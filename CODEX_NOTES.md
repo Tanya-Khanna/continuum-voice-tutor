@@ -450,3 +450,9 @@
 - Seeded the reproducible paused Ravi lesson and inspected the full teaching trace at desktop and phone widths. Raw learner-state enums are now human-readable (`Needs Support`, `Ask Reasoning`, `Foundational`, `Paused`) while exact language tags and model routes remain untouched for auditing; neither layout has horizontal overflow.
 - Re-ran the committed-HEAD clean-clone gate after the browser fixes: 107/107 tests, 25/25 deterministic cases, synthetic paused-state seed, exact resume, and a zero-vulnerability lockfile install all passed without local secrets or prior state.
 - Reconciled the schedule ledger with already-shipped flagship grounding, the Nomad persona, honest-limitations and consent/retention documentation, and roadmap coverage. The secret-safe phone preflight remains 3/11; every open check requires OpenAI project/webhook or Twilio/deployment configuration rather than more local teaching-engine code.
+
+## 2026-07-17 — Secret-safe dashboard readiness
+
+- Extended `npm run secrets:init` to fill a missing or blank Mission Control token as well as the phone-HMAC secret, without printing either value or changing any other `.env` line. A configured dashboard token is never overwritten; an invalid short one fails with an explicit repair instruction.
+- Added idempotency, preservation, mode-0600, generated-shape, and weak-token refusal coverage. The local ignored `.env` was initialized successfully, preserving the existing OpenAI key, and phone readiness advanced from 3/11 to 4/11.
+- The remaining seven checks are OpenAI project/webhook/public-delivery and Twilio account/number/routing/trunk actions. The initializer cannot truthfully mark any operator attestation itself.

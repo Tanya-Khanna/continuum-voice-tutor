@@ -370,8 +370,9 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Secret-safe `phone:preflight` now distinguishes local credential/config presence from three operator-verified
   external states and prints no values; `secrets:init` replaced the development phone-HMAC default locally with
   owner-only permissions~~ ✅. The preflight now has 11 checks, including Mission Control access protection. The
-  current local result is 3/11; project ID, webhook creation/public signed delivery, dashboard token, and Twilio
-  credentials/number/voice routing/trunk remain explicit setup work.
+  current local result is 4/11; `secrets:init` generated the private dashboard token without printing it. Project
+  ID, webhook creation/public signed delivery, and Twilio credentials/number/voice routing/trunk remain explicit
+  setup work.
 **Afternoon:**
 - The bridge: phone call → Twilio → SIP → Realtime → AI voice answers. G.711 8kHz confirmed.
 - Measure real latency (phone-to-response). Tune VAD/barge-in settings.
@@ -425,7 +426,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 
 ### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
 **Morning:**
-- Final stability pass: 2 live verification calls ($1) · `make eval` one last time · ~~repeatable secret-free REPL fresh-clone gate (`npm run verify:fresh`: archive committed HEAD → lockfile install → 107/107 tests → 25/25 eval → seed the synthetic Ravi fixture → prove exact paused-lesson resume)~~ ✅. Live calls remain gated on the external phone leg.
+- Final stability pass: 2 live verification calls ($1) · `make eval` one last time · ~~repeatable secret-free REPL fresh-clone gate (`npm run verify:fresh`: archive committed HEAD → lockfile install → 109/109 tests → 25/25 eval → seed the synthetic Ravi fixture → prove exact paused-lesson resume)~~ ✅. Live calls remain gated on the external phone leg.
 - Video → public on YouTube. Repo → public (MIT) or share with testing@devpost.com + build-week-event@openai.com.
 - In the main Codex session: run `/feedback`, copy the Session ID.
 **By noon PT:**
