@@ -380,7 +380,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - Minimal conversation loop with prompt v0 (Socratic + Hinglish sketch). Call it from your own phone; talk to it; note everything that feels wrong.
 - Commit milestones (≥3 today). CODEX_NOTES: 10 min.
 - **Exit: a real phone conversation with an AI exists. Latency number written down.**
-- **📦 Features landing today:** F1 zero-data dial-in · F7 GSM-native (inherited, confirmed) · F8 server-side inference · F9 G.711/SIP · F10 realtime pipeline · F12 VAD+barge-in · F15-voice (warm voice chosen, ~20% slower; persona NAME deferred to D3) · F19 accent check (catalog listen-through)
+- **📦 Features landing today:** F1 zero-data dial-in · F7 GSM-native (inherited after carrier proof) · ~~F8 server-side inference~~ ✅ · F9 G.711/SIP · F10 realtime pipeline · ~~F12 VAD+barge-in configuration and guards~~ ✅ *(real-phone tuning open)* · ~~F15-voice configuration (warm `marin`, 0.8 speed, Nomad persona)~~ ✅ *(real-phone listening open)* · F19 accent check (real-phone listen-through)
 
 ### 📅 SAT Jul 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
 **Morning:**
@@ -407,7 +407,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Dashboard skeleton plus deterministic eval-results view and evidence-based per-call token/cost accounting (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, per-turn model route, raw Responses/Realtime usage, and exact-model dated rates)~~ ✅.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
-- **📦 Features landing today:** ~~F38/F39 Curriculum Compiler + G3 originality rule~~ ✅ · ~~F37 frozen-pack grounding (formalized)~~ ✅ · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
+- **📦 Features landing today:** ~~F38/F39 Curriculum Compiler + G3 originality rule~~ ✅ · ~~F37 frozen-pack grounding (formalized)~~ ✅ · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · ~~F32-flavor real-world flagship grounding~~ ✅ · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · ~~F15 persona/product name: Nomad~~ ✅
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
@@ -421,7 +421,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
   explicit overlap/sample-size caveats~~ ✅. Final phone/dashboard/video URLs and the real-number Judge Experience
   card remain release-time work. Distill CODEX_NOTES → README §6.
 - **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
-- **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
+- **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · ~~G9 honest limitations + G2 consent/retention documentation~~ ✅ · ~~§4.3 roadmap features (README mentions)~~ ✅
 
 ### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
 **Morning:**

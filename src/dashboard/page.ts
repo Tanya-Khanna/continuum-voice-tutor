@@ -82,7 +82,10 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .eval-hero { padding: 24px; display: grid; grid-template-columns: 1fr repeat(3, minmax(135px, .35fr)); gap: 14px; }
     .eval-list { border-top: 1px solid var(--line); }
     .eval-section { padding: 22px 20px 12px; border-top: 1px solid var(--line); }
-    .eval-row { display: grid; grid-template-columns: minmax(180px, 1fr) 160px 90px minmax(240px, 1.5fr); gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); align-items: center; }
+    .eval-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(150px, .55fr) 80px minmax(220px, 1.35fr); gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); align-items: center; }
+    .eval-row > * { min-width: 0; overflow-wrap: anywhere; }
+    .eval-note summary { color: var(--blue); cursor: pointer; }
+    .eval-note p { margin: 10px 0 0; color: var(--muted); }
     .pass { color: var(--lime); }
     .fail { color: var(--orange); }
     .sample-view { margin-top: 18px; }
@@ -304,7 +307,15 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         const rationale = result.kind === 'execution_error'
           ? 'The case failed closed during ' + result.stage + '.'
           : result.evaluation.rationale;
-        row.append(text('span', failures.join(' · ') || rationale, 'count'));
+        if (failures.length > 0) {
+          row.append(text('span', failures.join(' · '), 'fail'));
+        } else {
+          const note = document.createElement('details');
+          note.className = 'eval-note';
+          note.append(text('summary', 'View evaluator note'));
+          note.append(text('p', rationale));
+          row.append(note);
+        }
         agentList.append(row);
       }
       root.append(agentHead, agentList);

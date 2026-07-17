@@ -442,3 +442,9 @@
 - Differentiation is now the source-visible combination the repository can prove: frozen curriculum/reviewer provenance, subject-scoped placement and resume, trusted turn guards, and reproducible deterministic plus paid-agent evidence.
 - Added an institution-led distribution and supervised-pilot path, a gate-ordered roadmap, the MIT/license and technology credits, official curriculum-source links, and a compact research source index.
 - Reconciled the build plan with the shipped product: History is not offered before review, the sample is synthetic Spanish-English rather than Hinglish, language universality is architectural rather than a promise about every language/accent, and no compiler-generated pack or five-subject deployment is claimed.
+
+## 2026-07-17 — Browser-verified Mission Control polish
+
+- Exercised Sessions, Eval gate, and Sample through the local app in a real browser at desktop and phone-sized viewports. The sample audio loaded, all four transcript lines rendered, and click-to-seek moved to the expected 16.715-second cue without horizontal overflow.
+- The visual pass found deterministic category labels colliding with the PASS column and 24 successful agent rationales overwhelming the scorecard. Evaluation columns now wrap safely, successful rationales are collapsed behind an accessible `details` control, and any failure remains immediately visible.
+- Reconciled the schedule ledger with already-shipped flagship grounding, the Nomad persona, honest-limitations and consent/retention documentation, and roadmap coverage. The secret-safe phone preflight remains 3/11; every open check requires OpenAI project/webhook or Twilio/deployment configuration rather than more local teaching-engine code.

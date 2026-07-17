@@ -17,6 +17,13 @@ describe("mission-control snapshot", () => {
     expect(DASHBOARD_HTML).not.toContain("searchParams.get('token')");
   });
 
+  it("keeps successful agent evidence compact without hiding failures", () => {
+    expect(DASHBOARD_HTML).toContain(".eval-row > *");
+    expect(DASHBOARD_HTML).toContain("document.createElement('details')");
+    expect(DASHBOARD_HTML).toContain("View evaluator note");
+    expect(DASHBOARD_HTML).toContain("if (failures.length > 0)");
+  });
+
   it("exposes teaching evidence without learner names or phone numbers", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({
