@@ -29,12 +29,46 @@ export const EvidenceRuleSchema = z.object({
   nextQuestion: z.string().min(1),
 });
 
+export const RationalNumberSchema = z.object({
+  numerator: z.number().int().min(-10_000).max(10_000),
+  denominator: z.number().int().min(1).max(10_000),
+});
+
+export const VerifiedRationalComparisonSchema = z.object({
+  id: z.string().min(1),
+  claim: z.string().min(1),
+  left: RationalNumberSchema,
+  relation: z.enum(["gt", "gte", "lt", "lte", "eq"]),
+  right: RationalNumberSchema,
+});
+
+export type VerifiedRationalComparison = z.infer<
+  typeof VerifiedRationalComparisonSchema
+>;
+
+export function evaluateRationalComparison(
+  comparison: VerifiedRationalComparison,
+): boolean {
+  const leftScaled =
+    comparison.left.numerator * comparison.right.denominator;
+  const rightScaled =
+    comparison.right.numerator * comparison.left.denominator;
+  if (comparison.relation === "gt") return leftScaled > rightScaled;
+  if (comparison.relation === "gte") return leftScaled >= rightScaled;
+  if (comparison.relation === "lt") return leftScaled < rightScaled;
+  if (comparison.relation === "lte") return leftScaled <= rightScaled;
+  return leftScaled === rightScaled;
+}
+
 export const CurriculumConceptSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   grade: z.number().int().positive(),
   learningObjective: z.string().min(1),
   verifiedFacts: z.array(z.string().min(1)).min(1),
+  verifiedRationalComparisons: z
+    .array(VerifiedRationalComparisonSchema)
+    .default([]),
   misconceptions: z.array(MisconceptionSchema),
   concreteAnalogies: z.array(z.string().min(1)).min(1),
   retrievalQuestions: z.array(z.string().min(1)).min(1),
@@ -55,7 +89,7 @@ export const CurriculumConceptSchema = z.object({
   }),
 });
 
-export const CurriculumPackSchema = z.object({
+const CurriculumPackBaseSchema = z.object({
   id: z.string().min(1),
   version: z.string().min(1),
   provenance: z.object({
@@ -122,8 +156,30 @@ export const CurriculumPackSchema = z.object({
   concepts: z.array(CurriculumConceptSchema).min(1),
 });
 
+export const CurriculumPackSchema = CurriculumPackBaseSchema.superRefine(
+  (pack, context) => {
+    for (const [conceptIndex, concept] of pack.concepts.entries()) {
+      for (const [comparisonIndex, comparison] of
+        concept.verifiedRationalComparisons.entries()) {
+        if (!evaluateRationalComparison(comparison)) {
+          context.addIssue({
+            code: "custom",
+            path: [
+              "concepts",
+              conceptIndex,
+              "verifiedRationalComparisons",
+              comparisonIndex,
+            ],
+            message: `Verified math claim ${comparison.id} is false.`,
+          });
+        }
+      }
+    }
+  },
+);
+
 export type CurriculumConcept = z.infer<typeof CurriculumConceptSchema>;
 export type CurriculumPack = z.infer<typeof CurriculumPackSchema>;
-export const CurriculumPackDraftSchema = CurriculumPackSchema.omit({
+export const CurriculumPackDraftSchema = CurriculumPackBaseSchema.omit({
   provenance: true,
 });

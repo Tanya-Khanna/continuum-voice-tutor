@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { zodTextFormat } from "openai/helpers/zod";
 import {
   CurriculumSourceBriefSchema,
   CurriculumVerificationSchema,
 } from "../src/compiler/schema.js";
 import { fractionsPack } from "../src/curriculum/fractions.pack.js";
-import { CurriculumPackSchema } from "../src/curriculum/schema.js";
+import {
+  CurriculumPackDraftSchema,
+  CurriculumPackSchema,
+} from "../src/curriculum/schema.js";
 
 const sourceBrief = {
   id: "example-science-brief",
@@ -50,6 +54,12 @@ describe("curriculum compiler contracts", () => {
       method: "hand_verified",
       sourceMaterials: [],
     });
+  });
+
+  it("keeps the compiler draft compatible with Structured Outputs", () => {
+    expect(() =>
+      zodTextFormat(CurriculumPackDraftSchema, "curriculum_pack_draft"),
+    ).not.toThrow();
   });
 
   it("cannot approve a verifier result that omits required checks", () => {

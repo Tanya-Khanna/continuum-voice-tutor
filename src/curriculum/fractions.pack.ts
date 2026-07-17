@@ -156,6 +156,22 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "For equal wholes, dividing into more equal parts makes each part smaller.",
         "One third is greater than one fourth when the wholes are equal.",
       ],
+      verifiedRationalComparisons: [
+        {
+          id: "one_third_greater_than_one_fourth",
+          claim: "One third is greater than one fourth for equal wholes.",
+          left: { numerator: 1, denominator: 3 },
+          relation: "gt",
+          right: { numerator: 1, denominator: 4 },
+        },
+        {
+          id: "one_fifth_greater_than_one_eighth",
+          claim: "One fifth is greater than one eighth for equal wholes.",
+          left: { numerator: 1, denominator: 5 },
+          relation: "gt",
+          right: { numerator: 1, denominator: 8 },
+        },
+      ],
       misconceptions: [
         {
           id: "larger_denominator_means_larger_fraction",

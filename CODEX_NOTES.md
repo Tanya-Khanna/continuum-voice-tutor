@@ -195,3 +195,12 @@
 - Added average and maximum measured GPT-5.6 latency to the session dashboard.
 - Ran one intentional live Luna teaching turn after the change. The request returned a correct retrieval-practice turn in 2,701 ms and persisted 1,936 input tokens, 270 output tokens, and the measured duration.
 - Real phone mouth-to-ear latency, VAD, and barge-in tuning remain blocked on the Twilio number/SIP leg; the dashboard does not mislabel server request time as phone latency.
+
+## 2026-07-17 — Computed rational-comparison truth
+
+- Added a bounded rational-number comparison contract to universal curriculum concepts.
+- Frozen packs now verify every declared comparison by integer cross-multiplication during schema parsing; no generated expression or `eval` is executed.
+- Added machine-verifiable claims for the flagship one-third versus one-fourth and one-fifth versus one-eighth transfer examples.
+- Updated compiler and verifier instructions to require matching machine checks for numerical fraction claims.
+- Added a fail-closed regression proving that a pack declaring one fourth greater than one third is rejected.
+- Verification: 47 of 47 automated tests, 25 of 25 deterministic teaching evals, strict TypeScript, and curriculum Structured Outputs conversion pass.
