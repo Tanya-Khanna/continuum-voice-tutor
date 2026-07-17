@@ -25,6 +25,7 @@ describe("Realtime SIP boundary", () => {
       "start_lesson",
       "get_teaching_turn",
       "get_learning_history",
+      "get_sandbox_turn",
     ]);
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "brief neutral acknowledgment",

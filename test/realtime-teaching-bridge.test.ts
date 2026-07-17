@@ -149,6 +149,23 @@ describe("Realtime teaching controller", () => {
     expect(historyOutput).toMatchObject({ ok: true, language_mode: "hi-Latn+en" });
     expect(historyOutput.spoken_response).toContain("Comparing unit fractions");
 
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "call_sandbox",
+        name: "get_sandbox_turn",
+        arguments: { learner_question: "Why do stars look small?" },
+      }),
+      (event) => sent.push(event),
+    );
+    const sandboxOutput = parseToolOutput(sent[6]!);
+    expect(sandboxOutput).toMatchObject({
+      ok: true,
+      mode: "curious_sandbox",
+      certainty: "low",
+      safety_status: "safe",
+    });
+    expect(repository.listSandboxTurns(startedSession!.id)).toHaveLength(1);
+
     await controller.close();
     const learnerId = startOutput.learner_id as string;
     expect(repository.findResumableLesson(learnerId)?.status).toBe("paused");

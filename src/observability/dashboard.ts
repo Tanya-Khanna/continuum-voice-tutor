@@ -6,6 +6,7 @@ import { estimateUsageCost } from "./pricing.js";
 
 const DashboardTurnSchema = z.object({
   sequence: z.number().int().positive(),
+  mode: z.enum(["guided", "curious_sandbox"]),
   learner_answer: z.string(),
   spoken_response: z.string(),
   diagnosis: z.string(),
@@ -24,6 +25,7 @@ const DashboardSessionSchema = z.object({
   concept_title: z.string(),
   status: z.string(),
   turn_count: z.number().int().nonnegative(),
+  sandbox_turn_count: z.number().int().nonnegative(),
   mastery_status: z.string(),
   mastery_evidence: z.string(),
   last_diagnosis: z.string(),
@@ -99,49 +101,8 @@ export function buildDashboardSnapshot(options: {
       const measuredLatencies = usageRecords.flatMap((usage) =>
         usage.latencyMs === undefined ? [] : [usage.latencyMs],
       );
-
-      return {
-      session_id: session.id,
-      learner_ref: learnerReference(session.learnerId),
-      concept_id: session.concept,
-      concept_title: conceptTitles.get(session.concept) ?? session.concept,
-      status: session.status,
-      turn_count: session.turnCount,
-      mastery_status: session.masteryStatus,
-      mastery_evidence: session.masteryEvidence,
-      last_diagnosis: session.lastDiagnosis,
-      updated_at: session.updatedAt,
-      usage: {
-        request_count: usageRecords.length,
-        input_text_tokens: inputTextTokens,
-        cached_input_text_tokens: sum("cachedInputTextTokens"),
-        output_text_tokens: outputTextTokens,
-        input_audio_tokens: inputAudioTokens,
-        cached_input_audio_tokens: sum("cachedInputAudioTokens"),
-        output_audio_tokens: outputAudioTokens,
-        total_tokens:
-          inputTextTokens +
-          outputTextTokens +
-          inputAudioTokens +
-          outputAudioTokens,
-        estimated_cost_usd: estimatedCost,
-        ...(pricingDates.length > 0
-          ? { pricing_as_of: pricingDates.sort().at(0) }
-          : {}),
-        unpriced_models: unpricedModels,
-        measured_latency_count: measuredLatencies.length,
-        average_latency_ms:
-          measuredLatencies.length === 0
-            ? null
-            : measuredLatencies.reduce((total, value) => total + value, 0) /
-              measuredLatencies.length,
-        maximum_latency_ms:
-          measuredLatencies.length === 0
-            ? null
-            : Math.max(...measuredLatencies),
-      },
-      turns: options.repository.listTurns(session.id).map((entry) => ({
-        sequence: entry.sequence,
+      const guidedTurns = options.repository.listTurns(session.id).map((entry) => ({
+        mode: "guided" as const,
         learner_answer: entry.turn.learner_answer,
         spoken_response: entry.turn.spoken_response,
         diagnosis: entry.turn.diagnosis,
@@ -151,8 +112,69 @@ export function buildDashboardSnapshot(options: {
         mastery_evidence: entry.turn.mastery_evidence,
         model_route: entry.modelRoute,
         created_at: entry.createdAt,
-      })),
-    };
+      }));
+      const sandboxTurns = options.repository
+        .listSandboxTurns(session.id)
+        .map((entry) => ({
+          mode: "curious_sandbox" as const,
+          learner_answer: entry.turn.learner_question,
+          spoken_response: entry.turn.spoken_response,
+          diagnosis: `Curious Sandbox response with ${entry.turn.certainty} certainty.`,
+          language_mode: entry.turn.language_mode,
+          next_strategy: "curious_sandbox",
+          mastery_status: "not_assessed",
+          mastery_evidence:
+            "Sandbox interactions are excluded from guided curriculum mastery.",
+          model_route: entry.modelRoute,
+          created_at: entry.createdAt,
+        }));
+      const turns = [...guidedTurns, ...sandboxTurns]
+        .sort((left, right) => left.created_at.localeCompare(right.created_at))
+        .map((turn, index) => ({ ...turn, sequence: index + 1 }));
+
+      return {
+        session_id: session.id,
+        learner_ref: learnerReference(session.learnerId),
+        concept_id: session.concept,
+        concept_title: conceptTitles.get(session.concept) ?? session.concept,
+        status: session.status,
+        turn_count: session.turnCount,
+        sandbox_turn_count: sandboxTurns.length,
+        mastery_status: session.masteryStatus,
+        mastery_evidence: session.masteryEvidence,
+        last_diagnosis: session.lastDiagnosis,
+        updated_at: session.updatedAt,
+        usage: {
+          request_count: usageRecords.length,
+          input_text_tokens: inputTextTokens,
+          cached_input_text_tokens: sum("cachedInputTextTokens"),
+          output_text_tokens: outputTextTokens,
+          input_audio_tokens: inputAudioTokens,
+          cached_input_audio_tokens: sum("cachedInputAudioTokens"),
+          output_audio_tokens: outputAudioTokens,
+          total_tokens:
+            inputTextTokens +
+            outputTextTokens +
+            inputAudioTokens +
+            outputAudioTokens,
+          estimated_cost_usd: estimatedCost,
+          ...(pricingDates.length > 0
+            ? { pricing_as_of: pricingDates.sort().at(0) }
+            : {}),
+          unpriced_models: unpricedModels,
+          measured_latency_count: measuredLatencies.length,
+          average_latency_ms:
+            measuredLatencies.length === 0
+              ? null
+              : measuredLatencies.reduce((total, value) => total + value, 0) /
+                measuredLatencies.length,
+          maximum_latency_ms:
+            measuredLatencies.length === 0
+              ? null
+              : Math.max(...measuredLatencies),
+        },
+        turns,
+      };
     });
 
   return DashboardSnapshotSchema.parse({

@@ -12,6 +12,11 @@ import {
 } from "../domain/learner.js";
 import { StoredModelUsageSchema, type ModelUsage } from "../domain/usage.js";
 import {
+  SandboxTurnSchema,
+  StoredSandboxTurnSchema,
+  type SandboxTurn,
+} from "../domain/sandbox.js";
+import {
   TeachingTurnSchema,
   type LanguageMode,
   type LessonPhase,
@@ -295,6 +300,40 @@ export class LessonService {
     });
     if (result.usage) this.recordModelUsage(context, result.usage);
     return result.value;
+  }
+
+  async exploreSandbox(
+    context: LessonContext,
+    learnerQuestion: string,
+  ): Promise<SandboxTurn> {
+    const redactedQuestion = redactPotentialPii(learnerQuestion);
+    const result = await this.#engine.explore({
+      learnerId: context.learner.id,
+      learnerQuestion: redactedQuestion,
+      requestedLanguageMode: context.learner.preferredLanguage,
+    });
+    const turn = SandboxTurnSchema.parse({
+      ...result.value,
+      learner_id: context.learner.id,
+      learner_question: redactedQuestion,
+    });
+    const now = this.#clock().toISOString();
+    const sequence = this.#repository.listSandboxTurns(context.session.id).length + 1;
+    this.#repository.appendSandboxTurn(
+      StoredSandboxTurnSchema.parse({
+        id: this.#makeId(),
+        sessionId: context.session.id,
+        sequence,
+        turn,
+        modelRoute: this.#engine.modelRoute,
+        createdAt: now,
+      }),
+    );
+    this.#repository.saveLesson(
+      LessonSessionSchema.parse({ ...context.session, updatedAt: now }),
+    );
+    if (result.usage) this.recordModelUsage(context, result.usage);
+    return turn;
   }
 
   recordModelUsage(context: LessonContext, usage: ModelUsage): void {

@@ -177,8 +177,10 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - **F19 Accent robustness** — inherited from platform ASR; validated with builder's own accent; hardening → roadmap.
 
 **Teaching (the authored layer: system prompt + curriculum packs — budget real writing time)**
-- **F20 Curious Sandbox mode** — "ask me anything," Socratic, hedges facts (no pack behind it); identity feature
-  and fallback layer.
+- **F20 Curious Sandbox mode** — ~~explicit ask-anything Realtime tool after identity, separate persisted trace,
+  Socratic short answer + one question, arbitrary language/code-switching, PII redaction, child-safety redirects,
+  honest current-fact uncertainty, zero-credit fallback, and live GPT-5.6 hedge gate~~ ✅. Sandbox never awards
+  guided-curriculum mastery.
 - **F21 Guided Path, five subjects** — Math (flagship fractions pack, HAND-BUILT) + Science/English/History/Geography
   (Curriculum Compiler). Subject flavors: Science = household experiments + anchor objects; History = time-machine
   roleplay with genuine decision points ("the market or the mountain?"); Geography = look-around prompts;
@@ -223,7 +225,8 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - **F52 Computed math truth** — ~~safe bounded rational-comparison claims are verified in application code by
   cross-multiplication before a frozen pack loads; false declared comparisons fail closed, without `eval` or
   model-authored code~~ ✅. Extend the numeric contract as new math operation types enter reviewed packs.
-- **F56 Uncertainty honesty** — "I'm not sure — let's work it out together"; hedge beats hallucination.
+- **F56 Uncertainty honesty** — ~~Curious Sandbox uses a structured low/medium/high certainty field and requires
+  low-certainty language for current, local, disputed, or unverifiable claims; live current-weather gate passes~~ ✅.
 
 **Trust, proof & product surface**
 - **F44 SMS recap** — post-session summary in the learner's language mode (G7); optional voice-registered parent
@@ -334,14 +337,14 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Curriculum Compiler scaffold: provenance-bearing reviewed source brief → GPT-5.6 Terra original draft → independent verifier → create-only frozen pack~~ ✅. Live runs for Science, English, History, and Geography remain open until official-source briefs are reviewed; builder spot-check remains mandatory before each freeze.
 - ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
 **Afternoon:**
-- Five-subject voice onboarding + flavored-sandbox fallbacks (experiments/anchor objects · conversation · time-machine choices · look-around prompts).
+- Five-subject voice onboarding + ~~universal Curious Sandbox tool and fallback~~ ✅ *(five reviewed subject packs and menu remain)*.
 - ~~Callback loop (exact recent-drop recovery, later retrieval practice, and post-completion retrieval)~~ ✅ · ~~voice-queryable per-profile history with GPT-5.6 language-aware narration~~ ✅ · shared-phone profiles polished.
 - **Eval harness**: simulated-learner × evaluator agents; ~~all 25 cases (§4.1) in text mode; iterate prompts until green~~ ✅ *(deterministic offline gate; agent-based judge pass still open)*. 2–3 live smoke calls only.
 **Evening:**
 - ~~Dashboard skeleton plus deterministic eval-results view and evidence-based per-call token/cost accounting (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, per-turn model route, raw Responses/Realtime usage, and exact-model dated rates)~~ ✅.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
-- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · F20 sandbox mode · F21-full five subjects + flavored fallbacks · F22 voice-menu onboarding · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
+- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · F22 voice-menu onboarding · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**

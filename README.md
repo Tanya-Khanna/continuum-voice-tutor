@@ -60,6 +60,8 @@ npm run eval:live
 
 It currently covers Hindi/English, Spanish/English, and French/English code-switching. The deterministic 25-case gate remains the normal zero-credit development loop.
 
+`npm run eval:live-sandbox` intentionally spends one small Luna request to verify that a Spanish-English current-information question is tagged correctly, treated as safe, and hedged with low certainty.
+
 The separate `npm run eval:live-history` check validates one synthetic Hindi/English learning-history narration. Realtime exposes this capability through `get_learning_history` after the caller selects their name.
 
 ## Phone architecture
@@ -71,6 +73,8 @@ Realtime asks the learner's name and calls `start_lesson`. Every later learner a
 The lesson arc is deployment-configured. The first pack uses eight teaching turns with explicit explore, independent-check, and recap phases. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. The server also prevents any model from marking mastery secure until it has observed at least two reasoning turns.
 
 Learners can ask what they worked on before. GPT-5.6 receives only that named profile's persisted, curriculum-grounded summaries and returns a short structured narration in the learner's current language mode. The Realtime layer says that narration exactly; it does not invent history from the conversation.
+
+Learners can explicitly enter **Curious Sandbox** after choosing their name. Realtime routes that request to a separate GPT-5.6 structured contract for child-safe open curiosity: a small idea, honest low/medium/high certainty, and exactly one Socratic follow-up in any detected language combination. Sandbox questions are PII-redacted and stored in a separate trace; they never change guided lesson progress or mastery. The zero-credit adapter refuses to invent open-world facts and instead helps the learner reason from what they know.
 
 ## Mission control
 

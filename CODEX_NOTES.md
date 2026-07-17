@@ -214,3 +214,14 @@
 - Added a byte-range-capable audio endpoint so browser playback and seeking work reliably.
 - The official TTS-1 HD request was attempted but the restricted key returned missing scope `api.model.audio.request`; the checked-in asset therefore uses the documented zero-credit local system-voice fallback. The OpenAI regeneration path remains available after the key scope changes.
 - Verification: 49 of 49 automated tests, exact 32.65-second MP3 inspection, sample manifest/API checks, 206 byte-range smoke, dashboard HTML smoke, and strict TypeScript pass.
+
+## 2026-07-17 — Curious Sandbox with honest uncertainty
+
+- Added a separate structured Curious Sandbox contract for explicit ask-anything requests after learner identity is established.
+- The live GPT-5.6 path detects arbitrary language combinations, supplies a small Socratic response, records low/medium/high certainty, and returns exactly one follow-up question.
+- Current, local, disputed, or otherwise unverifiable claims must use low certainty; unsafe and prompt-injection requests use the same redirect boundary as guided teaching.
+- Sandbox questions are PII-redacted before model access and persistence, stored in a dedicated SQLite trace, and never update guided turn counts or mastery.
+- Added `get_sandbox_turn` to the Realtime tools while forbidding silent routing of ordinary guided answers into Sandbox.
+- Mission control merges Sandbox interactions into the chronological transcript and labels their mastery status `not_assessed`.
+- The zero-credit fallback makes no open-world factual claim. One live Luna Spanish-English current-weather case passed language, safety, low-certainty, and voice-format checks.
+- Verification: 51 of 51 automated tests, 25 of 25 deterministic teaching evals, 1 of 1 live Sandbox gate, and strict TypeScript pass.

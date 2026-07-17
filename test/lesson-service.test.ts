@@ -236,6 +236,21 @@ describe("LessonService", () => {
           spoken_response: "Here is the saved learning history. Practice again?",
         } };
       },
+      async explore(request) {
+        return {
+          value: {
+            learner_id: request.learnerId,
+            learner_question: request.learnerQuestion,
+            language_mode: "en",
+            certainty: "low",
+            safety_status: "safe",
+            spoken_response:
+              "I may be unsure, but we can reason together. What do you think?",
+            follow_up_question: "What do you think?",
+            should_end_session: false,
+          },
+        };
+      },
     };
     const service = new LessonService({
       repository,

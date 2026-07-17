@@ -15,6 +15,10 @@ import {
   StoredModelUsageSchema,
   type StoredModelUsage,
 } from "../domain/usage.js";
+import {
+  StoredSandboxTurnSchema,
+  type StoredSandboxTurn,
+} from "../domain/sandbox.js";
 
 interface LearnerRow {
   id: string;
@@ -64,6 +68,15 @@ interface UsageRow {
   cached_input_audio_tokens: number;
   output_audio_tokens: number;
   latency_ms: number | null;
+  created_at: string;
+}
+
+interface SandboxTurnRow {
+  id: string;
+  session_id: string;
+  sequence: number;
+  turn_json: string;
+  model_route: string;
   created_at: string;
 }
 
@@ -172,6 +185,19 @@ export class SqliteLearningRepository implements LearningRepository {
 
       CREATE INDEX IF NOT EXISTS model_usage_session_idx
         ON model_usage(session_id, created_at);
+
+      CREATE TABLE IF NOT EXISTS sandbox_turns (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES lesson_sessions(id),
+        sequence INTEGER NOT NULL,
+        turn_json TEXT NOT NULL,
+        model_route TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(session_id, sequence)
+      );
+
+      CREATE INDEX IF NOT EXISTS sandbox_turns_session_idx
+        ON sandbox_turns(session_id, sequence);
     `);
     const turnColumns = this.#database.pragma(
       "table_info(teaching_turns)",
@@ -319,6 +345,42 @@ export class SqliteLearningRepository implements LearningRepository {
       .all(sessionId) as TurnRow[];
     return rows.map((row) =>
       StoredTeachingTurnSchema.parse({
+        id: row.id,
+        sessionId: row.session_id,
+        sequence: row.sequence,
+        turn: JSON.parse(row.turn_json) as unknown,
+        modelRoute: row.model_route,
+        createdAt: row.created_at,
+      }),
+    );
+  }
+
+  appendSandboxTurn(unparsedTurn: StoredSandboxTurn): void {
+    const entry = StoredSandboxTurnSchema.parse(unparsedTurn);
+    this.#database
+      .prepare(
+        `INSERT INTO sandbox_turns (
+          id, session_id, sequence, turn_json, model_route, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        entry.id,
+        entry.sessionId,
+        entry.sequence,
+        JSON.stringify(entry.turn),
+        entry.modelRoute,
+        entry.createdAt,
+      );
+  }
+
+  listSandboxTurns(sessionId: string): StoredSandboxTurn[] {
+    const rows = this.#database
+      .prepare(
+        "SELECT * FROM sandbox_turns WHERE session_id = ? ORDER BY sequence",
+      )
+      .all(sessionId) as SandboxTurnRow[];
+    return rows.map((row) =>
+      StoredSandboxTurnSchema.parse({
         id: row.id,
         sessionId: row.session_id,
         sequence: row.sequence,

@@ -16,6 +16,10 @@ const TeachingTurnArgumentsSchema = z.object({
   learner_answer: z.string().trim().min(1).max(2_000),
 });
 
+const SandboxTurnArgumentsSchema = z.object({
+  learner_question: z.string().trim().min(1).max(2_000),
+});
+
 const FunctionCallItemSchema = z.object({
   type: z.literal("function_call"),
   name: z.string().min(1),
@@ -70,6 +74,7 @@ interface LessonOrchestrator {
   pause: LessonService["pause"];
   learningHistory: LessonService["learningHistory"];
   recordModelUsage: LessonService["recordModelUsage"];
+  exploreSandbox: LessonService["exploreSandbox"];
 }
 
 export function usageFromRealtimeEvent(
@@ -280,6 +285,23 @@ export class RealtimeTeachingController {
             this.#context,
           );
           output = { ok: true, ...history };
+        }
+      } else if (call.name === "get_sandbox_turn") {
+        const args = SandboxTurnArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        if (!this.#context) {
+          output = {
+            ok: false,
+            spoken_response:
+              "Before we open Curious Sandbox, what name would you like me to use?",
+          };
+        } else {
+          const turn = await this.#lessonService.exploreSandbox(
+            this.#context,
+            args.learner_question,
+          );
+          output = { ok: true, mode: "curious_sandbox", ...turn };
         }
       } else {
         output = {

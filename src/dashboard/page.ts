@@ -204,7 +204,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       copy.append(text('h2', session.concept_title));
       copy.append(text('p', 'Anonymized teaching trace · ' + session.status));
       hero.append(copy);
-      for (const [label, value] of [['Turns', session.turn_count], ['Mastery', session.mastery_status], ['Language', latest?.language_mode ?? 'pending']]) {
+      for (const [label, value] of [['Interactions', session.turns.length], ['Mastery', session.mastery_status], ['Language', latest?.language_mode ?? 'pending']]) {
         const metric = text('div', '', 'metric'); metric.append(text('span', label)); metric.append(text('strong', String(value))); hero.append(metric);
       }
       const details = text('div', '', 'detail-grid');
@@ -213,12 +213,13 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       for (const turn of session.turns) {
         const row = text('div', '', 'turn'); row.append(text('div', String(turn.sequence).padStart(2, '0'), 'turn-no'));
         const content = text('div', '');
-        const learner = text('div', '', 'bubble'); learner.append(text('div', 'Learner', 'speaker')); learner.append(text('div', turn.learner_answer));
+        const learner = text('div', '', 'bubble'); learner.append(text('div', 'Learner · ' + (turn.mode === 'guided' ? 'Guided' : 'Curious Sandbox'), 'speaker')); learner.append(text('div', turn.learner_answer));
         const nomad = text('div', '', 'bubble nomad'); nomad.append(text('div', 'Nomad', 'speaker')); nomad.append(text('div', turn.spoken_response));
         content.append(learner, nomad); row.append(content); transcript.append(row);
       }
       const analysis = text('aside', '', 'analysis'); analysis.append(text('div', 'Teaching intelligence', 'section-label'));
       addCard(analysis, 'Latest diagnosis', latest?.diagnosis ?? session.last_diagnosis);
+      addCard(analysis, 'Latest mode', latest?.mode === 'curious_sandbox' ? 'Curious Sandbox · mastery not assessed' : 'Guided curriculum');
       addCard(analysis, 'Mastery evidence', latest?.mastery_evidence ?? session.mastery_evidence);
       addCard(analysis, 'Next strategy', latest?.next_strategy ?? 'awaiting first answer');
       addCard(analysis, 'Model route', latest?.model_route ?? 'pending', 'route');

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const UsageSourceSchema = z.enum([
   "responses_teaching",
   "responses_history",
+  "responses_sandbox",
   "realtime",
 ]);
 
