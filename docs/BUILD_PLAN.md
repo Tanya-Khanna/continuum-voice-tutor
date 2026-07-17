@@ -302,7 +302,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 ### 📅 FRI Jul 17 — D1: PROVE THE PIPE (Codex: BEST model, HIGH reasoning all day — this is the novel engineering)
 **Morning (~9 AM):**
 - ~~Open THE main Codex session (this becomes the `/feedback` session — everything core happens here). First prompt: point it at this file + repo init + AGENTS.md + CODEX_NOTES.md skeleton.~~ ✅
-- Access checks in practice: ~~first live structured-output API call to GPT-5.6 Luna~~ ✅ *(Jul 17; correct misconception diagnosis returned)*; Terra/Sol smoke checks; Realtime session hello-world; voice catalog listen-through (pick the warm voice; note accent options).
+- Access checks in practice: ~~first live structured-output API call to GPT-5.6 Luna~~ ✅ *(Jul 17; correct misconception diagnosis returned)*; Terra/Sol smoke checks; ~~Realtime session hello-world~~ ✅ *(Jul 17; text-only Realtime Mini selected the live `start_lesson` tool)*; voice catalog listen-through (pick the warm voice; note accent options).
 - Twilio: buy US number, configure SIP trunk → OpenAI Realtime SIP connector.
 **Afternoon:**
 - The bridge: phone call → Twilio → SIP → Realtime → AI voice answers. G.711 8kHz confirmed.
@@ -316,7 +316,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 
 ### 📅 SAT Jul 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
 **Morning:**
-- Two-layer teaching engine: ~~structured-JSON schema {learner_id, concept, learner_answer, diagnosis, language_mode, next_strategy, mastery_status, mastery_evidence, next_question}~~ ✅; Luna/Terra↔Sol routing (or Terra-only per D0); latency choreography wiring.
+- ~~Two-layer teaching engine: Realtime sideband tool bridge → structured GPT-5.6 teaching turn → exact spoken response, with schema {learner_id, concept, learner_answer, diagnosis, language_mode, next_strategy, mastery_status, mastery_evidence, next_question}~~ ✅ *(Jul 17; deterministic integration coverage plus live Realtime Mini tool-selection proof; end-to-end phone/audio remains gated on Twilio)*; Luna/Terra↔Sol routing (or Terra-only per D0); latency choreography wiring.
 - ~~Quick TEXT loop harness (pre-REPL) so all teaching iteration today is text-first (cheap).~~ ✅ *(built early as `npm run chat` / `make chat`; offline by default)*
 **Afternoon:**
 - Hand-build the fractions flagship pack: ~~objectives~~ ✅, micro-lessons, verified question bank (code-checked answers, F52), ~~misconception taxonomy (larger-denominator front and center), roti/paper-folding analogies~~ ✅.
@@ -325,7 +325,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** F42 two-layer architecture + hybrid routing · F13/F50 preambles + latency choreography · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · F16 code-switching · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · G4 lesson arc · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
+- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · F13/F50 preambles + latency choreography · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · F16 code-switching · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · G4 lesson arc · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**

@@ -17,7 +17,11 @@ const EnvironmentSchema = z.object({
   NOMAD_CURRICULUM_PATH: optionalNonEmpty,
   OPENAI_API_KEY: optionalNonEmpty,
   OPENAI_TEXT_MODEL: z.string().min(1).default("gpt-5.6-luna"),
-  OPENAI_REALTIME_MODEL: z.string().min(1).default("gpt-realtime-2.1"),
+  OPENAI_REALTIME_MODEL: z
+    .string()
+    .min(1)
+    .default("gpt-realtime-2.1-mini"),
+  OPENAI_REALTIME_VOICE: z.string().min(1).default("marin"),
   OPENAI_WEBHOOK_SECRET: optionalNonEmpty,
   OPENAI_PROJECT_ID: optionalNonEmpty,
   TWILIO_ACCOUNT_SID: optionalNonEmpty,

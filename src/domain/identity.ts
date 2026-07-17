@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 
 export function normalizeLearnerName(name: string): string {
-  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-IN");
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
 export function hashPhoneNumber(phoneNumber: string, secret: string): string {

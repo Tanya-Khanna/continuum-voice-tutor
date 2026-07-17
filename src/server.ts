@@ -1,11 +1,14 @@
 import { createServer, type IncomingHttpHeaders } from "node:http";
 import OpenAI from "openai";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
+import { createLessonRuntime } from "./runtime/lesson-runtime.js";
 import {
   RealtimeIncomingCallSchema,
   acceptRealtimeCall,
   buildRealtimeAcceptPayload,
+  callerNumberFromIncomingCall,
 } from "./telephony/realtime-sip.js";
+import { RealtimeTeachingBridge } from "./telephony/realtime-teaching-bridge.js";
 
 function headersFromIncoming(headers: IncomingHttpHeaders): Headers {
   const result = new Headers();
@@ -28,6 +31,7 @@ async function readBody(request: NodeJS.ReadableStream): Promise<string> {
 }
 
 const environment = loadEnvironment();
+const activeCallIds = new Set<string>();
 
 export const server = createServer(async (request, response) => {
   try {
@@ -63,11 +67,50 @@ export const server = createServer(async (request, response) => {
 
       if (event.type === "realtime.call.incoming") {
         const incomingCall = RealtimeIncomingCallSchema.parse(event);
-        await acceptRealtimeCall({
-          apiKey,
-          callId: incomingCall.data.call_id,
-          payload: buildRealtimeAcceptPayload(environment.OPENAI_REALTIME_MODEL),
-        });
+        const callId = incomingCall.data.call_id;
+        if (!activeCallIds.has(callId)) {
+          activeCallIds.add(callId);
+          try {
+            const callerNumber = callerNumberFromIncomingCall(incomingCall);
+            await acceptRealtimeCall({
+              apiKey,
+              callId,
+              payload: buildRealtimeAcceptPayload(
+                environment.OPENAI_REALTIME_MODEL,
+                environment.OPENAI_REALTIME_VOICE,
+              ),
+            });
+
+            const runtime = createLessonRuntime(environment);
+            const bridge = new RealtimeTeachingBridge({
+              apiKey,
+              callId,
+              callerNumber,
+              lessonService: runtime.lessonService,
+              onError: (bridgeError) =>
+                console.error(`Realtime call ${callId}:`, bridgeError.message),
+            });
+            void bridge
+              .run()
+              .catch((bridgeError: unknown) => {
+                const message =
+                  bridgeError instanceof Error
+                    ? bridgeError.message
+                    : "Unknown bridge failure";
+                console.error(
+                  `Realtime call ${callId} ended with an error:`,
+                  message,
+                );
+              })
+              .finally(() => {
+                runtime.close();
+                activeCallIds.delete(callId);
+              });
+          } catch (error) {
+            activeCallIds.delete(callId);
+            throw error;
+          }
+        }
       }
 
       response.writeHead(200, { "Content-Type": "application/json" });

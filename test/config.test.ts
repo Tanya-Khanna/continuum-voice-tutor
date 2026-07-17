@@ -6,6 +6,10 @@ describe("environment configuration", () => {
     const environment = loadEnvironment({});
     expect(environment.TEACHING_ENGINE).toBe("offline");
     expect(environment.OPENAI_TEXT_MODEL).toBe("gpt-5.6-luna");
+    expect(environment.OPENAI_REALTIME_MODEL).toBe(
+      "gpt-realtime-2.1-mini",
+    );
+    expect(environment.OPENAI_REALTIME_VOICE).toBe("marin");
   });
 
   it("prevents accidental live mode without a key", () => {

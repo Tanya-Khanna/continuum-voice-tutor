@@ -1,0 +1,278 @@
+import WebSocket, { type RawData } from "ws";
+import { z } from "zod";
+import { ResolvedLanguageModeSchema } from "../domain/teaching.js";
+import type {
+  LessonContext,
+  LessonService,
+} from "../lesson/lesson-service.js";
+
+const StartLessonArgumentsSchema = z.object({
+  learner_name: z.string().trim().min(1).max(80),
+  language_mode: ResolvedLanguageModeSchema.optional(),
+});
+
+const TeachingTurnArgumentsSchema = z.object({
+  learner_answer: z.string().trim().min(1).max(2_000),
+});
+
+const FunctionCallItemSchema = z.object({
+  type: z.literal("function_call"),
+  name: z.string().min(1),
+  call_id: z.string().min(1),
+  arguments: z.string(),
+});
+
+const OutputItemDoneSchema = z.object({
+  type: z.literal("response.output_item.done"),
+  item: FunctionCallItemSchema,
+});
+
+const ResponseDoneSchema = z.object({
+  type: z.literal("response.done"),
+  response: z.object({
+    output: z.array(z.unknown()),
+  }),
+});
+
+export type RealtimeClientEvent = Record<string, unknown> & { type: string };
+export type RealtimeEventSender = (event: RealtimeClientEvent) => void;
+
+interface LessonOrchestrator {
+  beginOrResume: LessonService["beginOrResume"];
+  respond: LessonService["respond"];
+  pause: LessonService["pause"];
+}
+
+function functionCallsFromEvent(event: unknown): z.infer<
+  typeof FunctionCallItemSchema
+>[] {
+  const outputItem = OutputItemDoneSchema.safeParse(event);
+  if (outputItem.success) return [outputItem.data.item];
+
+  const response = ResponseDoneSchema.safeParse(event);
+  if (!response.success) return [];
+  return response.data.response.output.flatMap((item) => {
+    const parsed = FunctionCallItemSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+function toolOutputEvent(
+  callId: string,
+  output: Record<string, unknown>,
+): RealtimeClientEvent {
+  return {
+    type: "conversation.item.create",
+    item: {
+      type: "function_call_output",
+      call_id: callId,
+      output: JSON.stringify(output),
+    },
+  };
+}
+
+function speakToolOutputEvent(): RealtimeClientEvent {
+  return {
+    type: "response.create",
+    response: {
+      instructions:
+        "The latest function output is authoritative. Speak its spoken_response exactly, with natural pronunciation. Add nothing before or after it, then wait for the learner.",
+    },
+  };
+}
+
+export function buildRealtimeOpeningEvent(): RealtimeClientEvent {
+  return {
+    type: "response.create",
+    response: {
+      instructions:
+        "Warmly introduce yourself as Nomad in one short sentence, then ask only what name the learner wants you to use. Do not start teaching yet.",
+    },
+  };
+}
+
+export class RealtimeTeachingController {
+  readonly #callerNumber: string;
+  readonly #lessonService: LessonOrchestrator;
+  readonly #handledCallIds = new Set<string>();
+  readonly #onError: (error: Error) => void;
+  #context: LessonContext | undefined;
+  #closed = false;
+  #queue: Promise<void> = Promise.resolve();
+
+  constructor(options: {
+    callerNumber: string;
+    lessonService: LessonOrchestrator;
+    onError?: (error: Error) => void;
+  }) {
+    this.#callerNumber = options.callerNumber;
+    this.#lessonService = options.lessonService;
+    this.#onError = options.onError ?? (() => undefined);
+  }
+
+  handleServerEvent(
+    event: unknown,
+    send: RealtimeEventSender,
+  ): Promise<void> {
+    this.#queue = this.#queue
+      .then(async () => {
+        for (const call of functionCallsFromEvent(event)) {
+          await this.#handleFunctionCall(call, send);
+        }
+      })
+      .catch((error: unknown) => {
+        this.#onError(
+          error instanceof Error ? error : new Error("Unknown bridge error"),
+        );
+      });
+    return this.#queue;
+  }
+
+  async #handleFunctionCall(
+    call: z.infer<typeof FunctionCallItemSchema>,
+    send: RealtimeEventSender,
+  ): Promise<void> {
+    if (this.#handledCallIds.has(call.call_id)) return;
+    this.#handledCallIds.add(call.call_id);
+
+    try {
+      let output: Record<string, unknown>;
+      if (call.name === "start_lesson") {
+        const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
+        if (this.#context) {
+          output = {
+            ok: false,
+            spoken_response:
+              "We already started this lesson. Please answer the question I just asked.",
+          };
+        } else {
+          this.#context = this.#lessonService.beginOrResume({
+            phoneNumber: this.#callerNumber,
+            learnerName: args.learner_name,
+            ...(args.language_mode
+              ? { preferredLanguage: args.language_mode }
+              : {}),
+          });
+          output = {
+            ok: true,
+            learner_id: this.#context.learner.id,
+            resumed: this.#context.resumed,
+            spoken_response: this.#context.greeting,
+          };
+        }
+      } else if (call.name === "get_teaching_turn") {
+        const args = TeachingTurnArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        if (!this.#context) {
+          output = {
+            ok: false,
+            spoken_response:
+              "Before we begin, what name would you like me to use?",
+          };
+        } else {
+          const result = await this.#lessonService.respond(
+            this.#context,
+            args.learner_answer,
+          );
+          this.#context = result.context;
+          output = { ok: true, ...result.turn };
+        }
+      } else {
+        output = {
+          ok: false,
+          spoken_response:
+            "I had trouble choosing the next step. Could you say that once more?",
+        };
+      }
+
+      send(toolOutputEvent(call.call_id, output));
+      send(speakToolOutputEvent());
+    } catch (error) {
+      this.#onError(error instanceof Error ? error : new Error("Tool failed"));
+      send(
+        toolOutputEvent(call.call_id, {
+          ok: false,
+          spoken_response:
+            "I had trouble hearing that clearly. Could you say it once more?",
+        }),
+      );
+      send(speakToolOutputEvent());
+    }
+  }
+
+  async close(): Promise<void> {
+    if (this.#closed) return;
+    this.#closed = true;
+    await this.#queue;
+    if (this.#context) this.#context = this.#lessonService.pause(this.#context);
+  }
+}
+
+export class RealtimeTeachingBridge {
+  readonly #apiKey: string;
+  readonly #callId: string;
+  readonly #controller: RealtimeTeachingController;
+  readonly #WebSocketImplementation: typeof WebSocket;
+  readonly #onError: (error: Error) => void;
+
+  constructor(options: {
+    apiKey: string;
+    callId: string;
+    callerNumber: string;
+    lessonService: LessonOrchestrator;
+    WebSocketImplementation?: typeof WebSocket;
+    onError?: (error: Error) => void;
+  }) {
+    this.#apiKey = options.apiKey;
+    this.#callId = options.callId;
+    this.#WebSocketImplementation =
+      options.WebSocketImplementation ?? WebSocket;
+    this.#onError = options.onError ?? (() => undefined);
+    this.#controller = new RealtimeTeachingController({
+      callerNumber: options.callerNumber,
+      lessonService: options.lessonService,
+      onError: this.#onError,
+    });
+  }
+
+  run(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const socket = new this.#WebSocketImplementation(
+        `wss://api.openai.com/v1/realtime?call_id=${encodeURIComponent(this.#callId)}`,
+        { headers: { Authorization: `Bearer ${this.#apiKey}` } },
+      );
+      let opened = false;
+
+      const send: RealtimeEventSender = (event) => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify(event));
+        }
+      };
+
+      socket.once("open", () => {
+        opened = true;
+        send(buildRealtimeOpeningEvent());
+      });
+      socket.on("message", (data: RawData) => {
+        try {
+          const event = JSON.parse(data.toString()) as unknown;
+          void this.#controller.handleServerEvent(event, send);
+        } catch (error) {
+          this.#onError(
+            error instanceof Error
+              ? error
+              : new Error("Could not parse Realtime event"),
+          );
+        }
+      });
+      socket.once("error", (error) => {
+        this.#onError(error);
+        if (!opened) reject(error);
+      });
+      socket.once("close", () => {
+        void this.#controller.close().then(resolve, reject);
+      });
+    });
+  }
+}

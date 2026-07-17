@@ -87,3 +87,23 @@
 - Terra: curriculum compilation and balanced reasoning tasks.
 - Sol: difficult review, safety, and misconception-analysis passes.
 - Realtime: phone-call speech experience through SIP.
+
+## 2026-07-17 — Realtime sideband teaching bridge
+
+- Implemented the actual two-layer call controller: Realtime owns listening, speech, and turn-taking; the server owns identity, curriculum state, and every teaching decision.
+- Added `start_lesson` and `get_teaching_turn` tools. Realtime must ask for a learner name first, then route every substantive answer to the teaching engine instead of teaching directly.
+- Connected accepted SIP calls to their documented server-side sideband WebSocket using the webhook `call_id`.
+- Extracted the caller number from the documented SIP `From` header and retained phone-number-plus-name shared-phone resume behavior.
+- Added serialized tool processing and call-ID idempotency because Realtime can surface the same completed function call in more than one lifecycle event.
+- Added exact `function_call_output` handoff followed by `response.create`; Realtime is instructed to speak the teaching engine's `spoken_response` without adding or rewriting content.
+- Removed a leftover Grade 6 phrase from the live model instructions; grade remains deployment-pack data rather than a core-engine assumption.
+- A closed control socket pauses the current lesson before its database connection is released, preserving disconnect recovery.
+- Changed the development voice model default to `gpt-realtime-2.1-mini`; `marin` is a provisional voice until the planned catalog listen-through.
+- Ran the first live Realtime request as a text-only tool-routing smoke. Realtime Mini correctly called `start_lesson`; no audio tokens and no GPT-5.6 teaching request were used in this smoke.
+- Verification after the bridge: strict TypeScript passed, 23 of 23 automated tests passed, and the 25-case offline teaching gate remained green.
+
+### Still open after the bridge
+
+- Complete Twilio number purchase and SIP trunk setup, then place the first real call.
+- Confirm phone audio format, choose the final voice, measure latency, and tune VAD/barge-in.
+- Run the live mid-call disconnect/resume gate over the phone.

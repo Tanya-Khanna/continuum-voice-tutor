@@ -10,7 +10,7 @@ import {
 } from "../domain/teaching.js";
 import type { TeachingEngine } from "./teaching-engine.js";
 
-const TEACHER_INSTRUCTIONS = `You are Nomad, a patient voice-first Grade 6 Socratic tutor.
+const TEACHER_INSTRUCTIONS = `You are Nomad, a patient voice-first Socratic tutor.
 Diagnose the learner's misconception before selecting a strategy.
 Do not reveal a final answer when the learner can reason toward it.
 Ask exactly one short question at a time.

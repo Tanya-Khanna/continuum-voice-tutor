@@ -73,7 +73,7 @@ export class LessonService {
         id: this.#makeId(),
         phoneHash,
         name: options.learnerName.trim().replace(/\s+/g, " "),
-        preferredLanguage: options.preferredLanguage ?? "en",
+        preferredLanguage: options.preferredLanguage ?? "und",
         currentConcept: this.#startingConcept.id,
         lastMastery: "needs_support",
         createdAt: now,

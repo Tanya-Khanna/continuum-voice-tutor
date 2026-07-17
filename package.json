@@ -8,6 +8,7 @@
     "chat": "tsx src/cli/chat.ts",
     "diagnostic": "tsx src/cli/diagnostic.ts",
     "eval": "tsx src/evals/run.ts",
+    "smoke:realtime": "tsx src/cli/realtime-smoke.ts",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
     "test": "vitest run",
@@ -22,11 +23,13 @@
     "better-sqlite3": "^12.11.1",
     "dotenv": "^17.2.3",
     "openai": "^6.9.1",
+    "ws": "^8.21.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.10.1",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.13"

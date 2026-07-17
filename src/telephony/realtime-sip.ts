@@ -1,37 +1,126 @@
 import { z } from "zod";
 
+const SipHeaderSchema = z.object({
+  name: z.string().min(1),
+  value: z.string().min(1),
+});
+
 export const RealtimeIncomingCallSchema = z.object({
   type: z.literal("realtime.call.incoming"),
   data: z
     .object({
       call_id: z.string().min(1),
+      sip_headers: z.array(SipHeaderSchema),
     })
     .passthrough(),
+});
+
+export const REALTIME_TEACHING_TOOLS = [
+  {
+    type: "function" as const,
+    name: "start_lesson",
+    description:
+      "Start or resume the named learner's lesson after they say what name they use. Call this exactly once before any teaching turn.",
+    parameters: {
+      type: "object",
+      properties: {
+        learner_name: {
+          type: "string",
+          description: "The name the learner just asked to be called.",
+        },
+        language_mode: {
+          type: "string",
+          description:
+            "Optional detected BCP-47 language tag, or tags joined with + for code-switching, such as es or sw+en.",
+        },
+      },
+      required: ["learner_name"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
+    name: "get_teaching_turn",
+    description:
+      "Get the authoritative next Socratic teaching turn. Call this for every substantive learner response after start_lesson.",
+    parameters: {
+      type: "object",
+      properties: {
+        learner_answer: {
+          type: "string",
+          description:
+            "A faithful transcript of the learner's complete answer, preserving their language and code-switching.",
+        },
+      },
+      required: ["learner_answer"],
+      additionalProperties: false,
+    },
+  },
+] as const;
+
+const RealtimeToolSchema = z.object({
+  type: z.literal("function"),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  parameters: z.record(z.string(), z.unknown()),
 });
 
 export const RealtimeAcceptPayloadSchema = z.object({
   type: z.literal("realtime"),
   model: z.string().min(1),
   instructions: z.string().min(1),
+  audio: z.object({
+    output: z.object({
+      voice: z.string().min(1),
+    }),
+  }),
+  tools: z.array(RealtimeToolSchema).min(1),
+  tool_choice: z.literal("auto"),
 });
 
 export type RealtimeAcceptPayload = z.infer<
   typeof RealtimeAcceptPayloadSchema
 >;
 
+export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Nomad's realtime conversation layer for a universal, voice-first Socratic tutor.
+Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
+At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once.
+After the lesson starts, call get_teaching_turn for every substantive learner response. Pass a faithful transcript, preserving any language or code-switching.
+Never invent a lesson, diagnosis, explanation, answer, or next question yourself.
+After a successful tool result, speak its spoken_response exactly. Do not add a preface, paraphrase, translate, or append another question.
+Keep conversation management brief and patient. Never shame the learner. If audio is unclear, ask them to repeat it rather than guessing.`;
+
 export function buildSipTarget(projectId: string): string {
   if (!projectId.trim()) throw new Error("An OpenAI project ID is required.");
   return `sip:${projectId}@sip.api.openai.com;transport=tls`;
 }
 
+export function callerNumberFromIncomingCall(unparsedEvent: unknown): string {
+  const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
+  const from = event.data.sip_headers.find(
+    (header) => header.name.toLocaleLowerCase() === "from",
+  );
+  if (!from) throw new Error("Incoming SIP call has no From header.");
+
+  const match = /sips?:([^@;>]+)/iu.exec(from.value);
+  const callerNumber = match?.[1] ? decodeURIComponent(match[1]).trim() : "";
+  if (!callerNumber) {
+    throw new Error("Incoming SIP From header has no caller identifier.");
+  }
+  return callerNumber;
+}
+
 export function buildRealtimeAcceptPayload(
-  model = "gpt-realtime-2.1",
+  model = "gpt-realtime-2.1-mini",
+  voice = "marin",
 ): RealtimeAcceptPayload {
   return RealtimeAcceptPayloadSchema.parse({
     type: "realtime",
     model,
-    instructions:
-      "You are Nomad, a patient multilingual Socratic tutor. Speak briefly, ask one question at a time, and never shame the learner.",
+    audio: { output: { voice } },
+    instructions: REALTIME_CONVERSATION_INSTRUCTIONS,
+    tools: REALTIME_TEACHING_TOOLS,
+    tool_choice: "auto",
   });
 }
 
