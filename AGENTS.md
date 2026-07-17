@@ -10,6 +10,8 @@
 
 Nomad is a multilingual, voice-first Socratic tutor for learners who may have only a basic phone. The flagship deployment is India, but the architecture must remain country, language, and grade configurable.
 
+India, fractions, and Hindi/English code-switching may appear only in deployment packs, fixtures, or entrypoint defaults. Core domain, teaching, persistence, and model-adapter modules must not contain country, subject, concept, or closed language assumptions.
+
 ## Build commands
 
 - `npm run chat` — zero-credit local teaching demo.
@@ -24,6 +26,7 @@ Nomad is a multilingual, voice-first Socratic tutor for learners who may have on
 - Keep credentials in `.env`; never commit them.
 - Offline mode must remain usable without OpenAI or Twilio credits.
 - Keep curriculum facts in frozen, reviewable packs instead of fetching the web during a lesson.
+- Load deployments through `NOMAD_CURRICULUM_PATH`; a new compiled pack must not require teaching-engine changes.
 - Validate all model-facing inputs and outputs with Zod.
 - Put telephony behind an adapter; Twilio must not leak into the teaching engine.
 - Use the OpenAI Responses API for text reasoning and the Realtime API SIP flow for phone calls.

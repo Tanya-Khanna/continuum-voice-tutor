@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { CurriculumPack } from "../curriculum/schema.js";
 import { hashPhoneNumber, normalizeLearnerName } from "../domain/identity.js";
 import {
   LearnerProfileSchema,
@@ -14,9 +15,6 @@ import type {
 } from "../domain/teaching.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
 
-const FIRST_QUESTION =
-  "Which is the bigger share, one third or one fourth? Tell me why.";
-
 export interface LessonContext {
   learner: LearnerProfile;
   session: LessonSession;
@@ -30,6 +28,7 @@ export interface LessonServiceOptions {
   clock?: () => Date;
   makeId?: () => string;
   phoneHashSecret: string;
+  curriculumPack: CurriculumPack;
 }
 
 export class LessonService {
@@ -38,6 +37,7 @@ export class LessonService {
   readonly #clock: () => Date;
   readonly #makeId: () => string;
   readonly #phoneHashSecret: string;
+  readonly #startingConcept: CurriculumPack["concepts"][number];
 
   constructor(options: LessonServiceOptions) {
     this.#repository = options.repository;
@@ -45,6 +45,9 @@ export class LessonService {
     this.#clock = options.clock ?? (() => new Date());
     this.#makeId = options.makeId ?? randomUUID;
     this.#phoneHashSecret = options.phoneHashSecret;
+    const startingConcept = options.curriculumPack.concepts[0];
+    if (!startingConcept) throw new Error("The curriculum pack has no concepts.");
+    this.#startingConcept = startingConcept;
   }
 
   beginOrResume(options: {
@@ -71,7 +74,7 @@ export class LessonService {
         phoneHash,
         name: options.learnerName.trim().replace(/\s+/g, " "),
         preferredLanguage: options.preferredLanguage ?? "en",
-        currentConcept: "comparing_unit_fractions",
+        currentConcept: this.#startingConcept.id,
         lastMastery: "needs_support",
         createdAt: now,
         updatedAt: now,
@@ -101,7 +104,7 @@ export class LessonService {
       concept: learner.currentConcept,
       status: "active",
       turnCount: 0,
-      lastPrompt: FIRST_QUESTION,
+      lastPrompt: this.#startingConcept.teachingScaffold.entryQuestion,
       lastDiagnosis: "No evidence yet.",
       lastStrategy: "ask_reasoning",
       masteryStatus: learner.lastMastery,
@@ -115,7 +118,7 @@ export class LessonService {
       learner,
       session,
       resumed: false,
-      greeting: `Hello, ${learner.name}. ${FIRST_QUESTION}`,
+      greeting: `Hello, ${learner.name}. ${this.#startingConcept.teachingScaffold.entryQuestion}`,
     };
   }
 
@@ -127,7 +130,7 @@ export class LessonService {
       learnerId: context.learner.id,
       concept: context.session.concept,
       learnerAnswer,
-      requestedLanguageMode: "auto",
+      requestedLanguageMode: context.learner.preferredLanguage,
     });
     const now = this.#clock().toISOString();
     const sequence = context.session.turnCount + 1;

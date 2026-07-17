@@ -322,7 +322,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Afternoon:**
 - Hand-build the fractions flagship pack: ~~objectives~~ ✅, micro-lessons, verified question bank (code-checked answers, F52), ~~misconception taxonomy (larger-denominator front and center), roti/paper-folding analogies~~ ✅.
 - ~~Learner DB: named profiles per number (G1 "Is this Ravi?"), resume state, placement diagnostic v0.~~ ✅ *(local SQLite; caller number stored as a keyed HMAC identifier)*
-- Prompts v1: ~~Socratic discipline, code-switching, turn-taking, voice-math ("one-fourth" never "1/4")~~ ✅, 8–10 min arc, ~~judgment-free tone~~ ✅.
+- Prompts v1: ~~Socratic discipline, turn-taking, voice-math ("one-fourth" never "1/4")~~ ✅, code-switching *(universal schema/config landed; live model eval still open)*, 8–10 min arc, ~~judgment-free tone~~ ✅.
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)

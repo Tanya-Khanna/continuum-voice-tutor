@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { comparingUnitFractions } from "../curriculum/fractions.pack.js";
+import type { CurriculumPack } from "../curriculum/schema.js";
 import {
   TeachingRequestSchema,
   TeachingTurnSchema,
@@ -14,8 +14,9 @@ const TEACHER_INSTRUCTIONS = `You are Nomad, a patient voice-first Grade 6 Socra
 Diagnose the learner's misconception before selecting a strategy.
 Do not reveal a final answer when the learner can reason toward it.
 Ask exactly one short question at a time.
-Use the learner's language mode and allow natural Hinglish code-switching.
-The spoken_response must sound natural aloud: no Markdown and no slash fraction notation.
+Detect and respond in whatever language or language combination the learner uses. Never assume a country implies a language.
+Represent detected languages with BCP-47-style tags joined by plus signs when the learner code-switches.
+The spoken_response must sound natural aloud: no Markdown, and read symbolic notation naturally as spoken words.
 Only teach from the supplied frozen curriculum context.
 Mark mastery secure only after at least two pieces of reasoning evidence.
 Return only the required structured output.`;
@@ -28,25 +29,37 @@ export interface OpenAITeachingEngineOptions {
   apiKey: string;
   model?: string;
   client?: OpenAI;
+  curriculumPack: CurriculumPack;
 }
 
 export class OpenAITeachingEngine implements TeachingEngine {
   readonly #client: OpenAI;
   readonly #model: string;
+  readonly #curriculumPack: CurriculumPack;
 
   constructor(options: OpenAITeachingEngineOptions) {
     this.#client = options.client ?? new OpenAI({ apiKey: options.apiKey });
     this.#model = options.model ?? "gpt-5.6-luna";
+    this.#curriculumPack = options.curriculumPack;
   }
 
   async teach(unparsedRequest: TeachingRequest): Promise<TeachingTurn> {
     const request = TeachingRequestSchema.parse(unparsedRequest);
+    const concept = this.#curriculumPack.concepts.find(
+      (candidate) => candidate.id === request.concept,
+    );
+    if (!concept) {
+      throw new Error(
+        `Concept ${request.concept} is not present in curriculum pack ${this.#curriculumPack.id}.`,
+      );
+    }
     const response = await this.#client.responses.parse({
       model: this.#model,
       instructions: TEACHER_INSTRUCTIONS,
       input: JSON.stringify({
         request,
-        frozen_curriculum: comparingUnitFractions,
+        deployment: this.#curriculumPack.deployment,
+        frozen_curriculum: concept,
       }),
       text: {
         format: zodTextFormat(TeachingTurnSchema, "teaching_turn"),

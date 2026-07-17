@@ -2,13 +2,17 @@ import { createInterface } from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 import {
   evaluatePlacement,
-  placementQuestions,
   type PlacementAnswer,
 } from "../engine/placement-diagnostic.js";
+import { loadCurriculumPack } from "../config/curriculum.js";
+import { loadEnvironment } from "../config/env.js";
 
 async function main(): Promise<void> {
   const terminal = createInterface({ input, output });
   const answers: PlacementAnswer[] = [];
+  const environment = loadEnvironment();
+  const curriculumPack = loadCurriculumPack(environment.NOMAD_CURRICULUM_PATH);
+  const placementQuestions = curriculumPack.placementDiagnostic.questions;
   let questionIndex = 0;
 
   output.write("Nomad AI — three-question placement diagnostic\n\n");
@@ -34,9 +38,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const result = evaluatePlacement(answers);
+  const result = evaluatePlacement(curriculumPack, answers);
   output.write(`\nPlacement: ${result.level}\n`);
-  output.write(`Evidence score: ${result.score} of 3\n`);
+  output.write(`Evidence score: ${result.score} of ${result.total}\n`);
   output.write(
     `Recommended starting concept: ${result.recommendedConcept.replaceAll("_", " ")}\n`,
   );

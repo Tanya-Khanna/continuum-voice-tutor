@@ -5,9 +5,93 @@ export const fractionsPack = CurriculumPackSchema.parse({
   version: "0.1.0-hand-verified",
   deployment: {
     country: "India",
+    countryCode: "IN",
     grade: 6,
-    languages: ["English", "Hindi", "Hinglish"],
+    defaultLanguage: "en",
+    languagePolicy: "model_detect_any",
+    testedLanguageModes: ["en", "hi", "hi-Latn+en"],
+    offlineLanguageHints: [
+      {
+        languageMode: "hi",
+        signals: ["बताओ", "क्योंकि", "नहीं"],
+        patterns: ["[\\u0900-\\u097f]"],
+      },
+      {
+        languageMode: "hi-Latn+en",
+        signals: [
+          "mujhe",
+          "lagta",
+          "samajh",
+          "nahi",
+          "pata",
+          "bata",
+          "bas",
+          "kyunki",
+          "bada",
+          "chhota",
+          "hai",
+          "roti",
+        ],
+        patterns: [],
+      },
+      {
+        languageMode: "es",
+        signals: ["no entiendo"],
+        patterns: [],
+      },
+      {
+        languageMode: "es+en",
+        signals: ["pienso", "porque"],
+        patterns: [],
+      },
+      {
+        languageMode: "sw",
+        signals: ["sielewi", "kwa sababu"],
+        patterns: [],
+      },
+      {
+        languageMode: "ta",
+        signals: ["புரியவில்லை", "எனக்கு"],
+        patterns: ["[\\u0b80-\\u0bff]"],
+      },
+    ],
     syllabus: "NCERT-aligned prototype pack",
+  },
+  placementDiagnostic: {
+    questions: [
+      {
+        id: "equal_shares",
+        prompt:
+          "One roti is shared equally between two people. What share does each person get?",
+        answerSignals: ["one half", "one-half", "half", "aadha", "आधा"],
+        reasoningSignals: [],
+      },
+      {
+        id: "compare_halves_quarters",
+        prompt:
+          "Which is larger, one half or one fourth? Tell me how you know.",
+        answerSignals: ["one half", "one-half", "half"],
+        reasoningSignals: ["bigger piece", "fewer pieces", "two pieces"],
+      },
+      {
+        id: "compare_thirds_fifths",
+        prompt:
+          "Which is larger, one third or one fifth? Tell me what happens to each piece.",
+        answerSignals: ["one third", "one-third"],
+        reasoningSignals: [
+          "bigger piece",
+          "fewer pieces",
+          "more pieces smaller",
+        ],
+      },
+    ],
+    developingMinimum: 1,
+    gradeReadyMinimum: 3,
+    recommendations: {
+      foundational: "equal_shares",
+      developing: "comparing_unit_fractions",
+      grade_ready: "comparing_unit_fractions",
+    },
   },
   concepts: [
     {
@@ -33,8 +117,11 @@ export const fractionsPack = CurriculumPackSchema.parse({
           ],
           diagnosis:
             "The learner is comparing denominator numerals instead of the size of the equal pieces.",
-          strategy:
-            "Use equal rotis split among three and four people, then ask which person receives more.",
+          strategy: "concrete_analogy",
+          masteryEvidence: "The answer uses denominator size as fraction size.",
+          responseLead: "Good, let us test that idea with same-sized rotis.",
+          nextQuestion:
+            "One equal roti is shared by three people and another by four. Which person gets the larger piece, and why?",
         },
       ],
       concreteAnalogies: [
@@ -45,6 +132,55 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "If two rotis are the same size, is one third or one fourth the bigger share? Why?",
         "As the number of equal pieces increases, what happens to each piece?",
       ],
+      teachingScaffold: {
+        entryQuestion:
+          "Which is the bigger share, one third or one fourth? Tell me why.",
+        silenceQuestion:
+          "Imagine one roti shared equally by three people. How many equal pieces would you make?",
+        silenceResponseLead: "That is okay. We can start small.",
+        answerRequestSignals: [
+          "just tell",
+          "give me the answer",
+          "answer bata",
+          "bas bata",
+        ],
+        answerRequestDiagnosis:
+          "The learner requested the result without showing reasoning.",
+        answerRequestEvidence: "No mathematical reasoning was provided.",
+        answerRequestResponseLead:
+          "I will help you work it out, not leave you with a guess.",
+        answerRequestQuestion:
+          "If the same whole is shared among more people, does each person receive more or less?",
+        evidenceRules: [
+          {
+            answerSignals: ["one third", "one-third", "1/3"],
+            reasoningSignals: [
+              "fewer pieces",
+              "less pieces",
+              "three people",
+              "bigger piece",
+              "four pieces are smaller",
+              "more people",
+              "kam log",
+              "teen log",
+            ],
+            diagnosis:
+              "The learner correctly connects denominator size with equal-piece size.",
+            masteryEvidence:
+              "The learner chose one third and justified it using piece size.",
+            responseLead: "Exactly. More equal pieces make each piece smaller.",
+            nextQuestion:
+              "Now compare one fifth and one eighth. Which share is larger, and what rule are you using?",
+          },
+        ],
+        fallbackDiagnosis:
+          "The response does not yet show enough evidence to identify stable understanding.",
+        fallbackEvidence:
+          "The learner has not explained the role of the denominators.",
+        fallbackResponseLead: "Let us look at what the numbers mean.",
+        fallbackQuestion:
+          "What do the three and four tell us about how many equal pieces each whole was split into?",
+      },
     },
   ],
 });

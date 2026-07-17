@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { evaluatePlacement } from "../src/engine/placement-diagnostic.js";
+import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 
 describe("placement diagnostic", () => {
   it("places a learner with consistent reasoning at grade-ready", () => {
-    const result = evaluatePlacement([
+    const result = evaluatePlacement(fractionsPack, [
       { questionId: "equal_shares", answer: "Each person gets one half." },
       {
         questionId: "compare_halves_quarters",
@@ -20,7 +21,7 @@ describe("placement diagnostic", () => {
   });
 
   it("starts a learner without fraction evidence at equal shares", () => {
-    const result = evaluatePlacement([
+    const result = evaluatePlacement(fractionsPack, [
       { questionId: "equal_shares", answer: "I do not know." },
       { questionId: "compare_halves_quarters", answer: "Four is bigger." },
       { questionId: "compare_thirds_fifths", answer: "Maybe one fifth." },

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { z } from "zod";
 
-const optionalCredential = z.preprocess(
+const optionalNonEmpty = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().min(1).optional(),
 );
@@ -14,14 +14,15 @@ const EnvironmentSchema = z.object({
     .string()
     .min(16)
     .default("local-development-change-me"),
-  OPENAI_API_KEY: optionalCredential,
+  NOMAD_CURRICULUM_PATH: optionalNonEmpty,
+  OPENAI_API_KEY: optionalNonEmpty,
   OPENAI_TEXT_MODEL: z.string().min(1).default("gpt-5.6-luna"),
   OPENAI_REALTIME_MODEL: z.string().min(1).default("gpt-realtime-2.1"),
-  OPENAI_WEBHOOK_SECRET: optionalCredential,
-  OPENAI_PROJECT_ID: optionalCredential,
-  TWILIO_ACCOUNT_SID: optionalCredential,
-  TWILIO_AUTH_TOKEN: optionalCredential,
-  TWILIO_PHONE_NUMBER: optionalCredential,
+  OPENAI_WEBHOOK_SECRET: optionalNonEmpty,
+  OPENAI_PROJECT_ID: optionalNonEmpty,
+  TWILIO_ACCOUNT_SID: optionalNonEmpty,
+  TWILIO_AUTH_TOKEN: optionalNonEmpty,
+  TWILIO_PHONE_NUMBER: optionalNonEmpty,
 });
 
 export type Environment = z.infer<typeof EnvironmentSchema>;

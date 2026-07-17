@@ -1,4 +1,5 @@
 import { OfflineTeachingEngine } from "../engine/offline-teaching-engine.js";
+import { fractionsPack } from "../curriculum/fractions.pack.js";
 import { offlineEvalCases, type OfflineEvalCase } from "./cases.js";
 
 export interface EvalCaseResult {
@@ -17,7 +18,7 @@ export interface EvalReport {
 }
 
 export async function runOfflineEvaluation(): Promise<EvalReport> {
-  const engine = new OfflineTeachingEngine();
+  const engine = new OfflineTeachingEngine(fractionsPack);
   const results: EvalCaseResult[] = [];
   let voiceFriendlyCount = 0;
 

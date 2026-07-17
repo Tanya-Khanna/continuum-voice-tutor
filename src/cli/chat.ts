@@ -1,7 +1,9 @@
 import { createInterface } from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 import { loadEnvironment, requireOpenAIKey } from "../config/env.js";
-import { LanguageModeSchema } from "../domain/teaching.js";
+import { loadCurriculumPack } from "../config/curriculum.js";
+import type { CurriculumPack } from "../curriculum/schema.js";
+import { ResolvedLanguageModeSchema } from "../domain/teaching.js";
 import { OfflineTeachingEngine } from "../engine/offline-teaching-engine.js";
 import { OpenAITeachingEngine } from "../engine/openai-teaching-engine.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
@@ -14,30 +16,35 @@ function argumentValue(flag: string, fallback: string): string {
   return value?.trim() || fallback;
 }
 
-function makeEngine(): TeachingEngine {
-  const environment = loadEnvironment();
+function makeEngine(
+  environment: ReturnType<typeof loadEnvironment>,
+  curriculumPack: CurriculumPack,
+): TeachingEngine {
   if (environment.TEACHING_ENGINE === "openai") {
     return new OpenAITeachingEngine({
       apiKey: requireOpenAIKey(environment),
       model: environment.OPENAI_TEXT_MODEL,
+      curriculumPack,
     });
   }
-  return new OfflineTeachingEngine();
+  return new OfflineTeachingEngine(curriculumPack);
 }
 
 async function main(): Promise<void> {
   const environment = loadEnvironment();
+  const curriculumPack = loadCurriculumPack(environment.NOMAD_CURRICULUM_PATH);
   const repository = new SqliteLearningRepository(
     environment.NOMAD_DATABASE_PATH,
   );
   const lessonService = new LessonService({
     repository,
-    engine: makeEngine(),
+    engine: makeEngine(environment, curriculumPack),
     phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
+    curriculumPack,
   });
   const learnerName = argumentValue("--name", "Demo Learner");
   const phoneNumber = argumentValue("--phone", "+910000000001");
-  const preferredLanguage = LanguageModeSchema.exclude(["auto"]).parse(
+  const preferredLanguage = ResolvedLanguageModeSchema.parse(
     argumentValue("--language", "en"),
   );
   let context = lessonService.beginOrResume({
@@ -47,7 +54,7 @@ async function main(): Promise<void> {
   });
   const terminal = createInterface({ input, output });
 
-  output.write("Nomad AI — fractions teaching demo\n");
+  output.write(`Nomad AI — ${curriculumPack.id}\n`);
   output.write(`Engine: ${environment.TEACHING_ENGINE}\n`);
   output.write(`Learner: ${context.learner.name}\n`);
   output.write(`Session: ${context.resumed ? "resumed" : "new"}\n`);

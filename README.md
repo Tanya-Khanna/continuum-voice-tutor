@@ -4,6 +4,14 @@
 
 Nomad is a multilingual Socratic tutor designed for learners who may have only a basic phone. The first build proves the teaching brain locally with a frozen Grade 6 fractions pack. OpenAI Responses and Realtime SIP integrations are kept behind adapters until API and Twilio funding are enabled.
 
+## Universal architecture
+
+The teaching engine contains no subject, country, grade, or language list. A deployment supplies a frozen curriculum pack with its concepts, misconception evidence, teaching scaffolds, placement diagnostic, syllabus identity, and locally tested language modes. The live model contract accepts any BCP-47-style language tag or code-switching combination. India Grade 6 fractions is the first deployment pack and demo fixture, not the product boundary.
+
+Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to change the deployment without changing teaching-engine code. Leaving it blank loads the built-in India fractions demo pack.
+
+The offline language detector is deliberately a configurable test adapter; it does not claim to translate arbitrary languages. In live mode, the model detects and responds in the learner's actual language while remaining grounded in the selected pack.
+
 ## Run the zero-credit demo
 
 ```bash
@@ -28,7 +36,7 @@ npm run check
 npm run eval
 ```
 
-`npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, Hinglish, and voice-formatting results.
+`npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 
 ## Configuration
 

@@ -1,18 +1,16 @@
 import { z } from "zod";
 import {
-  LanguageModeSchema,
   MasteryStatusSchema,
+  ResolvedLanguageModeSchema,
   TeachingStrategySchema,
   TeachingTurnSchema,
 } from "./teaching.js";
-
-const StoredLanguageModeSchema = LanguageModeSchema.exclude(["auto"]);
 
 export const LearnerProfileSchema = z.object({
   id: z.string().min(1),
   phoneHash: z.string().length(64),
   name: z.string().min(1).max(80),
-  preferredLanguage: StoredLanguageModeSchema,
+  preferredLanguage: ResolvedLanguageModeSchema,
   currentConcept: z.string().min(1),
   lastMastery: MasteryStatusSchema,
   createdAt: z.string().datetime(),

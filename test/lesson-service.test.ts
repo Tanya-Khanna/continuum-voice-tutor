@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { hashPhoneNumber } from "../src/domain/identity.js";
+import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js";
 import { LessonService } from "../src/lesson/lesson-service.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
@@ -32,9 +33,10 @@ describe("LessonService", () => {
     const repository = new SqliteLearningRepository(makeDatabasePath());
     const service = new LessonService({
       repository,
-      engine: new OfflineTeachingEngine(),
+      engine: new OfflineTeachingEngine(fractionsPack),
       makeId: sequentialIds(),
       phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
     });
 
     const ravi = service.beginOrResume({
@@ -62,9 +64,10 @@ describe("LessonService", () => {
     const firstRepository = new SqliteLearningRepository(databasePath);
     const firstService = new LessonService({
       repository: firstRepository,
-      engine: new OfflineTeachingEngine(),
+      engine: new OfflineTeachingEngine(fractionsPack),
       makeId: sequentialIds(),
       phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
     });
     let firstContext = firstService.beginOrResume({
       phoneNumber: "+91 99999 22222",
@@ -81,9 +84,10 @@ describe("LessonService", () => {
     const secondRepository = new SqliteLearningRepository(databasePath);
     const secondService = new LessonService({
       repository: secondRepository,
-      engine: new OfflineTeachingEngine(),
+      engine: new OfflineTeachingEngine(fractionsPack),
       makeId: sequentialIds(),
       phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
     });
     const resumed = secondService.beginOrResume({
       phoneNumber: "+91 99999 22222",
@@ -101,9 +105,10 @@ describe("LessonService", () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({
       repository,
-      engine: new OfflineTeachingEngine(),
+      engine: new OfflineTeachingEngine(fractionsPack),
       makeId: sequentialIds(),
       phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
     });
     const context = service.beginOrResume({
       phoneNumber: "+91 99999 33333",
@@ -116,9 +121,9 @@ describe("LessonService", () => {
       "Mujhe lagta hai one fourth is bigger.",
     );
 
-    expect(response.turn.language_mode).toBe("hinglish");
+    expect(response.turn.language_mode).toBe("hi-Latn+en");
     expect(repository.findLearner(context.learner.id)?.preferredLanguage).toBe(
-      "hinglish",
+      "hi-Latn+en",
     );
     repository.close();
   });

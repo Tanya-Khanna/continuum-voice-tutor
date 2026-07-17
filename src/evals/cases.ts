@@ -10,7 +10,7 @@ export interface OfflineEvalCase {
     | "answer_request"
     | "correct_reasoning"
     | "insufficient_evidence"
-    | "hinglish";
+    | "multilingual";
   learnerAnswer: string;
   expected: {
     strategy: TeachingTurn["next_strategy"];
@@ -92,7 +92,7 @@ export const offlineEvalCases: OfflineEvalCase[] = [
     expected: {
       strategy: "ask_reasoning",
       mastery: "needs_support",
-      language: "hinglish",
+      language: "hi-Latn+en",
     },
   },
   {
@@ -102,7 +102,7 @@ export const offlineEvalCases: OfflineEvalCase[] = [
     expected: {
       strategy: "ask_reasoning",
       mastery: "needs_support",
-      language: "hinglish",
+      language: "hi-Latn+en",
     },
   },
   {
@@ -166,54 +166,53 @@ export const offlineEvalCases: OfflineEvalCase[] = [
     expected: { strategy: "ask_reasoning", mastery: "needs_support" },
   },
   {
-    id: "hinglish-01",
-    category: "hinglish",
+    id: "multilingual-01",
+    category: "multilingual",
     learnerAnswer: "Mujhe lagta hai one fourth is bigger.",
     expected: {
       strategy: "concrete_analogy",
       mastery: "needs_support",
-      language: "hinglish",
-      spokenIncludes: "Achha",
+      language: "hi-Latn+en",
     },
   },
   {
-    id: "hinglish-02",
-    category: "hinglish",
-    learnerAnswer: "One third kyunki three people get a bigger piece.",
+    id: "multilingual-02",
+    category: "multilingual",
+    learnerAnswer: "No entiendo. One fourth is bigger.",
+    expected: {
+      strategy: "concrete_analogy",
+      mastery: "needs_support",
+      language: "es",
+    },
+  },
+  {
+    id: "multilingual-03",
+    category: "multilingual",
+    learnerAnswer: "Sielewi. One fourth is bigger.",
+    expected: {
+      strategy: "concrete_analogy",
+      mastery: "needs_support",
+      language: "sw",
+    },
+  },
+  {
+    id: "multilingual-04",
+    category: "multilingual",
+    learnerAnswer: "எனக்கு புரியவில்லை. One fourth is bigger.",
+    expected: {
+      strategy: "concrete_analogy",
+      mastery: "needs_support",
+      language: "ta",
+    },
+  },
+  {
+    id: "multilingual-05",
+    category: "multilingual",
+    learnerAnswer: "Pienso one third because fewer pieces makes a bigger piece.",
     expected: {
       strategy: "retrieval_practice",
       mastery: "developing",
-      language: "hinglish",
-    },
-  },
-  {
-    id: "hinglish-03",
-    category: "hinglish",
-    learnerAnswer: "Mujhe samajh nahi aata.",
-    expected: {
-      strategy: "ask_reasoning",
-      mastery: "needs_support",
-      language: "hinglish",
-    },
-  },
-  {
-    id: "hinglish-04",
-    category: "hinglish",
-    learnerAnswer: "Roti ko kaise share karenge?",
-    expected: {
-      strategy: "ask_reasoning",
-      mastery: "needs_support",
-      language: "hinglish",
-    },
-  },
-  {
-    id: "hinglish-05",
-    category: "hinglish",
-    learnerAnswer: "Nahi pata, maybe one fourth.",
-    expected: {
-      strategy: "ask_reasoning",
-      mastery: "needs_support",
-      language: "hinglish",
+      language: "es+en",
     },
   },
 ];

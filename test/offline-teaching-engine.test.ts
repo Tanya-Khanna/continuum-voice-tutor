@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js";
+import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 
 describe("OfflineTeachingEngine", () => {
   let engine: OfflineTeachingEngine;
 
   beforeEach(() => {
-    engine = new OfflineTeachingEngine();
+    engine = new OfflineTeachingEngine(fractionsPack);
   });
 
   it("diagnoses denominator-size reasoning and uses a concrete analogy", async () => {
@@ -49,7 +50,7 @@ describe("OfflineTeachingEngine", () => {
     expect(turn.mastery_evidence).toContain("justified");
   });
 
-  it("detects everyday Hinglish", async () => {
+  it("detects a configured code-switching mode", async () => {
     const turn = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
@@ -57,8 +58,7 @@ describe("OfflineTeachingEngine", () => {
       requestedLanguageMode: "auto",
     });
 
-    expect(turn.language_mode).toBe("hinglish");
-    expect(turn.spoken_response).toContain("Achha");
+    expect(turn.language_mode).toBe("hi-Latn+en");
   });
 
   it("keeps spoken output voice friendly", async () => {

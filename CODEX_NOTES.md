@@ -59,6 +59,19 @@
 - Add the remaining four Grade 6 subject packs and curriculum compiler.
 - Finish the real phone pipeline, latency measurement, VAD/barge-in tuning, and live disconnect/resume proof.
 
+## 2026-07-16 — Universal-product correction
+
+- Builder clarified that Nomad is a universal product; India, Hinglish, and fractions are only deployment #1.
+- Removed the closed English/Hindi/Hinglish language enum. Model-facing state now accepts arbitrary BCP-47-style language tags and code-switching combinations.
+- Moved all fraction questions, answer signals, misconceptions, analogies, evidence rules, and response scaffolds out of the engine and into the India fractions curriculum pack.
+- Added a generic curriculum teaching engine that resolves behavior entirely from the selected pack.
+- Made lesson entry and placement diagnostics pack-driven instead of fractions-driven.
+- Added `NOMAD_CURRICULUM_PATH`, allowing any validated deployment pack to be selected without changing engine code.
+- Diversified the offline multilingual eval fixtures across Hindi/English code-switching, Spanish, Swahili, and Tamil.
+- Added a separate Grade 6 science fixture test to prove a new subject/country/language can use the same engine without modifying its code.
+- Universal refactor verification: 20 of 20 automated tests and 25 of 25 offline teaching evals passed.
+- Reopened the build-plan code-switching prompt item until it passes a live model evaluation; offline keyword detection is explicitly only a configurable test adapter.
+
 ### Model roles
 
 - Luna: high-volume teaching turns and evals.
