@@ -8,6 +8,7 @@
     "chat": "tsx src/cli/chat.ts",
     "diagnostic": "tsx src/cli/diagnostic.ts",
     "eval": "tsx src/evals/run.ts",
+    "eval:live": "tsx src/evals/live-run.ts",
     "smoke:realtime": "tsx src/cli/realtime-smoke.ts",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",

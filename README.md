@@ -44,6 +44,14 @@ With an API key configured, this low-cost command verifies live Realtime tool ro
 npm run smoke:realtime
 ```
 
+Run the small live GPT-5.6 multilingual teaching gate only when intentionally spending API credit:
+
+```bash
+npm run eval:live
+```
+
+It currently covers Hindi/English, Spanish/English, and French/English code-switching. The deterministic 25-case gate remains the normal zero-credit development loop.
+
 ## Phone architecture
 
 For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Nomad accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.

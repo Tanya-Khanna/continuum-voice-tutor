@@ -117,3 +117,11 @@
 - Preserved two distinct continuity behaviors: an immediate redial within fifteen minutes resumes the exact interrupted question, while a later return opens with a retrieval question.
 - Completed lessons now create a new session on the next call and begin with retrieval practice instead of silently restarting the entry question.
 - Verification: 26 of 26 automated tests and the 25-case offline teaching gate pass.
+
+## 2026-07-17 — Live universal code-switching gate
+
+- Added `npm run eval:live`, a deliberately small GPT-5.6 Luna evaluation that is separate from the default zero-credit test loop.
+- The gate checks language tags, teaching strategy, and voice-safe formatting for synthetic Hindi/English, Spanish/English, and French/English learner turns.
+- The first run scored 2/3. Luna correctly detected Spanish/English and correctly diagnosed supported reasoning, but chose `concrete_analogy` and repeated the solved example instead of moving to retrieval practice.
+- Tightened the live prompt to evaluate meaning before isolated keywords, define the strategy taxonomy, and require a new transfer example after supported reasoning.
+- The targeted Spanish/English rerun passed, followed by a full 3/3 regression pass. This is live evidence for arbitrary-language/code-switching architecture, not a claim that every language and accent has been field-validated.
