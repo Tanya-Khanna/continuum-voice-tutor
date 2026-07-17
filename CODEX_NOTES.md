@@ -39,7 +39,25 @@
 - Fund the OpenAI API and run one controlled live Responses request.
 - Finish Twilio onboarding only when the D2 gate calls for it; buy/configure the number and SIP trunk then.
 - Measure phone latency, tune VAD/barge-in, and verify disconnect/resume on a real call.
-- Persist learner profiles and call state in a durable database.
+
+## 2026-07-16 — Milestone 2: continuity and evaluation
+
+- Added a local SQLite learning database with HMAC-pseudonymized caller numbers, named profiles, lesson sessions, and turn history.
+- Added shared-phone identity: Ravi and Asha can use one caller number without mixing their progress.
+- Added durable interruption recovery: exit the CLI, restart it with the same name and number, and the exact pending question resumes.
+- Added a three-question, evidence-scored placement diagnostic.
+- Added a frozen 25-case text evaluation across misconceptions, answer requests, correct reasoning, insufficient evidence, Hinglish, and voice formatting.
+- The first eval scored 22 of 25 and revealed two missing Hinglish markers plus one incorrect expected result. After correcting the detector and the expectation, the gate reached 25 of 25.
+- `npm run check`: 19 of 19 tests passed with strict typechecking.
+- `npm run eval`: 25 of 25 cases passed; voice-friendly output 100%.
+- CLI new-session, saved-session, cross-process resume, and placement-diagnostic smoke tests passed.
+
+### Still open after Milestone 2
+
+- Run model-based evaluator passes when API funding is available; the current gate is deterministic and offline.
+- Build the 8–10 minute lesson arc and retrieval callback loop.
+- Add the remaining four Grade 6 subject packs and curriculum compiler.
+- Finish the real phone pipeline, latency measurement, VAD/barge-in tuning, and live disconnect/resume proof.
 
 ### Model roles
 

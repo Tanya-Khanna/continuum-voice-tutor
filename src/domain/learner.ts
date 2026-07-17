@@ -1,28 +1,60 @@
-import { type LanguageMode, MasteryStatusSchema } from "./teaching.js";
-import type { z } from "zod";
+import { z } from "zod";
+import {
+  LanguageModeSchema,
+  MasteryStatusSchema,
+  TeachingStrategySchema,
+  TeachingTurnSchema,
+} from "./teaching.js";
 
-export interface LearnerProfile {
-  id: string;
-  name?: string;
-  preferredLanguage: Exclude<LanguageMode, "auto">;
-  currentConcept: string;
-  lastMastery: z.infer<typeof MasteryStatusSchema>;
-  updatedAt: string;
-}
+const StoredLanguageModeSchema = LanguageModeSchema.exclude(["auto"]);
 
-export interface LearnerRepository {
-  find(id: string): Promise<LearnerProfile | undefined>;
-  save(profile: LearnerProfile): Promise<void>;
-}
+export const LearnerProfileSchema = z.object({
+  id: z.string().min(1),
+  phoneHash: z.string().length(64),
+  name: z.string().min(1).max(80),
+  preferredLanguage: StoredLanguageModeSchema,
+  currentConcept: z.string().min(1),
+  lastMastery: MasteryStatusSchema,
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
 
-export class InMemoryLearnerRepository implements LearnerRepository {
-  readonly #learners = new Map<string, LearnerProfile>();
+export const LessonStatusSchema = z.enum(["active", "paused", "completed"]);
 
-  async find(id: string): Promise<LearnerProfile | undefined> {
-    return this.#learners.get(id);
-  }
+export const LessonSessionSchema = z.object({
+  id: z.string().min(1),
+  learnerId: z.string().min(1),
+  concept: z.string().min(1),
+  status: LessonStatusSchema,
+  turnCount: z.number().int().nonnegative(),
+  lastPrompt: z.string().min(1),
+  lastDiagnosis: z.string(),
+  lastStrategy: TeachingStrategySchema,
+  masteryStatus: MasteryStatusSchema,
+  masteryEvidence: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
 
-  async save(profile: LearnerProfile): Promise<void> {
-    this.#learners.set(profile.id, profile);
-  }
+export const StoredTeachingTurnSchema = z.object({
+  id: z.string().min(1),
+  sessionId: z.string().min(1),
+  sequence: z.number().int().positive(),
+  turn: TeachingTurnSchema,
+  createdAt: z.string().datetime(),
+});
+
+export type LearnerProfile = z.infer<typeof LearnerProfileSchema>;
+export type LessonSession = z.infer<typeof LessonSessionSchema>;
+export type StoredTeachingTurn = z.infer<typeof StoredTeachingTurnSchema>;
+
+export interface LearningRepository {
+  findLearner(id: string): LearnerProfile | undefined;
+  listLearnersForPhone(phoneHash: string): LearnerProfile[];
+  saveLearner(profile: LearnerProfile): void;
+  findResumableLesson(learnerId: string): LessonSession | undefined;
+  saveLesson(session: LessonSession): void;
+  appendTurn(storedTurn: StoredTeachingTurn): void;
+  listTurns(sessionId: string): StoredTeachingTurn[];
+  close(): void;
 }

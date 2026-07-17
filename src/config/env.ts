@@ -9,6 +9,11 @@ const optionalCredential = z.preprocess(
 const EnvironmentSchema = z.object({
   TEACHING_ENGINE: z.enum(["offline", "openai"]).default("offline"),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3_000),
+  NOMAD_DATABASE_PATH: z.string().min(1).default(".data/nomad.db"),
+  NOMAD_PHONE_HASH_SECRET: z
+    .string()
+    .min(16)
+    .default("local-development-change-me"),
   OPENAI_API_KEY: optionalCredential,
   OPENAI_TEXT_MODEL: z.string().min(1).default("gpt-5.6-luna"),
   OPENAI_REALTIME_MODEL: z.string().min(1).default("gpt-realtime-2.1"),

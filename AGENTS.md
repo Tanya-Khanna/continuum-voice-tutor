@@ -13,9 +13,11 @@ Nomad is a multilingual, voice-first Socratic tutor for learners who may have on
 ## Build commands
 
 - `npm run chat` — zero-credit local teaching demo.
+- `npm run diagnostic` — three-question placement diagnostic.
+- `npm run eval` — 25-case deterministic teaching quality gate.
 - `npm test` — deterministic pedagogy and integration-boundary tests.
 - `npm run typecheck` — strict TypeScript validation.
-- `npm run check` — typecheck and tests.
+- `npm run check` — typecheck and automated tests.
 
 ## Engineering rules
 

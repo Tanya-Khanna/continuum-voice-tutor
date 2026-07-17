@@ -10,13 +10,17 @@ import type { TeachingEngine } from "./teaching-engine.js";
 
 const HINDI_SIGNALS = [
   "mujhe",
+  "lagta",
   "samajh",
   "nahi",
+  "pata",
+  "bata",
+  "bas",
   "kyunki",
   "bada",
   "chhota",
   "hai",
-  "roti",
+    "roti",
   "बताओ",
   "क्योंकि",
   "नहीं",

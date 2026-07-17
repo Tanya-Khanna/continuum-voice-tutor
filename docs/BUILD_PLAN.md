@@ -283,7 +283,7 @@ latency, UX feel, and demos ② every live test call has a purpose ③ cost/call
 |---|---|---|
 | D1 Fri | pipeline bring-up + latency tests (~12 live min) | $3 |
 | D2 Sat | gate-test calls (teaching iterated in text first) | $4 |
-| D3 Sun | compiler runs + 25-case eval (text) + 2–3 live smoke calls | $3 |
+| D3 Sun | compiler runs + ~~25-case eval (text)~~ ✅ + 2–3 live smoke calls | $3 |
 | D4 Mon | demo takes, montage, WhatsApp tests | $5 |
 | D5 Tue | final verification calls | $1 |
 | Jul 22–Aug 5 | **judges' test calls (reserve — do not touch)** | $4 |
@@ -321,12 +321,12 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Quick TEXT loop harness (pre-REPL) so all teaching iteration today is text-first (cheap).~~ ✅ *(built early as `npm run chat` / `make chat`; offline by default)*
 **Afternoon:**
 - Hand-build the fractions flagship pack: ~~objectives~~ ✅, micro-lessons, verified question bank (code-checked answers, F52), ~~misconception taxonomy (larger-denominator front and center), roti/paper-folding analogies~~ ✅.
-- Learner DB: named profiles per number (G1 "Is this Ravi?"), resume state, placement diagnostic v0.
+- ~~Learner DB: named profiles per number (G1 "Is this Ravi?"), resume state, placement diagnostic v0.~~ ✅ *(local SQLite; caller number stored as a keyed HMAC identifier)*
 - Prompts v1: ~~Socratic discipline, code-switching, turn-taking, voice-math ("one-fourth" never "1/4")~~ ✅, 8–10 min arc, ~~judgment-free tone~~ ✅.
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** F42 two-layer architecture + hybrid routing · F13/F50 preambles + latency choreography · F14 drop recovery + resume machinery · F21-flagship fractions pack · F23 Socratic method · F16 code-switching · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · G4 lesson arc · F41 learner DB + resume · G1 shared-phone named profiles · F54/F29 placement diagnostic v0 · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
+- **📦 Features landing today:** F42 two-layer architecture + hybrid routing · F13/F50 preambles + latency choreography · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · F16 code-switching · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · G4 lesson arc · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
@@ -335,11 +335,11 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Afternoon:**
 - Five-subject voice onboarding + flavored-sandbox fallbacks (experiments/anchor objects · conversation · time-machine choices · look-around prompts).
 - Callback loop (retrieval practice on return) · voice-queryable history · shared-phone profiles polished.
-- **Eval harness**: simulated-learner × evaluator agents; all 25 cases (§4.1) in text mode; iterate prompts until green. 2–3 live smoke calls only.
+- **Eval harness**: simulated-learner × evaluator agents; ~~all 25 cases (§4.1) in text mode; iterate prompts until green~~ ✅ *(deterministic offline gate; agent-based judge pass still open)*. 2–3 live smoke calls only.
 **Evening:**
 - Dashboard skeleton (transcript, diagnosis JSON, mastery, cost/call).
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
-- **Exit: five subjects callable · eval 25/25 green · REPL works · dashboard skeleton live.**
+- **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · dashboard skeleton live.**
 - **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · F20 sandbox mode · F21-full five subjects + flavored fallbacks · F22 voice-menu onboarding · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · F47 callback loop · F41-query voice-queryable history · F18 language_mode config + Spanish smoke test · F51 eval harness (25 cases) · §7.5 REPL (`make chat`) · F45-skeleton dashboard · F15-persona NAME decided (+ product name)
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
