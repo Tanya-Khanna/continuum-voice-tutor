@@ -30,6 +30,28 @@ Early low-bandwidth tutoring work is promising but still preliminary. A Ghana st
 
 Code-switching is likewise a teaching behavior rather than a locale toggle. SIGDIAL research describes educational code-switching as important but underexplored in LLM tutors and reports benefits from strategic, pedagogy-driven switching. Nomad preserves the learner's language pattern while keeping curriculum terms and teaching decisions pack-grounded. ([Liu, Yin, and Chen, SIGDIAL 2024](https://aclanthology.org/2024.sigdial-1.43/))
 
+## Distribution and pilot path
+
+Nomad's first distribution path is institution-led, not an assumption that a child will discover a phone number online. A school or NGO reviews the local curriculum and safety policy, obtains responsible-adult consent and learner assent, shares a local number in person, and helps the learner make the first call using a nickname.
+
+The proposed first pilot is one district, one grade, and roughly 200 learners. It should measure independent pre/post assessment—not tutor-session performance alone—along with attendance, completion, teacher and learner feedback, language/access subgroups, failure reports, and compliance with an agreed deletion and retention policy. Teachers remain responsible for instruction; Nomad supplies additional practice and auditable evidence.
+
+Only after the carrier and learning gates pass should the project pursue a school, NGO, state-education, or carrier partner. Missed-call callback, teacher assignments, parent recaps, and cohort reporting are later consent-sensitive channels, not shipped capabilities.
+
+## Landscape and differentiation
+
+Nomad does not claim to invent voice AI, phone access, multilingual tutoring, or personalization. Current products already demonstrate substantial parts of that landscape. The distinction is the inspectable combination this repository can prove:
+
+| Product | What its official material demonstrates | Nomad's narrower distinction |
+|---|---|---|
+| [Bakame](https://bakame.online/) | Feature-phone learning programs with lessons, quizzes, personalized voice conversations, localization/accent support, dashboards, and institutional deployments | Open frozen-pack schema and compiler, source/reviewer provenance, per-subject placement/resume, trusted turn guards, and reproducible deterministic plus paid-agent gates |
+| [Viamo AVA](https://viamo.io/ask-viamo-anything-ai/) | Voice access from a basic non-internet phone, in local languages, to open-ended information across education, health, agriculture, and other domains | A deliberately narrower reviewed-school state machine with pack-defined misconceptions, placement, mastery evidence, retrieval, and no live web lookup during lessons |
+| [1-800-ChatGPT](https://help.openai.com/en/articles/10193193-1-800-chatgpt-calling-and-messaging-chatgpt-with-your-phone) | Experimental account-free ChatGPT calls from U.S. or Canadian numbers, with a documented monthly free-call allowance | Deployment-owned curriculum, sibling-safe named state, subject-scoped history, trusted pack validation, and an auditable release gate; the carrier path is not called live until it passes |
+| [Rori](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana) | A WhatsApp/low-bandwidth Math intervention with promising preliminary randomized evidence | Standard-call architecture, configurable reviewed subjects, and exact continuity; Nomad does not inherit Rori's measured learning outcome |
+| [Callee Me](https://callee.me/) | A parent-controlled phone tutor for children, multiple subjects, and many languages | Source-visible curriculum provenance, human approval receipts, explicit configured-versus-tested claims, and checked-in evaluation evidence |
+
+The contribution is therefore an inspectable curriculum-and-continuity system built around the voice channel—not novelty of the channel itself.
+
 ## Universal architecture
 
 The teaching engine contains no subject, country, grade, or language list. A deployment supplies a frozen curriculum pack with its concepts, misconception evidence, teaching scaffolds, placement diagnostic, syllabus identity, and locally tested language modes. The live model contract accepts any BCP-47-style language tag or code-switching combination. India Grade 6 fractions is the first deployment pack and demo fixture, not the product boundary.
@@ -217,6 +239,16 @@ Human decisions stayed explicit: the builder corrected the product from a Hingli
 - Mission Control's shared Bearer token is appropriate for controlled hackathon judging, not institutional role-based access. SQLite retention is still an explicit pre-pilot policy gap.
 - Voice-only access excludes deaf and hard-of-hearing learners; a complementary text channel is roadmap, not a shipped claim.
 
+## Roadmap, in gate order
+
+1. Pass the real carrier gate: signed public webhook, Twilio voice routing and SIP trunk, G.711 clarity, interruption, disconnect/redial, latency, and dashboard-access checks.
+2. Review, compile, independently verify, and spot-check the four pending subject packs before making them callable.
+3. Run a supervised pilot only after local curriculum/safety review, consent and assent, an enforced retention policy, emergency procedures, and an independent learning-measurement plan exist.
+4. Add access channels in measured order: missed-call callback first, then complementary WhatsApp/text. Camera homework, DTMF fallback, pronunciation work, and noise hardening follow only after the core voice path is stable.
+5. Expand deployment data—not engine branches—to additional local numbers, countries, grades, subjects, teacher workflows, cohorts, and locally tested language patterns.
+
+This is sequencing, not a capability claim. The checked-in deployment currently exposes reviewed Math plus Curious Sandbox.
+
 ## Configuration
 
 Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requires no credentials. Local learner state is stored in `.data/nomad.db`, which is ignored by Git. Change `NOMAD_PHONE_HASH_SECRET` before any real deployment; it keys the one-way caller identifiers. Development defaults to `gpt-realtime-2.1-mini`; switch to the full Realtime model only for planned quality checks and the final demo.
@@ -228,3 +260,14 @@ The complete product scope and schedule are in [`docs/BUILD_PLAN.md`](docs/BUILD
 The executable local-judge path, real-phone release gates, three-minute recording order, and submission placeholders are in [`docs/DEMO_AND_JUDGE_RUNBOOK.md`](docs/DEMO_AND_JUDGE_RUNBOOK.md).
 
 Ready-to-paste Devpost copy, judge instructions, and the claim-by-claim release ledger are in [`docs/SUBMISSION_COPY.md`](docs/SUBMISSION_COPY.md).
+
+## License, credits, and source index
+
+The code is released under the [MIT License](LICENSE), copyright 2026 Tanya Khanna.
+
+- OpenAI supplies the [GPT-5.6 model family](https://developers.openai.com/api/docs/models), [Realtime API](https://developers.openai.com/api/docs/models/gpt-realtime), Responses API, and Codex development environment. Nomad's server—not the voice model—owns the trusted curriculum and persistence boundaries.
+- Twilio is the planned phone-number, voice-routing, SIP-trunk, and optional SMS infrastructure. It does not supply Nomad's teaching decisions.
+- The runtime uses Node.js, TypeScript, SQLite through `better-sqlite3`, Zod, and `ws`; exact versions and transitive licenses are pinned in `package-lock.json`.
+- The flagship fractions pack is original, hand-authored prototype content described as NCERT-aligned. It is not an official NCERT product and implies no endorsement. Pending, unapproved briefs cite CIET/NCERT ePathshala pages for [Science](https://epathshala.nic.in/topicc.php?id=0677CH06), [English](https://epathshala.nic.in/topic.php?id=0673CH01), [History](https://epathshala.nic.in/topicc.php?id=0681CH04), and [Geography](https://epathshala.nic.in/topicc.php?id=0681CH01).
+- Research receipts used in the product rationale are the [ITU 2024 connectivity release](https://www.itu.int/en/mediacentre/Pages/PR-2024-11-27-facts-and-figures.aspx), [GSMA 2024 connectivity release](https://www.gsma.com/newsroom/press-release/new-gsma-report-shows-mobile-internet-connectivity-continues-to-grow-globally-but-barriers-for-3-45-billion-unconnected-people-remain/), [UNESCO teacher report](https://www.unesco.org/en/articles/global-report-teachers-addressing-teacher-shortages-and-transforming-profession), [Bastani et al.](https://hamsabastani.github.io/education_llm.pdf), [Rori study](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana), [Adesua feasibility study](https://arxiv.org/abs/2605.15376), and [SIGDIAL code-switching paper](https://aclanthology.org/2024.sigdial-1.43/).
+- The checked-in sample recording is a synthetic Spanish-English fixture generated with local system voices; it is not a learner recording or evidence of a carrier call.

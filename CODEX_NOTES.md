@@ -435,3 +435,10 @@
 - Grounded strict Socratic guardrails in the nearly 1,000-student Bastani et al. field experiment: unrestricted GPT-4 hurt unaided grades after practice access was removed, while hint-based safeguards largely mitigated that effect.
 - Added preliminary Rori and Adesua receipts with their limitations intact: Rori's roughly 500-student year-one study and estimated marginal cost cannot be inherited by Nomad; Adesua's 93.75% helpfulness came from only 16 ratings.
 - Added the peer-reviewed SIGDIAL code-switching tutoring paper as a design receipt without turning selected model checks into a universal quality claim.
+
+## 2026-07-17 — Current landscape and complete README handoff
+
+- Re-audited the comparison against current official product pages. Removed stale claims that Bakame is English-only, that 1-800-ChatGPT is merely an answer machine without memory, and that no competitor combines more than two relevant capabilities; Callee Me and Rori are now credited explicitly too.
+- Differentiation is now the source-visible combination the repository can prove: frozen curriculum/reviewer provenance, subject-scoped placement and resume, trusted turn guards, and reproducible deterministic plus paid-agent evidence.
+- Added an institution-led distribution and supervised-pilot path, a gate-ordered roadmap, the MIT/license and technology credits, official curriculum-source links, and a compact research source index.
+- Reconciled the build plan with the shipped product: History is not offered before review, the sample is synthetic Spanish-English rather than Hinglish, language universality is architectural rather than a promise about every language/accent, and no compiler-generated pack or five-subject deployment is claimed.

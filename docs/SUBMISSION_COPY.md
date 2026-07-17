@@ -58,6 +58,16 @@ the documented G.711, barge-in, disconnect, redial, and latency checks, use the
 repository's complete offline judge path and do not describe browser or terminal
 audio as a live phone call.
 
+Nomad does not claim to invent voice AI or phone access. [Bakame](https://bakame.online/),
+[Viamo AVA](https://viamo.io/ask-viamo-anything-ai/),
+[1-800-ChatGPT](https://help.openai.com/en/articles/10193193-1-800-chatgpt-calling-and-messaging-chatgpt-with-your-phone),
+[Rori](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana),
+and [Callee Me](https://callee.me/) each prove important parts of the landscape.
+Nomad's narrower contribution is an inspectable combination of frozen reviewed
+curriculum, source/reviewer provenance, subject-scoped placement and exact resume,
+trusted turn validation, and reproducible release evidence. The README contains
+the sourced comparison and does not infer undocumented limitations of those products.
+
 ## Final phone paragraph — paste only after every phone gate passes
 
 Call Nomad at **[PUBLIC PHONE NUMBER]**. Choose Math and say: “One-fourth is
@@ -120,6 +130,7 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 | Adesua 93.75% helpfulness | Six-month feasibility deployment; only 16 ratings | Always state n=16 and preliminary scope |
 | Socratic guardrails protect learning | Nearly 1,000-student math field experiment; unrestricted AI harmed unaided grades, hint safeguards mitigated | Use as design motivation, not a Nomad learning-outcome claim |
 | Child-ready deployment | Safety behavior and privacy checklist exist | Never claim; supervised prototype until local review/consent/retention pass |
+| “No competitor does this” | Current official pages show substantial overlap, especially Bakame and Callee Me | Never claim; describe the narrower inspectable combination |
 
 ## Final submission fields
 

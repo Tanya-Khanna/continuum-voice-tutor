@@ -115,10 +115,13 @@ The demonstration must carry the claim → **the judge personally gets taught** 
 a real learner journey end-to-end, and the dashboard proves teaching (mastery evidence), not chatting.
 
 ### Criterion 4 — Quality of the Idea
-*"**creative and novel** … **differ from existing concepts**"* → five-pillar white space, competitor-matrix-proven:
-live call + all subjects + curriculum grounding + Socratic + code-switching — no competitor owns more than two
-(Bakame: English-only/one country · Viamo: info, not teaching · 1-800-ChatGPT: answer machine, US/CA only, no memory ·
-WhatsApp tutors: text, literacy+data required · India voice apps: smartphone required).
+*"**creative and novel** … **differ from existing concepts**"* → never claim channel novelty. Current official
+material shows substantial overlap: Bakame documents multilingual feature-phone lessons, quizzes, personalization,
+and dashboards; Viamo AVA offers local-language voice information on basic phones; Callee Me markets a multilingual,
+multi-subject phone tutor; 1-800-ChatGPT provides account-free experimental calls; and Rori has preliminary
+WhatsApp/low-bandwidth Math evidence. Nomad's narrower distinction is the inspectable combination of frozen reviewed
+packs, source/reviewer provenance, per-subject placement and exact resume, trusted turn guards, and reproducible
+deterministic plus paid-agent gates.
 *"genuine understanding of the problem space"* (site variant) → research-literate package: verified Adesua citation
 (executes its published future-work agenda; 93.75% helpfulness, n=16 caveat), transfer-problem pedagogy as design,
 code-switching as documented open problem (Cameroon paper), honest limitations section, honest competitor credit.
@@ -135,13 +138,15 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
    mastery state flipping. Getting taught, then seeing the brain's reasoning about yourself, is the one-two punch.
 3. **The break-it menu (published in testing instructions):** "Try to make it just give you the answer." ·
    "Hang up mid-lesson; call back." · "Interrupt it mid-sentence." · "Ask: *what have we learned together?*" ·
-   "Try History — make a choice in the story." Every stress test becomes a judge activity that passes.
-4. **The Hinglish exhibit:** judges can't produce code-switched speech → dashboard hosts a recorded sample Hinglish
-   session with synced transcript + the invitation: "try any Hindi word you know — even one."
+   "Switch between two languages you speak." Keep every published guided-subject stress test in reviewed Math until
+   another pack passes its human approval and freeze gate.
+4. **The multilingual exhibit:** dashboard hosts a clearly synthetic Spanish-English code-switched sample with a
+   synced transcript. It demonstrates one tested pattern, not every language or accent.
 5. **English is first-class:** the entire experience works beautifully in pure English (placement diagnostic adapts
    naturally to an adult English caller). Code-switching is the bonus wow, never a gate.
-5.5 **The any-language invitation:** *"Speak to it in YOUR language — Spanish, Portuguese, Mandarin, whatever you
-   grew up with. It will answer."* Judges experience the global claim personally instead of reading it.
+5.5 **The multilingual invitation:** invite judges to try a language pattern they speak, while naming the patterns
+   actually tested. Describe arbitrary language tags and code-switching as an open architecture—not proof of every
+   language, accent, or noisy phone condition.
 6. **Zero friction:** no repo clone, no login, no sandbox code. A phone number and a dashboard URL. Live through Aug 5.
 
 # 4 · COMPLETE FEATURE MANIFEST (the confirmed scope — build exactly this)
@@ -315,7 +320,7 @@ G5 proactive re-engagement nudges · deep emotional adaptation · canvas compani
 tutoring pattern · living simulations from real-world observation.
 
 ### 4.4 DO NOT BUILD (binding)
-Grades beyond 6 · languages beyond hi/en/hinglish · native apps · WhatsApp as PRIMARY interface · parent
+Grades beyond 6 · language-specific engine branches · native apps · WhatsApp as PRIMARY interface · parent
 accounts/payments · school management · live web search mid-call · real deployment with children · complex auth ·
 custom noise DSP · toll-free provisioning · managed voice platforms (Vapi/Retell/Bland).
 
@@ -445,7 +450,8 @@ Record against the real system (rehearse the script, never fake the tech). No co
 1. (0:00–0:15) **Mission cold open (voiceover over black, then the phone):** *"A quarter of the world has no real
    internet. Their kids' education ends where the data signal does. But almost everyone has this—"* → $15 feature
    phone fills the frame, no WiFi anywhere → dials a normal number.
-2. (0:15–0:45) Onboarding menu (five subjects) → learner speaks **Hinglish, switching mid-sentence** — tutor flows.
+2. (0:15–0:45) Onboarding menu (reviewed Math + Curious Sandbox today) → learner code-switches in one tested
+   language pattern and the tutor follows without changing curriculum evidence.
 3. (0:45–1:05) The misconception: "one-fourth is bigger because four is bigger" → tutor catches it (diagnosis JSON
    flashes on dashboard split-screen).
 4. (1:05–1:25) The pivot: roti analogy instead of repetition; learner interrupts mid-sentence — tutor stops, listens.
@@ -455,18 +461,17 @@ Record against the real system (rehearse the script, never fake the tech). No co
 8. (1:50–2:00) Learner answers correctly → dashboard mastery flips "Needs support" → "Developing."
 8.5 (2:00–2:10) **The sandbox flash (Mode 2):** off-script curiosity — "ek aur sawaal… why do stars twinkle?" —
    tutor answers with a Socratic question back. The kid who lingers after class. Any topic under the sun.
-8.7 (2:10–2:22) **The language montage:** the SAME number dialed again and again — a child's question in Spanish…
-   Swahili… Tamil… Portuguese… the same teacher answers in each. Fast cuts, real calls. On-screen text: *"One
-   number. Any language."* (Rule: only include languages spot-checked for output quality before filming; 3–4
-   languages is plenty — this proves the claim, it doesn't inventory it.)
+8.7 (2:10–2:22) **The language montage:** the same number receives questions in two or three language patterns that
+   passed recorded spot checks. Label each pattern and show the evidence. On-screen text: *"One architecture.
+   Locally tested language patterns."* A finite montage never proves every language or accent.
 9. (2:22–2:55) WhatsApp voice-note encore (if built) → voiceover over architecture diagram covering, in order:
    **the three audiences in one line** ("No screen, no text, no app — designed for the 3.1 billion covered by
    mobile broadband but not using it, for learners who can't yet read, and for kids for whom text itself is the barrier") → **the global
-   line** ("It already speaks dozens of languages — a new country is a config file and one compiler run on its
-   syllabus. India is deployment #1, not the boundary") → **how Codex built it** (telephony bridge, compiler,
+   line** ("Its engine has no hard-coded subject or language pair. Each deployment still needs reviewed curriculum
+   and local language testing. India is deployment #1, not the boundary") → **how Codex built it** (telephony bridge, compiler,
    eval harness — one main session) and **how GPT-5.6 powers it** (teaching-engine JSON, Luna/Terra/Sol routing,
-   compiler, simulated-classroom QA) → judge invitation: "call the number in our README — speak any language —
-   it will teach YOU" → tagline card: *"The connection may drop. The learning continues."*
+   compiler, simulated-classroom QA) → judge invitation: "call the number in our README — try a language pattern
+   you speak" → tagline card: *"The connection may drop. The learning continues."*
 
 # 7 · CODEX PROCESS (submission-critical — also scored under Criterion 1)
 
@@ -483,21 +488,19 @@ Record against the real system (rehearse the script, never fake the tech). No co
 
 **README (11 sections):**
 1. Hero: product + tagline + **THE PHONE NUMBER** ("it will teach you — call it") + dashboard link + architecture diagram.
-2. Why: three audiences · GSMA 3.1B usage gap (60% in Sub-Saharan Africa) · separate ITU 2.6B offline estimate, never added · UNESCO projected 44M teacher deficit by 2030 ·
-   Rori benchmark (~1 yr schooling gain @ ~$5/child) · rural-India voice adoption (12% MAU organic).
+2. Why: three audiences · GSMA 3.1B usage gap · separate ITU 2.6B offline estimate, never added · UNESCO projected
+   44M teacher deficit by 2030 · preliminary Rori benchmark (~1 yr schooling gain @ ~$5/child), never inherited as
+   a Nomad outcome.
 2.5 **Distribution & adoption path (the "who hands the child the number?" answer):** learner-direct digital
-   acquisition FAILS in these markets (documented in the rural-India 2G deployment — adoption came via teachers,
-   NGOs, and in-person onboarding). So the go-to-market is institution-first: (a) teachers/schools distribute the
-   number and receive SMS recaps (the teacher is the trust channel, not the app store); (b) NGO/state-education
-   pilots — concrete next step: one district, one grade, ~200 learners, measured on INDEPENDENT tests (the transfer
-   bar), with a state education department or NGO network as partner; (c) carrier partnerships for zero-cost
-   calling at scale (Viamo precedent: 22 countries). Missed-call callback + SMS keep the learner side free and
-   familiar. Distribution isn't an afterthought to the product — the phone number IS distributable by a teacher
-   with a chalkboard, which no app ever was.
-3. What's different: five-pillar matrix vs Bakame / Viamo AVA / 1-800-ChatGPT / WhatsApp tutors / India voice apps
-   (honest, sourced) + pre-emptive Q&A ("Isn't this 1-800-ChatGPT?" → answer machine vs teacher: Socratic,
-   curriculum-grounded, remembers you, works where you live, speaks your mix. "Isn't this Bakame?" → English-only
-   conversation practice vs all-subject curriculum-grounded teaching).
+   acquisition is not assumed. The proposed path is institution-first: (a) teachers/schools distribute the number
+   after local review, consent, and learner assent; (b) a school/NGO/state-education pilot starts with one district,
+   one grade, and roughly 200 learners measured on independent tests plus attendance, feedback, subgroup access,
+   failures, and deletion/retention compliance; (c) carrier partnership is explored only after the carrier and
+   learning gates pass. Missed-call callback and teacher/parent messaging remain later consent-sensitive channels.
+3. What's different: sourced matrix crediting Bakame, Viamo AVA, 1-800-ChatGPT, Rori, and Callee Me for the
+   overlapping capabilities they actually document. Nomad differentiates on an inspectable combination: frozen
+   reviewed packs and provenance, per-subject placement/resume, trusted turn guards, and reproducible evidence—not
+   on unsupported claims that others lack languages, subjects, personalization, memory, or basic-phone access.
 4. Research grounding: Adesua verified citation (executes its published future-work agenda; 93.75% helpfulness,
    **n=16 caveat stated honestly**) · transfer problem (+0.73 local vs +0.13 independent effect sizes; 17%-worse
    exam finding) → Nomad's context-anchored design answer · Cameroon paper (code-switching = documented open problem).
@@ -506,14 +509,16 @@ Record against the real system (rehearse the script, never fake the tech). No co
 6. **How we built it with Codex** (scored under BOTH Technical Implementation and Quality of the Idea — per
    official submission guidance): the CODEX_NOTES.md distillation — where Codex accelerated, where key decisions
    were made, how GPT-5.6 and Codex were used.
-7. **Judge Experience** (§3 verbatim): the invitation, the mirror, the break-it menu, the Hinglish exhibit.
+7. **Judge Experience** (§3 verbatim): the invitation, the mirror, the break-it menu, and the clearly synthetic
+   Spanish-English exhibit.
 7.5 **Run it yourself (REQUIRED by submission rules — setup, sample data, run guidance):**
    - Prerequisites + `.env.example` (OpenAI key; Twilio optional)
    - **Local text-mode REPL** (`make chat`): the full GPT-5.6 teaching engine in the terminal — no telephony
      needed. Judge types as the learner; sees Socratic turns + live diagnosis JSON. One command to meet the tutor.
    - **Eval suite** (`make eval`): runs all 25 scripted cases, prints the scorecard.
-   - **Sample data shipped in-repo:** frozen fractions pack + one compiler-generated pack, seeded demo learner
-     ("Ravi", mid-lesson state — so resume/callback behavior is testable immediately), sample call transcript.
+   - **Sample data shipped in-repo:** one original hand-authored frozen fractions prototype pack, four pending
+     source briefs that are not callable, a synthetic seeded learner ("Ravi", paused mid-lesson), and synthetic
+     Spanish-English sample audio/transcript. No compiler-generated subject pack is currently shipped.
    - Full telephony setup guide (Twilio number + SIP trunk) for complete reproduction, marked optional.
 8. Safety & privacy: child-safety behavior, anonymized IDs, retention, deployment consent flow (G2).
 9. **Honest limitations:** deaf/HoH excluded by voice-only (inverse of the dyslexia strength) · ASR limits under
@@ -522,11 +527,11 @@ Record against the real system (rehearse the script, never fake the tech). No co
 10. Roadmap (§4.3) with citations.
 11. License (MIT) · credits · full source list (from NOMAD_FEATURES.md).
 
-**Devpost description:** capability-first ("An adaptive multilingual tutor that works on any phone") → breadth
-claims stated plainly and honestly: *"Ask it anything under the sun — five subjects with full curriculum depth,
-everything else a genuine Socratic conversation. Speaks whatever the model speaks; validated for Hinglish; a new
-country is a config profile and a compiler run."* → the 9-beat story in prose → five pillars → evidence stack →
-Codex/GPT-5.6 summary → the judge invitation.
+**Devpost description:** capability-first ("An adaptive multilingual tutor designed for any phone") → breadth claims
+stated plainly and honestly: reviewed Grade 6 Math plus Curious Sandbox today; a gated compiler and catalog for future
+reviewed subjects; an engine without a fixed subject or language-pair branch; and named tested multilingual patterns,
+not every language or accent. Then tell the 9-beat story in prose → evidence stack → Codex/GPT-5.6 summary → gated
+judge invitation.
 
 # 9 · RISK REGISTER
 
