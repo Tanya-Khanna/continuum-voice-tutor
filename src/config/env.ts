@@ -13,6 +13,17 @@ const booleanFromEnvironment = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+const optionalPathArray = z.preprocess((value) => {
+  if (value === undefined || value === "") return undefined;
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}, z.array(z.string().trim().min(1)).min(1).optional());
+
 const EnvironmentSchema = z.object({
   TEACHING_ENGINE: z.enum(["offline", "openai"]).default("offline"),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3_000),
@@ -22,6 +33,7 @@ const EnvironmentSchema = z.object({
     .min(16)
     .default("local-development-change-me"),
   NOMAD_CURRICULUM_PATH: optionalNonEmpty,
+  NOMAD_CURRICULUM_PATHS: optionalPathArray,
   NOMAD_AGENT_EVAL_REPORT_PATH: z
     .string()
     .min(1)
@@ -60,6 +72,15 @@ const EnvironmentSchema = z.object({
   NOMAD_TWILIO_SIP_TRUNK_CONFIGURED: booleanFromEnvironment,
   NOMAD_TWILIO_NUMBER_VOICE_READY: booleanFromEnvironment,
   NOMAD_SMS_RECAP_ENABLED: booleanFromEnvironment,
+}).superRefine((environment, context) => {
+  if (environment.NOMAD_CURRICULUM_PATH && environment.NOMAD_CURRICULUM_PATHS) {
+    context.addIssue({
+      code: "custom",
+      path: ["NOMAD_CURRICULUM_PATHS"],
+      message:
+        "Configure NOMAD_CURRICULUM_PATH or NOMAD_CURRICULUM_PATHS, not both.",
+    });
+  }
 });
 
 export type Environment = z.infer<typeof EnvironmentSchema>;

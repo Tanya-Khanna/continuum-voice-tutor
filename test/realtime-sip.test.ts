@@ -42,6 +42,14 @@ describe("Realtime SIP boundary", () => {
       "get_sandbox_turn",
       "recover_unclear_audio",
     ]);
+    const modeTool = buildRealtimeAcceptPayload().tools.find(
+      (tool) => tool.name === "choose_learning_mode",
+    );
+    expect(modeTool?.parameters).toMatchObject({
+      properties: {
+        subject: expect.objectContaining({ type: "string" }),
+      },
+    });
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "brief neutral acknowledgment",
     );

@@ -26,7 +26,7 @@ India, fractions, and Hindi/English code-switching may appear only in deployment
 - Keep credentials in `.env`; never commit them.
 - Offline mode must remain usable without OpenAI or Twilio credits.
 - Keep curriculum facts in frozen, reviewable packs instead of fetching the web during a lesson.
-- Load deployments through `NOMAD_CURRICULUM_PATH`; a new compiled pack must not require teaching-engine changes.
+- Load one pack through `NOMAD_CURRICULUM_PATH`, or an ordered callable subject catalog through `NOMAD_CURRICULUM_PATHS`; a new compiled pack must not require teaching-engine or telephony changes.
 - Validate all model-facing inputs and outputs with Zod.
 - Put telephony behind an adapter; Twilio must not leak into the teaching engine.
 - Use the OpenAI Responses API for text reasoning and the Realtime API SIP flow for phone calls.

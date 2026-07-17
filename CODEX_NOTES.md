@@ -398,3 +398,12 @@
 - Added one executable runbook for the current secret-free local judge path, the future real-phone judge card, the three-minute demo recording, final evidence capture, and submission placeholders.
 - Release gates explicitly forbid publishing a phone number before preflight and real G.711 behavior pass, presenting local/browser audio as a carrier call, exposing the unauthenticated dashboard with learner data, or claiming five callable subjects while four packs remain human-gated.
 - The demo order centers observable teaching evidence: misconception diagnosis, code-switching, exact drop/resume, Mission Control reasoning/usage, break-it behavior, architecture, and the 25/25 plus 24/24 scorecards.
+
+## 2026-07-17 — Callable multi-subject runtime architecture
+
+- Replaced the implicit single-pack phone assumption with an ordered `CurriculumCatalog`. It rejects empty catalogs, duplicate pack IDs, duplicate case-insensitive subject labels, and packs from a different country/grade deployment.
+- Added `NOMAD_CURRICULUM_PATHS` as an ordered JSON array while retaining `NOMAD_CURRICULUM_PATH`. The explicit `builtin:india-ncert-grade-6-fractions` identifier makes the hand-built flagship usable beside future frozen JSON packs without copying it into generated content.
+- Split learner identification from guided-session creation. Realtime now returns `guided_subjects`; a multi-pack call cannot create a session until the learner explicitly selects a valid subject. Subject changes pause the old session and route to the selected pack.
+- Migrated curriculum pack ID and placement evidence onto lesson sessions. Placement, retrieval history, active/paused state, and exact resume are now subject-specific; learner-level placement fields remain only as a backward-compatible latest-result mirror.
+- Catalog routing is shared by the server runtime, Realtime bridge, dashboard, REPL, and diagnostic. Mission Control shows subject/pack, and `/health` exposes only safe subject labels.
+- Added two-subject adversarial coverage for missing selection, case-insensitive routing, independent Math/Science placement, cross-subject history isolation, subject switching, legacy default-pack adoption, environment loading, and dashboard metadata. The fixture is not shipped as reviewed Science content.

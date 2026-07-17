@@ -180,7 +180,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         top.append(text('span', session.learner_ref, 'session-title'));
         top.append(text('span', session.status, 'badge'));
         const meta = text('div', '', 'meta-row');
-        meta.append(text('span', session.concept_title));
+        meta.append(text('span', session.subject + ' · ' + session.concept_title));
         meta.append(text('span', relativeTime(session.updated_at)));
         button.append(top, meta);
         button.addEventListener('click', () => { state.selected = session.session_id; renderList(); renderWorkspace(); });
@@ -202,7 +202,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       const hero = text('div', '', 'hero');
       const copy = text('div', '', 'hero-copy');
       copy.append(text('div', session.learner_ref, 'eyebrow'));
-      copy.append(text('h2', session.concept_title));
+      copy.append(text('h2', session.subject + ' · ' + session.concept_title));
       copy.append(text('p', 'Anonymized teaching trace · ' + session.status));
       hero.append(copy);
       for (const [label, value] of [['Interactions', session.turns.length], ['Mastery', session.mastery_status], ['Language', latest?.language_mode ?? 'pending']]) {

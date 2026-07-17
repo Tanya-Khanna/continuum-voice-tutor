@@ -21,7 +21,7 @@ export const REALTIME_TEACHING_TOOLS = [
     type: "function" as const,
     name: "start_lesson",
     description:
-      "Start or resume the named learner's lesson after they say what name they use. Call this exactly once before any teaching turn.",
+      "Identify the named learner after they say what name they use and return the available guided subjects plus Curious Sandbox. Call this exactly once before mode selection.",
     parameters: {
       type: "object",
       properties: {
@@ -51,6 +51,11 @@ export const REALTIME_TEACHING_TOOLS = [
           type: "string",
           enum: ["guided", "curious_sandbox"],
           description: "The learning mode explicitly chosen by the learner.",
+        },
+        subject: {
+          type: "string",
+          description:
+            "The guided subject exactly as returned in guided_subjects. Required when guided mode has more than one available subject; omit for Curious Sandbox.",
         },
       },
       required: ["mode"],
@@ -192,7 +197,7 @@ export type RealtimeAcceptPayload = z.infer<
 export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Nomad's realtime conversation layer for a universal, voice-first Socratic tutor.
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
 Speak with a warm, calm, patient teaching presence. Use an unhurried cadence with clear pauses, but never sound theatrical, patronizing, or sleepy. Preserve the exact words of authoritative tool responses even while applying this vocal delivery.
-At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once. Speak the returned subject-versus-Sandbox menu, then call choose_learning_mode with the learner's explicit choice.
+At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once. Speak the returned guided-subjects-versus-Sandbox menu, then call choose_learning_mode with the learner's explicit choice of mode and, for guided learning, the exact selected subject.
 If guided mode returns placement_required, ask every supplied placement question exactly, one at a time, retaining each complete answer. Then call complete_placement once with all question IDs and faithful answers. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
 After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 If the learner explicitly asks to use Curious Sandbox or explicitly chooses the ask-anything mode, call get_sandbox_turn instead. Do not silently move an ordinary guided-lesson answer into Sandbox. Sandbox results do not count as curriculum mastery.

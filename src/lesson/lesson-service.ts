@@ -47,6 +47,7 @@ export interface LessonServiceOptions {
   makeId?: () => string;
   phoneHashSecret: string;
   curriculumPack: CurriculumPack;
+  acceptLegacySessions?: boolean;
 }
 
 export class LessonService {
@@ -56,6 +57,7 @@ export class LessonService {
   readonly #makeId: () => string;
   readonly #phoneHashSecret: string;
   readonly #curriculumPack: CurriculumPack;
+  readonly #acceptLegacySessions: boolean;
   readonly #startingConcept: CurriculumPack["concepts"][number];
 
   constructor(options: LessonServiceOptions) {
@@ -65,6 +67,7 @@ export class LessonService {
     this.#makeId = options.makeId ?? randomUUID;
     this.#phoneHashSecret = options.phoneHashSecret;
     this.#curriculumPack = options.curriculumPack;
+    this.#acceptLegacySessions = options.acceptLegacySessions ?? true;
     const startingConcept = options.curriculumPack.concepts[0];
     if (!startingConcept) throw new Error("The curriculum pack has no concepts.");
     this.#startingConcept = startingConcept;
@@ -75,8 +78,23 @@ export class LessonService {
     learnerName: string;
     preferredLanguage?: Exclude<LanguageMode, "auto">;
   }): LessonContext {
-    const nowDate = this.#clock();
-    const now = nowDate.toISOString();
+    return this.beginOrResumeLearner(this.identifyLearner(options));
+  }
+
+  availableSubjects(): string[] {
+    return [this.#curriculumPack.deployment.subject];
+  }
+
+  subjectForContext(_context: LessonContext): string {
+    return this.#curriculumPack.deployment.subject;
+  }
+
+  identifyLearner(options: {
+    phoneNumber: string;
+    learnerName: string;
+    preferredLanguage?: Exclude<LanguageMode, "auto">;
+  }): LearnerProfile {
+    const now = this.#clock().toISOString();
     const phoneHash = hashPhoneNumber(
       options.phoneNumber,
       this.#phoneHashSecret,
@@ -106,8 +124,40 @@ export class LessonService {
       });
 
     if (!existingLearner) this.#repository.saveLearner(learner);
+    return learner;
+  }
 
-    const existingLesson = this.#repository.findResumableLesson(learner.id);
+  beginOrResumeSubject(
+    learner: LearnerProfile,
+    subject?: string,
+  ): LessonContext {
+    if (
+      subject &&
+      subject.trim().toLocaleLowerCase("en-US") !==
+        this.#curriculumPack.deployment.subject
+          .trim()
+          .toLocaleLowerCase("en-US")
+    ) {
+      throw new Error(
+        `Unknown guided subject ${subject}. Available subjects: ${this.#curriculumPack.deployment.subject}.`,
+      );
+    }
+    return this.beginOrResumeLearner(learner);
+  }
+
+  beginOrResumeLearner(learner: LearnerProfile): LessonContext {
+    const persistedLearner = this.#repository.findLearner(learner.id);
+    if (!persistedLearner) {
+      throw new Error(`Learner ${learner.id} is not present in the repository.`);
+    }
+    const nowDate = this.#clock();
+    const now = nowDate.toISOString();
+
+    const existingLesson = this.#repository.findResumableLesson(
+      persistedLearner.id,
+      this.#curriculumPack.id,
+      this.#acceptLegacySessions,
+    );
     if (existingLesson) {
       const concept = this.#concept(existingLesson.concept);
       const elapsedMinutes =
@@ -121,22 +171,25 @@ export class LessonService {
         : this.#retrievalQuestion(concept, existingLesson.turnCount);
       const resumedLesson = LessonSessionSchema.parse({
         ...existingLesson,
+        curriculumPackId: this.#curriculumPack.id,
         status: "active",
         lastPrompt: prompt,
         updatedAt: now,
       });
       this.#repository.saveLesson(resumedLesson);
       return {
-        learner,
+        learner: persistedLearner,
         session: resumedLesson,
         resumed: true,
         greeting: `${isRecentDrop ? this.#curriculumPack.lessonPolicy.recentResumeLead : this.#curriculumPack.lessonPolicy.returnRetrievalLead} ${prompt}`,
       };
     }
 
-    const latestLesson = existingLearner
-      ? this.#repository.findLatestLesson(learner.id)
-      : undefined;
+    const latestLesson = this.#repository.findLatestLesson(
+      persistedLearner.id,
+      this.#curriculumPack.id,
+      this.#acceptLegacySessions,
+    );
     const concept = latestLesson
       ? this.#concept(latestLesson.concept)
       : this.#startingConcept;
@@ -146,27 +199,32 @@ export class LessonService {
 
     const session = LessonSessionSchema.parse({
       id: this.#makeId(),
-      learnerId: learner.id,
+      learnerId: persistedLearner.id,
+      curriculumPackId: this.#curriculumPack.id,
       concept: concept.id,
       status: "active",
       turnCount: 0,
       lastPrompt: firstPrompt,
       lastDiagnosis: "No evidence yet.",
       lastStrategy: "ask_reasoning",
-      masteryStatus: learner.lastMastery,
-      masteryEvidence: "No evidence yet.",
+      masteryStatus: latestLesson?.masteryStatus ?? "needs_support",
+      masteryEvidence: latestLesson?.masteryEvidence ?? "No evidence yet.",
+      placementLevel: latestLesson?.placementLevel ?? "unplaced",
+      placementScore: latestLesson?.placementScore ?? 0,
+      placementTotal: latestLesson?.placementTotal ?? 0,
+      placementEvidence: latestLesson?.placementEvidence ?? [],
       createdAt: now,
       updatedAt: now,
     });
     this.#repository.saveLesson(session);
 
     return {
-      learner,
+      learner: persistedLearner,
       session,
       resumed: Boolean(latestLesson),
       greeting: latestLesson
         ? `${this.#curriculumPack.lessonPolicy.returnRetrievalLead} ${firstPrompt}`
-        : `Hello, ${learner.name}. ${firstPrompt}`,
+        : `Hello, ${persistedLearner.name}. ${firstPrompt}`,
     };
   }
 
@@ -206,7 +264,7 @@ export class LessonService {
         priorReasoningEvidenceCount,
         consecutiveSafetyRedirects,
         anchorObject: context.session.anchorObject,
-        placementLevel: context.learner.placementLevel,
+        placementLevel: context.session.placementLevel,
       },
     });
     const generatedTurn = generated.value;
@@ -288,7 +346,7 @@ export class LessonService {
     };
   }
 
-  learningMenu(context: LessonContext): string {
+  learningMenu(context: { learner: LearnerProfile }): string {
     return `Welcome, ${context.learner.name}. Would you like guided ${this.#curriculumPack.deployment.subject}, or Curious Sandbox where you can ask anything?`;
   }
 
@@ -299,10 +357,10 @@ export class LessonService {
   }
 
   requiresPlacement(context: LessonContext): boolean {
-    return context.learner.placementLevel === "unplaced";
+    return context.session.placementLevel === "unplaced";
   }
 
-  placementQuestions(): { id: string; prompt: string }[] {
+  placementQuestions(_context?: LessonContext): { id: string; prompt: string }[] {
     return this.#curriculumPack.placementDiagnostic.questions.map(
       ({ id, prompt }) => ({ id, prompt }),
     );
@@ -354,6 +412,10 @@ export class LessonService {
         context.session.turnCount === 0
           ? concept.teachingScaffold.entryQuestion
           : context.session.lastPrompt,
+      placementLevel: result.level,
+      placementScore: result.score,
+      placementTotal: result.total,
+      placementEvidence: result.evidence,
       updatedAt: now,
     });
     this.#repository.saveLearner(nextLearner);
@@ -389,7 +451,9 @@ export class LessonService {
       .listRecentLessons(100)
       .filter(
         (session) =>
-          session.learnerId === context.learner.id && session.turnCount > 0,
+          session.learnerId === context.learner.id &&
+          session.curriculumPackId === this.#curriculumPack.id &&
+          session.turnCount > 0,
       )
       .slice(0, 20)
       .map((session) => ({
@@ -426,7 +490,8 @@ export class LessonService {
       learner_question: redactedQuestion,
     });
     const now = this.#clock().toISOString();
-    const sequence = this.#repository.listSandboxTurns(context.session.id).length + 1;
+    const sequence =
+      this.#repository.listSandboxTurns(context.session.id).length + 1;
     this.#repository.appendSandboxTurn(
       StoredSandboxTurnSchema.parse({
         id: this.#makeId(),

@@ -31,6 +31,7 @@ export const LessonStatusSchema = z.enum(["active", "paused", "completed"]);
 export const LessonSessionSchema = z.object({
   id: z.string().min(1),
   learnerId: z.string().min(1),
+  curriculumPackId: z.string().min(1).default("legacy"),
   concept: z.string().min(1),
   status: LessonStatusSchema,
   turnCount: z.number().int().nonnegative(),
@@ -39,6 +40,12 @@ export const LessonSessionSchema = z.object({
   lastStrategy: TeachingStrategySchema,
   masteryStatus: MasteryStatusSchema,
   masteryEvidence: z.string(),
+  placementLevel: z
+    .enum(["unplaced", "foundational", "developing", "grade_ready"])
+    .default("unplaced"),
+  placementScore: z.number().int().nonnegative().default(0),
+  placementTotal: z.number().int().nonnegative().default(0),
+  placementEvidence: z.array(z.string()).default([]),
   anchorObject: AnchorObjectSchema.nullable().default(null),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -61,8 +68,16 @@ export interface LearningRepository {
   findLearner(id: string): LearnerProfile | undefined;
   listLearnersForPhone(phoneHash: string): LearnerProfile[];
   saveLearner(profile: LearnerProfile): void;
-  findResumableLesson(learnerId: string): LessonSession | undefined;
-  findLatestLesson(learnerId: string): LessonSession | undefined;
+  findResumableLesson(
+    learnerId: string,
+    curriculumPackId?: string,
+    includeLegacy?: boolean,
+  ): LessonSession | undefined;
+  findLatestLesson(
+    learnerId: string,
+    curriculumPackId?: string,
+    includeLegacy?: boolean,
+  ): LessonSession | undefined;
   findLesson(id: string): LessonSession | undefined;
   listRecentLessons(limit: number): LessonSession[];
   saveLesson(session: LessonSession): void;

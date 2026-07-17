@@ -196,11 +196,16 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - **F21 Guided Path, five subjects** — Math (flagship fractions pack, HAND-BUILT) + Science/English/History/Geography
   (Curriculum Compiler). Subject flavors: Science = household experiments + anchor objects; History = time-machine
   roleplay with genuine decision points ("the market or the mountain?"); Geography = look-around prompts;
-  English = conversation + vocabulary.
+  English = conversation + vocabulary. ~~The runtime now loads an ordered validated pack catalog, builds the voice
+  menu from subject metadata, requires an explicit subject before session creation, routes engine/placement/history
+  by pack ID, preserves independent per-subject placement and drop/resume state, supports subject switching, and
+  labels Mission Control sessions by subject~~ ✅. Five-subject content remains open until the four pending briefs
+  are human-approved, compiled, independently verified, spot-checked, frozen, and configured.
 - **F22 Voice-menu onboarding** — ~~name → deployment-configured guided subject versus Curious Sandbox → explicit
   mode selection, with a server guard preventing teaching before selection and a live Realtime name+menu routing
-  smoke~~ ✅. Expand the same metadata-driven menu to Math, Science, English, History, and Geography after the four
-  additional reviewed packs are frozen.
+  smoke; the same tool contract now returns an ordered `guided_subjects` catalog and requires the exact subject for
+  multi-pack guided mode without creating a hidden default lesson~~ ✅. Adding the four names to the real menu now
+  requires only reviewed frozen packs in configuration, not telephony code changes.
 - **F23 Strict Socratic method** — ~~answer requests and misconceptions route to a hint, analogy, or smaller step;
   trusted voice checks reject answer leakage and require the next Socratic question; deterministic "just tell me"
   cases and the 24/24 independent agent gate pass~~ ✅.

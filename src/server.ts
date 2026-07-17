@@ -2,7 +2,10 @@ import { createServer, type IncomingHttpHeaders } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import OpenAI from "openai";
-import { loadCurriculumPack } from "./config/curriculum.js";
+import {
+  curriculumCatalogOptions,
+  loadCurriculumCatalog,
+} from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
 import { runOfflineEvaluation } from "./evals/offline-evaluator.js";
@@ -52,6 +55,9 @@ const activeCallIds = new Set<string>();
 const callAdmission = new CallAdmissionGuard({
   maxCallsPerWindow: environment.NOMAD_MAX_CALLS_PER_HOUR,
 });
+const curriculumCatalog = loadCurriculumCatalog(
+  curriculumCatalogOptions(environment),
+);
 
 export const server = createServer(async (request, response) => {
   try {
@@ -66,6 +72,7 @@ export const server = createServer(async (request, response) => {
           realtimeConfigured: Boolean(
             environment.OPENAI_API_KEY && environment.OPENAI_WEBHOOK_SECRET,
           ),
+          guidedSubjects: curriculumCatalog.subjects(),
         }),
       );
       return;
@@ -140,9 +147,9 @@ export const server = createServer(async (request, response) => {
       try {
         const snapshot = buildDashboardSnapshot({
           repository,
-          curriculumPack: loadCurriculumPack(
-            environment.NOMAD_CURRICULUM_PATH,
-          ),
+          curriculumPacks: curriculumCatalog
+            .list()
+            .map((option) => option.pack),
           limit: Number(url.searchParams.get("limit") ?? 20),
         });
         response.writeHead(200, {

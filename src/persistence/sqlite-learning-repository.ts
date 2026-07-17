@@ -38,6 +38,7 @@ interface LearnerRow {
 interface LessonRow {
   id: string;
   learner_id: string;
+  curriculum_pack_id: string;
   concept: string;
   status: string;
   turn_count: number;
@@ -46,6 +47,10 @@ interface LessonRow {
   last_strategy: string;
   mastery_status: string;
   mastery_evidence: string;
+  placement_level: string;
+  placement_score: number;
+  placement_total: number;
+  placement_evidence: string;
   anchor_object: string | null;
   created_at: string;
   updated_at: string;
@@ -106,6 +111,7 @@ function lessonFromRow(row: LessonRow): LessonSession {
   return LessonSessionSchema.parse({
     id: row.id,
     learnerId: row.learner_id,
+    curriculumPackId: row.curriculum_pack_id,
     concept: row.concept,
     status: row.status,
     turnCount: row.turn_count,
@@ -114,6 +120,10 @@ function lessonFromRow(row: LessonRow): LessonSession {
     lastStrategy: row.last_strategy,
     masteryStatus: row.mastery_status,
     masteryEvidence: row.mastery_evidence,
+    placementLevel: row.placement_level,
+    placementScore: row.placement_score,
+    placementTotal: row.placement_total,
+    placementEvidence: JSON.parse(row.placement_evidence) as unknown,
     anchorObject: row.anchor_object,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -156,6 +166,7 @@ export class SqliteLearningRepository implements LearningRepository {
       CREATE TABLE IF NOT EXISTS lesson_sessions (
         id TEXT PRIMARY KEY,
         learner_id TEXT NOT NULL REFERENCES learners(id),
+        curriculum_pack_id TEXT NOT NULL DEFAULT 'legacy',
         concept TEXT NOT NULL,
         status TEXT NOT NULL,
         turn_count INTEGER NOT NULL,
@@ -164,6 +175,10 @@ export class SqliteLearningRepository implements LearningRepository {
         last_strategy TEXT NOT NULL,
         mastery_status TEXT NOT NULL,
         mastery_evidence TEXT NOT NULL,
+        placement_level TEXT NOT NULL DEFAULT 'unplaced',
+        placement_score INTEGER NOT NULL DEFAULT 0,
+        placement_total INTEGER NOT NULL DEFAULT 0,
+        placement_evidence TEXT NOT NULL DEFAULT '[]',
         anchor_object TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
@@ -230,6 +245,34 @@ export class SqliteLearningRepository implements LearningRepository {
         "ALTER TABLE lesson_sessions ADD COLUMN anchor_object TEXT",
       );
     }
+    if (!lessonColumns.some((column) => column.name === "curriculum_pack_id")) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN curriculum_pack_id TEXT NOT NULL DEFAULT 'legacy'",
+      );
+    }
+    const addedSessionPlacement = !lessonColumns.some(
+      (column) => column.name === "placement_level",
+    );
+    if (addedSessionPlacement) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN placement_level TEXT NOT NULL DEFAULT 'unplaced'",
+      );
+    }
+    if (!lessonColumns.some((column) => column.name === "placement_score")) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN placement_score INTEGER NOT NULL DEFAULT 0",
+      );
+    }
+    if (!lessonColumns.some((column) => column.name === "placement_total")) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN placement_total INTEGER NOT NULL DEFAULT 0",
+      );
+    }
+    if (!lessonColumns.some((column) => column.name === "placement_evidence")) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN placement_evidence TEXT NOT NULL DEFAULT '[]'",
+      );
+    }
     const learnerColumns = this.#database.pragma(
       "table_info(learners)",
     ) as { name: string }[];
@@ -253,6 +296,31 @@ export class SqliteLearningRepository implements LearningRepository {
         "ALTER TABLE learners ADD COLUMN placement_evidence TEXT NOT NULL DEFAULT '[]'",
       );
     }
+    if (addedSessionPlacement) {
+      this.#database.exec(`
+        UPDATE lesson_sessions
+        SET placement_level = COALESCE(
+              (SELECT placement_level FROM learners WHERE learners.id = lesson_sessions.learner_id),
+              'unplaced'
+            ),
+            placement_score = COALESCE(
+              (SELECT placement_score FROM learners WHERE learners.id = lesson_sessions.learner_id),
+              0
+            ),
+            placement_total = COALESCE(
+              (SELECT placement_total FROM learners WHERE learners.id = lesson_sessions.learner_id),
+              0
+            ),
+            placement_evidence = COALESCE(
+              (SELECT placement_evidence FROM learners WHERE learners.id = lesson_sessions.learner_id),
+              '[]'
+            )
+      `);
+    }
+    this.#database.exec(`
+      CREATE INDEX IF NOT EXISTS lessons_learner_pack_status_idx
+        ON lesson_sessions(learner_id, curriculum_pack_id, status, updated_at)
+    `);
     const usageColumns = this.#database.pragma(
       "table_info(model_usage)",
     ) as { name: string }[];
@@ -307,25 +375,49 @@ export class SqliteLearningRepository implements LearningRepository {
       });
   }
 
-  findResumableLesson(learnerId: string): LessonSession | undefined {
+  findResumableLesson(
+    learnerId: string,
+    curriculumPackId?: string,
+    includeLegacy = false,
+  ): LessonSession | undefined {
+    const packClause = curriculumPackId
+      ? includeLegacy
+        ? "AND curriculum_pack_id IN (?, 'legacy')"
+        : "AND curriculum_pack_id = ?"
+      : "";
+    const parameters = curriculumPackId
+      ? [learnerId, curriculumPackId]
+      : [learnerId];
     const row = this.#database
       .prepare(
         `SELECT * FROM lesson_sessions
-         WHERE learner_id = ? AND status IN ('active', 'paused')
+         WHERE learner_id = ? ${packClause} AND status IN ('active', 'paused')
          ORDER BY updated_at DESC LIMIT 1`,
       )
-      .get(learnerId) as LessonRow | undefined;
+      .get(...parameters) as LessonRow | undefined;
     return row ? lessonFromRow(row) : undefined;
   }
 
-  findLatestLesson(learnerId: string): LessonSession | undefined {
+  findLatestLesson(
+    learnerId: string,
+    curriculumPackId?: string,
+    includeLegacy = false,
+  ): LessonSession | undefined {
+    const packClause = curriculumPackId
+      ? includeLegacy
+        ? "AND curriculum_pack_id IN (?, 'legacy')"
+        : "AND curriculum_pack_id = ?"
+      : "";
+    const parameters = curriculumPackId
+      ? [learnerId, curriculumPackId]
+      : [learnerId];
     const row = this.#database
       .prepare(
         `SELECT * FROM lesson_sessions
-         WHERE learner_id = ?
+         WHERE learner_id = ? ${packClause}
          ORDER BY updated_at DESC LIMIT 1`,
       )
-      .get(learnerId) as LessonRow | undefined;
+      .get(...parameters) as LessonRow | undefined;
     return row ? lessonFromRow(row) : undefined;
   }
 
@@ -351,15 +443,19 @@ export class SqliteLearningRepository implements LearningRepository {
     this.#database
       .prepare(
         `INSERT INTO lesson_sessions (
-          id, learner_id, concept, status, turn_count, last_prompt,
+          id, learner_id, curriculum_pack_id, concept, status, turn_count, last_prompt,
           last_diagnosis, last_strategy, mastery_status, mastery_evidence,
+          placement_level, placement_score, placement_total, placement_evidence,
           anchor_object, created_at, updated_at
         ) VALUES (
-          @id, @learnerId, @concept, @status, @turnCount, @lastPrompt,
+          @id, @learnerId, @curriculumPackId, @concept, @status, @turnCount, @lastPrompt,
           @lastDiagnosis, @lastStrategy, @masteryStatus, @masteryEvidence,
+          @placementLevel, @placementScore, @placementTotal, @placementEvidenceJson,
           @anchorObject, @createdAt, @updatedAt
         )
         ON CONFLICT(id) DO UPDATE SET
+          curriculum_pack_id = excluded.curriculum_pack_id,
+          concept = excluded.concept,
           status = excluded.status,
           turn_count = excluded.turn_count,
           last_prompt = excluded.last_prompt,
@@ -367,10 +463,17 @@ export class SqliteLearningRepository implements LearningRepository {
           last_strategy = excluded.last_strategy,
           mastery_status = excluded.mastery_status,
           mastery_evidence = excluded.mastery_evidence,
+          placement_level = excluded.placement_level,
+          placement_score = excluded.placement_score,
+          placement_total = excluded.placement_total,
+          placement_evidence = excluded.placement_evidence,
           anchor_object = excluded.anchor_object,
           updated_at = excluded.updated_at`,
       )
-      .run(lesson);
+      .run({
+        ...lesson,
+        placementEvidenceJson: JSON.stringify(lesson.placementEvidence),
+      });
   }
 
   appendTurn(storedTurn: StoredTeachingTurn): void {

@@ -51,6 +51,8 @@ describe("mission-control snapshot", () => {
     expect(snapshot.sessions).toHaveLength(1);
     expect(snapshot.sessions[0]).toMatchObject({
       learner_ref: expect.stringMatching(/^learner_[a-f0-9]{10}$/u),
+      curriculum_pack_id: fractionsPack.id,
+      subject: "Math",
       turn_count: 1,
       anchor_object: null,
       placement: {

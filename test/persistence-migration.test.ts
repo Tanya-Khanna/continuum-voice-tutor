@@ -53,6 +53,11 @@ describe("SQLite learning migrations", () => {
     const repository = new SqliteLearningRepository(path);
     expect(repository.findLesson("lesson_legacy")).toMatchObject({
       id: "lesson_legacy",
+      curriculumPackId: "legacy",
+      placementLevel: "unplaced",
+      placementScore: 0,
+      placementTotal: 0,
+      placementEvidence: [],
       anchorObject: null,
     });
     repository.close();

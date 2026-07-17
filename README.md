@@ -12,7 +12,15 @@ Academic vocabulary is pack-driven too. Every concept declares reviewed canonica
 
 Physical anchor activities are also curriculum data rather than engine branches. A learner can say they are holding a reviewed household object such as paper, a flatbread, a leaf, or—in another subject pack—a balloon. Nomad stores only the pack's generic `objectName`, carries it through a dropped call, and supplies it to the next teaching decision. The model cannot persist an unreviewed noun, owner, brand, location, or personal detail; physical manipulation must use the pack's reviewed safe prompt.
 
-Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to change the deployment without changing teaching-engine code. Leaving it blank loads the built-in India fractions demo pack.
+Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to run a one-subject deployment. For multiple callable subjects, leave that variable blank and set `NOMAD_CURRICULUM_PATHS` to an ordered JSON array. Use `builtin:india-ncert-grade-6-fractions` for the checked-in flagship, followed by reviewed frozen pack files:
+
+```dotenv
+NOMAD_CURRICULUM_PATHS=["builtin:india-ncert-grade-6-fractions","curriculum/packs/science.json"]
+```
+
+The first entry is the default context used for Sandbox persistence. The catalog rejects empty lists, duplicate IDs, duplicate subject labels, and mixed country/grade deployments. Leaving both variables blank loads only the built-in India fractions demo pack.
+
+Realtime returns the catalog's subject labels after identifying the learner and requires an explicit subject when more than one is available. No guided session is created before that choice. Placement, lesson state, retrieval history, and exact drop/resume are stored per curriculum pack, so Math placement cannot silently satisfy Science placement and switching subjects cannot resume the wrong lesson.
 
 The offline language detector is deliberately a configurable test adapter; it does not claim to translate arbitrary languages. In live mode, the model detects and responds in the learner's actual language while remaining grounded in the selected pack.
 
@@ -42,6 +50,8 @@ Numerical fraction claims use a bounded, machine-checkable rational-comparison c
 npm install
 npm run chat -- --name Ravi --phone +919999900001
 ```
+
+With a multi-pack catalog, add `--subject Science` (or another exact catalog subject). `npm run diagnostic -- --subject Science` uses that pack's placement questions.
 
 Try: `One fourth is bigger because four is bigger than three.`
 
@@ -121,7 +131,7 @@ Nomad's default Realtime voice is `marin` at a 0.8 playback multiplier, with exp
 
 If speech is missing, clipped, or too unclear to transcribe faithfully, the Realtime layer must call `recover_unclear_audio` instead of guessing or sending partial text to a teaching tool. The server returns the correct pending identity, menu, placement, guided-lesson, or Sandbox prompt and localizes only the neutral retry lead. This path makes no teaching-model request and does not change lesson progress, mastery, or Sandbox history.
 
-Realtime asks the learner's name and calls `start_lesson`. The server returns a menu built from `deployment.subject`—currently guided Math or Curious Sandbox—and Realtime calls `choose_learning_mode` with the explicit choice. A server guard prevents a guided teaching call before that choice. A first-time guided learner must then complete the curriculum's placement questions through `complete_placement`; teaching remains blocked until the result is stored. Realtime may translate this non-decision onboarding copy into the caller's language, but it may not change the options or question meaning.
+Realtime asks the learner's name and calls `start_lesson`. The server returns ordered `guided_subjects` from the validated catalog—currently only reviewed Math in the checked-in deployment—plus Curious Sandbox. Realtime calls `choose_learning_mode` with the explicit mode and exact subject. A server guard prevents session creation or teaching before a required subject choice. A first-time learner in each guided subject must then complete that pack's placement questions through `complete_placement`; teaching remains blocked until the subject-specific result is stored. Realtime may translate this non-decision onboarding copy into the caller's language, but it may not change the options or question meaning.
 
 Every later guided learner answer must call `get_teaching_turn`; the server runs the frozen-pack teaching engine through GPT-5.6 Luna, persists the structured decision, and sends only the authoritative `spoken_response` back for Realtime to say. Asking for a name on every call keeps siblings on a shared phone separate, while phone number plus name resumes the correct interrupted lesson.
 
@@ -139,7 +149,7 @@ Learners can explicitly enter **Curious Sandbox** after choosing their name. Rea
 
 ## Mission control
 
-Start the server and open `http://localhost:3000/dashboard` to inspect recent teaching sessions. The page refreshes automatically and shows the anonymized learner reference, transcript, diagnosis, mastery evidence, strategy, language mode, and actual model route stored for every turn. The **Eval gate** tab runs and displays the deterministic 25-case zero-credit gate. Names, caller numbers, and phone hashes are deliberately excluded from the dashboard API.
+Start the server and open `http://localhost:3000/dashboard` to inspect recent teaching sessions. The page refreshes automatically and shows each session's subject and pack, anonymized learner reference, transcript, diagnosis, mastery evidence, strategy, language mode, and actual model route stored for every turn. The **Eval gate** tab runs and displays the deterministic 25-case zero-credit gate. Names, caller numbers, and phone hashes are deliberately excluded from the dashboard API. `/health` reports the configured guided-subject labels without exposing pack paths or secrets.
 
 The session view also displays the latest reasoning trace, recorded Responses and Realtime usage, measured GPT-5.6 request latency, and an evidence-based cost estimate. Usage is stored by session with the provider response ID and separate text, cached-text, input-audio, cached-audio, and output-audio token counts. Cost uses exact-model rates dated 2026-07-17 for `gpt-5.6-luna` and `gpt-realtime-2.1-mini`; an unknown route is shown as unpriced instead of borrowing another model's rate. The Eval gate also shows the latest saved GPT-5.6 learner/teacher/evaluator report when one exists; absence is labeled plainly rather than presented as a pass.
 

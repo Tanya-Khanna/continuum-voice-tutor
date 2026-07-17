@@ -5,10 +5,8 @@ import {
   type TeachingTurn,
 } from "../domain/teaching.js";
 import { ModelUsageSchema, type ModelUsage } from "../domain/usage.js";
-import type {
-  LessonContext,
-  LessonService,
-} from "../lesson/lesson-service.js";
+import type { LearnerProfile } from "../domain/learner.js";
+import type { LessonContext, LessonService } from "../lesson/lesson-service.js";
 
 const StartLessonArgumentsSchema = z.object({
   learner_name: z.string().trim().min(1).max(80),
@@ -25,6 +23,7 @@ const SandboxTurnArgumentsSchema = z.object({
 
 const LearningModeArgumentsSchema = z.object({
   mode: z.enum(["guided", "curious_sandbox"]),
+  subject: z.string().trim().min(1).max(80).optional(),
 });
 
 const EmptyArgumentsSchema = z.object({}).strict();
@@ -94,8 +93,11 @@ export interface CompletedGuidedLesson {
   turn: TeachingTurn;
 }
 
-interface LessonOrchestrator {
-  beginOrResume: LessonService["beginOrResume"];
+export interface LessonOrchestrator {
+  availableSubjects: LessonService["availableSubjects"];
+  subjectForContext: LessonService["subjectForContext"];
+  identifyLearner: LessonService["identifyLearner"];
+  beginOrResumeSubject: LessonService["beginOrResumeSubject"];
   respond: LessonService["respond"];
   pause: LessonService["pause"];
   learningHistory: LessonService["learningHistory"];
@@ -104,7 +106,7 @@ interface LessonOrchestrator {
   learningMenu: LessonService["learningMenu"];
   modeGreeting: LessonService["modeGreeting"];
   requiresPlacement: LessonService["requiresPlacement"];
-  placementQuestions: LessonService["placementQuestions"];
+  placementQuestions: (context: LessonContext) => { id: string; prompt: string }[];
   completePlacement: LessonService["completePlacement"];
 }
 
@@ -210,6 +212,7 @@ export class RealtimeTeachingController {
     | undefined;
   readonly #sideEffects = new Set<Promise<void>>();
   #context: LessonContext | undefined;
+  #learner: LearnerProfile | undefined;
   #learningMode: "guided" | "curious_sandbox" | undefined;
   #completionNotified = false;
   #closed = false;
@@ -286,7 +289,7 @@ export class RealtimeTeachingController {
       let completedLesson: CompletedGuidedLesson | undefined;
       if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
-        if (this.#context) {
+        if (this.#learner) {
           output = {
             ok: false,
             spoken_response:
@@ -294,7 +297,7 @@ export class RealtimeTeachingController {
           };
           speechPolicy = "localize_onboarding";
         } else {
-          this.#context = this.#lessonService.beginOrResume({
+          this.#learner = this.#lessonService.identifyLearner({
             phoneNumber: this.#callerNumber,
             learnerName: args.learner_name,
             ...(args.language_mode
@@ -303,10 +306,13 @@ export class RealtimeTeachingController {
           });
           output = {
             ok: true,
-            learner_id: this.#context.learner.id,
-            resumed: this.#context.resumed,
+            learner_id: this.#learner.id,
+            resume_status: "pending_subject_selection",
             menu_options: ["guided", "curious_sandbox"],
-            spoken_response: this.#lessonService.learningMenu(this.#context),
+            guided_subjects: this.#lessonService.availableSubjects(),
+            spoken_response: this.#lessonService.learningMenu({
+              learner: this.#learner,
+            }),
           };
           speechPolicy = "localize_onboarding";
         }
@@ -314,24 +320,67 @@ export class RealtimeTeachingController {
         const args = LearningModeArgumentsSchema.parse(
           JSON.parse(call.arguments),
         );
-        if (!this.#context) {
+        if (!this.#learner) {
           output = {
             ok: false,
             spoken_response:
               "Before choosing a learning mode, what name would you like me to use?",
           };
         } else {
+          const subjects = this.#lessonService.availableSubjects();
+          const selectedSubject = args.subject
+            ? subjects.find(
+                (subject) =>
+                  subject.toLocaleLowerCase("en-US") ===
+                  args.subject!.toLocaleLowerCase("en-US"),
+              )
+            : subjects.length === 1
+              ? subjects[0]
+              : undefined;
+          if (args.mode === "guided" && !selectedSubject) {
+            output = {
+              ok: false,
+              guided_subjects: subjects,
+              spoken_response: this.#lessonService.learningMenu({
+                learner: this.#learner,
+              }),
+            };
+            speechPolicy = "localize_onboarding";
+            send(toolOutputEvent(call.call_id, output));
+            send(speakToolOutputEvent(speechPolicy));
+            return;
+          }
+          if (!this.#context) {
+            this.#context = this.#lessonService.beginOrResumeSubject(
+              this.#learner,
+              args.mode === "guided" ? selectedSubject : undefined,
+            );
+          } else if (
+            args.mode === "guided" &&
+            selectedSubject &&
+            this.#lessonService.subjectForContext(this.#context) !==
+              selectedSubject
+          ) {
+            this.#context = this.#lessonService.pause(this.#context);
+            this.#context = this.#lessonService.beginOrResumeSubject(
+              this.#learner,
+              selectedSubject,
+            );
+          }
           this.#learningMode = args.mode;
+          this.#flushUsage();
           const placementRequired =
             args.mode === "guided" &&
             this.#lessonService.requiresPlacement(this.#context);
           const placementQuestions = placementRequired
-            ? this.#lessonService.placementQuestions()
+            ? this.#lessonService.placementQuestions(this.#context)
             : [];
           output = placementRequired
             ? {
                 ok: true,
                 mode: args.mode,
+                selected_subject: selectedSubject,
+                resumed: this.#context.resumed,
                 placement_required: true,
                 placement_questions: placementQuestions,
                 spoken_response: placementQuestions[0]!.prompt,
@@ -339,6 +388,10 @@ export class RealtimeTeachingController {
             : {
                 ok: true,
                 mode: args.mode,
+                ...(selectedSubject
+                  ? { selected_subject: selectedSubject }
+                  : {}),
+                resumed: this.#context.resumed,
                 placement_required: false,
                 spoken_response: this.#lessonService.modeGreeting(
                   this.#context,
@@ -380,12 +433,20 @@ export class RealtimeTeachingController {
         const args = TeachingTurnArgumentsSchema.parse(
           JSON.parse(call.arguments),
         );
-        if (!this.#context) {
+        if (!this.#learner) {
           output = {
             ok: false,
             spoken_response:
               "Before we begin, what name would you like me to use?",
           };
+        } else if (!this.#context) {
+          output = {
+            ok: false,
+            spoken_response: this.#lessonService.learningMenu({
+              learner: this.#learner,
+            }),
+          };
+          speechPolicy = "localize_onboarding";
         } else if (
           this.#learningMode !== "guided" ||
           this.#lessonService.requiresPlacement(this.#context)
@@ -456,18 +517,21 @@ export class RealtimeTeachingController {
           | "guided"
           | "curious_sandbox";
         let pendingPrompt: string;
-        if (!this.#context) {
+        if (!this.#learner) {
           recoveryStage = "identity";
           pendingPrompt = "What name would you like me to use?";
-        } else if (!this.#learningMode) {
+        } else if (!this.#learningMode || !this.#context) {
           recoveryStage = "menu";
-          pendingPrompt = this.#lessonService.learningMenu(this.#context);
+          pendingPrompt = this.#lessonService.learningMenu({
+            learner: this.#learner,
+          });
         } else if (
           this.#learningMode === "guided" &&
           this.#lessonService.requiresPlacement(this.#context)
         ) {
           recoveryStage = "placement";
-          pendingPrompt = this.#lessonService.placementQuestions()[0]!.prompt;
+          pendingPrompt =
+            this.#lessonService.placementQuestions(this.#context)[0]!.prompt;
         } else if (this.#learningMode === "guided") {
           recoveryStage = "guided";
           pendingPrompt = this.#context.session.lastPrompt;

@@ -1,13 +1,16 @@
 import { createInterface } from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 import { loadEnvironment, requireOpenAIKey } from "../config/env.js";
-import { loadCurriculumPack } from "../config/curriculum.js";
+import {
+  curriculumCatalogOptions,
+  loadCurriculumCatalog,
+} from "../config/curriculum.js";
 import type { CurriculumPack } from "../curriculum/schema.js";
 import { ResolvedLanguageModeSchema } from "../domain/teaching.js";
 import { OfflineTeachingEngine } from "../engine/offline-teaching-engine.js";
 import { OpenAITeachingEngine } from "../engine/openai-teaching-engine.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
-import { LessonService } from "../lesson/lesson-service.js";
+import { CatalogLessonService } from "../lesson/catalog-lesson-service.js";
 import { SqliteLearningRepository } from "../persistence/sqlite-learning-repository.js";
 
 function argumentValue(flag: string, fallback: string): string {
@@ -32,29 +35,41 @@ function makeEngine(
 
 async function main(): Promise<void> {
   const environment = loadEnvironment();
-  const curriculumPack = loadCurriculumPack(environment.NOMAD_CURRICULUM_PATH);
+  const catalog = loadCurriculumCatalog(curriculumCatalogOptions(environment));
+  const requestedSubject = argumentValue(
+    "--subject",
+    catalog.defaultOption.subject,
+  );
+  const curriculumOption = catalog.requireBySubject(requestedSubject);
+  const curriculumPack = curriculumOption.pack;
   const repository = new SqliteLearningRepository(
     environment.NOMAD_DATABASE_PATH,
   );
-  const lessonService = new LessonService({
+  const lessonService = new CatalogLessonService({
     repository,
-    engine: makeEngine(environment, curriculumPack),
+    catalog,
+    engineFactory: (packId) =>
+      makeEngine(environment, catalog.requireByPackId(packId).pack),
     phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
-    curriculumPack,
   });
   const learnerName = argumentValue("--name", "Demo Learner");
   const phoneNumber = argumentValue("--phone", "+910000000001");
   const preferredLanguage = ResolvedLanguageModeSchema.parse(
     argumentValue("--language", "en"),
   );
-  let context = lessonService.beginOrResume({
+  const learner = lessonService.identifyLearner({
     phoneNumber,
     learnerName,
     preferredLanguage,
   });
+  let context = lessonService.beginOrResumeSubject(
+    learner,
+    curriculumOption.subject,
+  );
   const terminal = createInterface({ input, output });
 
   output.write(`Nomad AI — ${curriculumPack.id}\n`);
+  output.write(`Subject: ${curriculumOption.subject}\n`);
   output.write(`Engine: ${environment.TEACHING_ENGINE}\n`);
   output.write(`Learner: ${context.learner.name}\n`);
   output.write(`Session: ${context.resumed ? "resumed" : "new"}\n`);

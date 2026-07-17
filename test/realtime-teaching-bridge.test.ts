@@ -109,15 +109,17 @@ describe("Realtime teaching controller", () => {
     );
 
     const startOutput = parseToolOutput(sent[0]!);
-    expect(startOutput).toMatchObject({ ok: true, resumed: false });
+    expect(startOutput).toMatchObject({
+      ok: true,
+      resume_status: "pending_subject_selection",
+      guided_subjects: ["Math"],
+    });
     expect(startOutput.spoken_response).toContain("Ravi");
     expect(startOutput.spoken_response).toContain("guided Math");
     expect(startOutput.menu_options).toEqual(["guided", "curious_sandbox"]);
-    const startedSession = repository.findResumableLesson(
-      startOutput.learner_id as string,
-    );
-    expect(startedSession).toBeDefined();
-    expect(repository.listUsage(startedSession!.id)).toHaveLength(1);
+    expect(
+      repository.findResumableLesson(startOutput.learner_id as string),
+    ).toBeUndefined();
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -131,8 +133,15 @@ describe("Realtime teaching controller", () => {
     expect(modeOutput).toMatchObject({
       ok: true,
       mode: "guided",
+      selected_subject: "Math",
+      resumed: false,
       placement_required: true,
     });
+    const startedSession = repository.findResumableLesson(
+      startOutput.learner_id as string,
+    );
+    expect(startedSession).toBeDefined();
+    expect(repository.listUsage(startedSession!.id)).toHaveLength(1);
     expect(modeOutput.spoken_response).toContain("shared equally");
     expect(sent[3]).toMatchObject({
       type: "response.create",
@@ -299,7 +308,7 @@ describe("Realtime teaching controller", () => {
     expect(blocked.spoken_response).toContain("guided Math");
     const learnerId = parseToolOutput(sent[0]!).learner_id as string;
     const session = repository.findResumableLesson(learnerId);
-    expect(repository.listTurns(session!.id)).toHaveLength(0);
+    expect(session).toBeUndefined();
     await controller.close();
     repository.close();
   });
@@ -343,7 +352,6 @@ describe("Realtime teaching controller", () => {
       send,
     );
     const learnerId = parseToolOutput(sent.at(-2)!).learner_id as string;
-    const session = repository.findResumableLesson(learnerId)!;
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -374,6 +382,7 @@ describe("Realtime teaching controller", () => {
       }),
       send,
     );
+    const session = repository.findResumableLesson(learnerId)!;
     expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
       recovery_stage: "placement",
       pending_prompt: service.placementQuestions()[0]!.prompt,

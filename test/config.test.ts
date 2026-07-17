@@ -18,6 +18,24 @@ describe("environment configuration", () => {
     expect(environment.NOMAD_VAD_SILENCE_MS).toBe(650);
     expect(environment.NOMAD_MAX_CALLS_PER_HOUR).toBe(6);
     expect(environment.NOMAD_SMS_RECAP_ENABLED).toBe(false);
+    expect(environment.NOMAD_CURRICULUM_PATHS).toBeUndefined();
+  });
+
+  it("parses an ordered multi-pack path list and rejects conflicting config", () => {
+    expect(
+      loadEnvironment({
+        NOMAD_CURRICULUM_PATHS: '["packs/math.json","packs/science.json"]',
+      }).NOMAD_CURRICULUM_PATHS,
+    ).toEqual(["packs/math.json", "packs/science.json"]);
+    expect(() =>
+      loadEnvironment({
+        NOMAD_CURRICULUM_PATH: "packs/math.json",
+        NOMAD_CURRICULUM_PATHS: '["packs/science.json"]',
+      }),
+    ).toThrow(/not both/u);
+    expect(() =>
+      loadEnvironment({ NOMAD_CURRICULUM_PATHS: "math.json,science.json" }),
+    ).toThrow();
   });
 
   it("parses an explicit SMS recap opt-in without treating false as truthy", () => {

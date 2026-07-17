@@ -29,6 +29,8 @@ const DashboardTurnSchema = z.object({
 const DashboardSessionSchema = z.object({
   session_id: z.string(),
   learner_ref: z.string(),
+  curriculum_pack_id: z.string(),
+  subject: z.string(),
   concept_id: z.string(),
   concept_title: z.string(),
   status: z.string(),
@@ -78,13 +80,19 @@ function learnerReference(learnerId: string): string {
 
 export function buildDashboardSnapshot(options: {
   repository: LearningRepository;
-  curriculumPack: CurriculumPack;
+  curriculumPack?: CurriculumPack;
+  curriculumPacks?: readonly CurriculumPack[];
   limit?: number;
   now?: Date;
 }): DashboardSnapshot {
-  const conceptTitles = new Map(
-    options.curriculumPack.concepts.map((concept) => [concept.id, concept.title]),
-  );
+  const packs =
+    options.curriculumPacks ??
+    (options.curriculumPack ? [options.curriculumPack] : []);
+  if (packs.length === 0) {
+    throw new Error("Dashboard snapshot requires at least one curriculum pack.");
+  }
+  const packsById = new Map(packs.map((pack) => [pack.id, pack]));
+  const defaultPack = packs[0]!;
   const sessions = options.repository
     .listRecentLessons(options.limit ?? 20)
     .map((session) => {
@@ -92,6 +100,19 @@ export function buildDashboardSnapshot(options: {
       if (!learner) {
         throw new Error(`Learner ${session.learnerId} is missing.`);
       }
+      const curriculumPack =
+        session.curriculumPackId === "legacy"
+          ? defaultPack
+          : packsById.get(session.curriculumPackId);
+      if (!curriculumPack) {
+        throw new Error(
+          `Curriculum pack ${session.curriculumPackId} is missing from the dashboard catalog.`,
+        );
+      }
+      const conceptTitle =
+        curriculumPack.concepts.find(
+          (concept) => concept.id === session.concept,
+        )?.title ?? session.concept;
       const usageRecords = options.repository.listUsage(session.id);
       const estimates = usageRecords.map(estimateUsageCost);
       const unpricedModels = [
@@ -158,8 +179,10 @@ export function buildDashboardSnapshot(options: {
       return {
         session_id: session.id,
         learner_ref: learnerReference(session.learnerId),
+        curriculum_pack_id: curriculumPack.id,
+        subject: curriculumPack.deployment.subject,
         concept_id: session.concept,
-        concept_title: conceptTitles.get(session.concept) ?? session.concept,
+        concept_title: conceptTitle,
         status: session.status,
         turn_count: session.turnCount,
         sandbox_turn_count: sandboxTurns.length,
@@ -169,10 +192,10 @@ export function buildDashboardSnapshot(options: {
         anchor_object: session.anchorObject,
         updated_at: session.updatedAt,
         placement: {
-          level: learner.placementLevel,
-          score: learner.placementScore,
-          total: learner.placementTotal,
-          evidence: learner.placementEvidence,
+          level: session.placementLevel,
+          score: session.placementScore,
+          total: session.placementTotal,
+          evidence: session.placementEvidence,
         },
         usage: {
           request_count: usageRecords.length,

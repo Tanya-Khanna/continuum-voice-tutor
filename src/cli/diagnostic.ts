@@ -4,14 +4,23 @@ import {
   evaluatePlacement,
   type PlacementAnswer,
 } from "../engine/placement-diagnostic.js";
-import { loadCurriculumPack } from "../config/curriculum.js";
+import {
+  curriculumCatalogOptions,
+  loadCurriculumCatalog,
+} from "../config/curriculum.js";
 import { loadEnvironment } from "../config/env.js";
 
 async function main(): Promise<void> {
   const terminal = createInterface({ input, output });
   const answers: PlacementAnswer[] = [];
   const environment = loadEnvironment();
-  const curriculumPack = loadCurriculumPack(environment.NOMAD_CURRICULUM_PATH);
+  const catalog = loadCurriculumCatalog(curriculumCatalogOptions(environment));
+  const subjectIndex = process.argv.indexOf("--subject");
+  const requestedSubject =
+    subjectIndex >= 0 ? process.argv[subjectIndex + 1] : undefined;
+  const curriculumPack = requestedSubject
+    ? catalog.requireBySubject(requestedSubject).pack
+    : catalog.defaultOption.pack;
   const placementQuestions = curriculumPack.placementDiagnostic.questions;
   let questionIndex = 0;
 
