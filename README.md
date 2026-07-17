@@ -179,6 +179,13 @@ npm run phone:preflight
 
 The initializer rotates only a missing/development-default phone HMAC secret and fills only a missing/blank dashboard token. It refuses to overwrite a configured token—even a weak one—preserves every other `.env` line, sets owner-only file permissions, and never prints generated values. The preflight reports booleans and next actions only—never keys, tokens, project IDs, webhook secrets, or phone numbers. Three operator attestations remain false until a human has actually verified the public signed webhook, Twilio voice routing, and SIP trunk; possession of credentials alone is not reported as readiness.
 
+Follow the exact [real-phone setup and release guide](docs/PHONE_SETUP.md). The
+preflight permits exactly one evidence-gathering call at 10/11 when signed public
+webhook delivery is the only open check. A verified signed delivery advances the
+configuration gate to 11/11; the number still remains private until G.711
+clarity, latency, barge-in, unclear-audio recovery, and redial resume pass on the
+carrier path.
+
 For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Nomad accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
 
 The call-accept payload explicitly enables OpenAI server VAD with automatic response creation and `interrupt_response: true`, so new learner speech can cancel ongoing Nomad audio instead of forcing the caller to wait. Threshold, prefix padding, and silence duration are bounded environment settings. The checked-in 0.5 / 300 ms / 650 ms values are provisional development policy, not a claim of field tuning; adjust them only after measuring missed speech, pause-cutoffs, and barge-in on the real Twilio phone leg.

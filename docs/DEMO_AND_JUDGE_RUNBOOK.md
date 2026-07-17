@@ -4,12 +4,21 @@ This is the executable handoff for recording and judge testing. It distinguishes
 what works now from claims that require the real phone line or four additional
 reviewed curriculum packs.
 
+For the exact OpenAI project, webhook, Twilio number, and SIP-trunk sequence, use
+the [real-phone setup guide](PHONE_SETUP.md).
+
 ## Release gates
+
+`npm run phone:preflight` has two deliberate stages. A 10/11 result permits
+exactly one controlled inbound smoke call only when signed public webhook
+delivery is the sole open check. After that delivery is verified, set the public
+webhook attestation and require 11/11 before wider testing.
 
 Do not publish a phone number or record a “live call” sequence until all of these
 are true:
 
-- `npm run phone:preflight` reports 11/11, including Mission Control access protection.
+- `npm run phone:preflight` reports 11/11, including signed delivery and Mission
+  Control access protection.
 - A real carrier call reaches Nomad through Twilio and OpenAI SIP.
 - Barge-in, unclear-audio recovery, disconnect, and redial have been heard over
   G.711—not merely unit-tested.
@@ -112,7 +121,7 @@ fragment, not the query string; verify that it disappears from the address bar.
 - Start from a clean committed revision; save the commit hash in submission
   notes.
 - Run `npm run verify:fresh` and capture the final pass line.
-- Run `npm run phone:preflight`; capture 11/11 without displaying secret values.
+- Follow `docs/PHONE_SETUP.md`; capture 11/11 without displaying secret values.
 - Use a new synthetic adult demo profile, never a child’s real data.
 - Confirm SMS recaps are off unless the receiving phone explicitly consented.
 - Keep a backup local REPL take and the checked-in synthetic code-switch sample.

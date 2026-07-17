@@ -48,7 +48,7 @@ Codex built the telephony bridge, state machine, curriculum compiler, evaluation
 harness, dashboard, tests, privacy gates, and documentation in one continuous task
 with inspectable milestone commits. GPT-5.6 powers live teaching, curriculum
 compilation/verification, and a separate simulated-learner/evaluator suite. The
-current evidence is 109/109 automated tests, 25/25 deterministic teaching cases,
+current evidence is 111/111 automated tests, 25/25 deterministic teaching cases,
 and a historical complete 24/24 paid agent run. The repository's clean-clone gate
 installs from the lockfile, runs every zero-credit check, seeds a synthetic paused
 lesson, and proves exact resume without local secrets or prior state.
@@ -113,12 +113,12 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 
 | Claim | Current evidence | Publication rule |
 |---|---|---|
-| Runnable Socratic tutor | Clean-clone offline lesson; 109/109 tests; 25/25 deterministic gate | Safe now |
+| Runnable Socratic tutor | Clean-clone offline lesson; 111/111 tests; 25/25 deterministic gate | Safe now |
 | GPT-5.6 at the teaching core | Structured Responses teacher plus 24/24 historical paid agent suite | Safe now; capture the saved scorecard before submission |
 | Universal product architecture | Open language tags; pack/catalog routing; no language-pair or subject branch | Say “universal architecture,” not “every language proven” |
 | Multilingual/code-switching behavior | Selected live Hindi/English, Spanish/English, French/English checks plus deterministic fixtures | Name tested patterns; do not claim every accent/noise condition |
 | Five guided subjects | Runtime can route any reviewed catalog; only Math is reviewed and callable | Blocked until four packs pass human review and freeze |
-| Works over a normal phone | SIP/Realtime server path is implemented | Blocked until 11/11 preflight and real G.711 call checks pass |
+| Works over a normal phone | SIP/Realtime server path is implemented; two-stage setup is documented | Blocked until signed delivery, 11/11 preflight, and real G.711 call checks pass |
 | Drop and exact resume | Service, Realtime close, tests, and clean-clone paused fixture | Safe for software behavior; call it carrier-proven only after redial test |
 | Live judge dashboard | Token-protected session API and local HTTP smoke | Blocked on deployed URL, token, retention decision, and release smoke |
 | SMS recap | Opt-in, exactly-once code and tests | Say implemented; call it live only after Twilio delivery and consent test |
@@ -136,7 +136,7 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 
 - Category: Education
 - Repository: `https://github.com/Tanya-Khanna/nomad-ai`
-- Public phone number: `[PENDING 11/11 PHONE GATE]`
+- Public phone number: `[PENDING SIGNED DELIVERY + 11/11 + CARRIER GATE]`
 - Dashboard URL: `[PENDING PROTECTED DEPLOYMENT]`
 - Public demo video: `[PENDING REAL-PHONE RECORDING]`
 - Main Codex feedback/session ID: `[PENDING FINAL /feedback ACTION]`

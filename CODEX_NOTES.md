@@ -456,3 +456,12 @@
 - Extended `npm run secrets:init` to fill a missing or blank Mission Control token as well as the phone-HMAC secret, without printing either value or changing any other `.env` line. A configured dashboard token is never overwritten; an invalid short one fails with an explicit repair instruction.
 - Added idempotency, preservation, mode-0600, generated-shape, and weak-token refusal coverage. The local ignored `.env` was initialized successfully, preserving the existing OpenAI key, and phone readiness advanced from 3/11 to 4/11.
 - The remaining seven checks are OpenAI project/webhook/public-delivery and Twilio account/number/routing/trunk actions. The initializer cannot truthfully mark any operator attestation itself.
+
+## 2026-07-17 — Two-stage real-phone release gate
+
+- Fixed a circular readiness rule: a valid signed `realtime.call.incoming` delivery cannot be observed before the first inbound SIP call. Preflight now permits exactly one controlled smoke call at 10/11 only when signed public delivery is the sole open check; 11/11 remains mandatory before wider carrier testing.
+- Added `docs/PHONE_SETUP.md` with the exact public-HTTPS, OpenAI project/webhook, Twilio number/origination, first-call, and carrier-behavior sequence. The guide uses OpenAI's official Realtime SIP and webhook documentation plus Twilio's official trunk documentation and connector tutorial.
+- Tightened attestation inputs: the OpenAI project ID must have the documented `proj_` shape, the Twilio Account SID must have its `AC` shape, and the number must be E.164. Placeholder-looking values no longer count as configured.
+- Added one secret-free server log after OpenAI SDK signature verification so the first valid delivery can be evidenced without printing the call ID, caller, project, or credentials.
+- Kept the release claim honest: 11/11 proves configuration, not G.711 clarity, latency, barge-in, unclear-audio behavior, or disconnect/redial. The number remains private until those real-carrier checks pass.
+- Verification: strict TypeScript and 111/111 automated tests pass, including the sole-open-check smoke-call rule and rejection of placeholder-shaped external account values.

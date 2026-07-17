@@ -236,6 +236,9 @@ export const server = createServer(async (request, response) => {
 
       if (event.type === "realtime.call.incoming") {
         const incomingCall = RealtimeIncomingCallSchema.parse(event);
+        console.log(
+          "Verified signed realtime.call.incoming webhook; evaluating call admission.",
+        );
         const callId = incomingCall.data.call_id;
         if (activeCallIds.has(callId)) {
           response.writeHead(200, { "Content-Type": "application/json" });
