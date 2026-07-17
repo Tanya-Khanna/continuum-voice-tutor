@@ -379,3 +379,10 @@
 - Prepared pending official-source briefs for Science materials, English oral narratives, History timelines/sources, and Geography maps using NCERT/CIET ePathshala pages. Each includes reviewed-vocabulary candidates, safe subject flavor, originality rules, and explicit excluded risks; none is presented as approved.
 - Added `curriculum:brief:check` plus a reviewer checklist. All four drafts validate and intentionally exit locked. No model credit was used and no extra subject pack or five-subject menu claim was made.
 - Verification: 91 of 91 automated tests, 25 of 25 deterministic teaching cases, strict TypeScript pass, and clean diff validation.
+
+## 2026-07-17 — Reproducible fresh-clone shipping gate
+
+- Added `npm run verify:fresh`, which exports committed `HEAD` to a unique temporary directory rather than trusting the working tree.
+- The gate fails if local `.env`, `.data`, or `node_modules` leaks into the archive, strips OpenAI/Twilio credentials and curriculum overrides from its child environment, forces the offline engine, and installs from `package-lock.json` with `npm ci`.
+- It then runs strict TypeScript plus all tests, the full deterministic eval suite, and a scripted one-turn REPL lesson before deleting the temporary copy.
+- Reran the command after committing the verifier itself: 91 of 91 tests, 25 of 25 eval cases, one saved offline teaching turn, and zero npm audit vulnerabilities passed from the clean archive.

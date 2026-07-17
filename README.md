@@ -62,6 +62,14 @@ npm run check
 npm run eval
 ```
 
+Before shipping, run the reproducible clean-room gate:
+
+```bash
+npm run verify:fresh
+```
+
+It exports committed `HEAD` into a temporary directory, confirms `.env`, `.data`, and `node_modules` are absent, installs exactly from the lockfile, runs the TypeScript/tests and deterministic eval gates, and completes one offline lesson. OpenAI/Twilio credentials and local curriculum overrides are removed from the child environment; the temporary copy is deleted afterward.
+
 `npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 
 The full 24-case agent harness is deliberately separate and paid. Fourteen semantic cases use GPT-5.6 as a synthetic learner, the production teaching engine, and an independent evaluator. Ten orchestration cases use the same simulator/evaluator pair around dedicated application adapters for disconnect persistence, exact reconnect, shared-phone identity, placement, callback retrieval, menu routing, Sandbox hedging, and voice formatting. Trusted code independently checks language, strategy, state, isolation, routing, question count, voice formatting, and answer leakage. It will not run without explicit confirmation:
