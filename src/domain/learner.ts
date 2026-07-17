@@ -3,7 +3,7 @@ import {
   MasteryStatusSchema,
   ResolvedLanguageModeSchema,
   TeachingStrategySchema,
-  TeachingTurnSchema,
+  PersistedTeachingTurnSchema,
 } from "./teaching.js";
 import type { StoredModelUsage } from "./usage.js";
 import type { StoredSandboxTurn } from "./sandbox.js";
@@ -46,7 +46,7 @@ export const StoredTeachingTurnSchema = z.object({
   id: z.string().min(1),
   sessionId: z.string().min(1),
   sequence: z.number().int().positive(),
-  turn: TeachingTurnSchema,
+  turn: PersistedTeachingTurnSchema,
   modelRoute: z.string().min(1),
   createdAt: z.string().datetime(),
 });

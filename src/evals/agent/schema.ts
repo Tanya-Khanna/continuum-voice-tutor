@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   ResolvedLanguageModeSchema,
   TeachingStrategySchema,
-  TeachingTurnSchema,
+  PersistedTeachingTurnSchema,
 } from "../../domain/teaching.js";
 
 export const AgentEvalScenarioSchema = z.object({
@@ -52,7 +52,7 @@ export const AgentEvalCaseResultSchema = z.object({
   teacher_model: z.string().min(1),
   evaluator_model: z.string().min(1),
   simulated_learner: SimulatedLearnerOutputSchema,
-  teaching_turn: TeachingTurnSchema,
+  teaching_turn: PersistedTeachingTurnSchema,
   evaluation: AgentEvaluatorOutputSchema,
   structural_failures: z.array(z.string()),
   input_tokens: z.number().int().nonnegative(),

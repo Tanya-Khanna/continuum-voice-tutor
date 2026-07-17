@@ -320,6 +320,18 @@ describe("LessonService", () => {
           concept: request.concept,
           learner_answer: request.learnerAnswer,
           diagnosis: "The learner supplied one correct explanation.",
+          reasoning_trace: [
+            {
+              source: "learner_stated",
+              claim: request.learnerAnswer,
+              status: "supported",
+            },
+            {
+              source: "tutor_inference",
+              claim: "The learner supplied one correct explanation.",
+              status: "supported",
+            },
+          ],
           language_mode: "en",
           next_strategy: "retrieval_practice",
           mastery_status: "secure",

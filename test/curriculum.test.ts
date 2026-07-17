@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { zodTextFormat } from "openai/helpers/zod";
 import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 import {
   CurriculumPackSchema,
   evaluateRationalComparison,
 } from "../src/curriculum/schema.js";
+import {
+  PersistedTeachingTurnSchema,
+  TeachingTurnSchema,
+} from "../src/domain/teaching.js";
 
 describe("frozen fractions curriculum", () => {
   it("validates as a reviewable curriculum pack", () => {
@@ -73,5 +78,32 @@ describe("frozen fractions curriculum", () => {
         },
       }),
     ).toThrow(/not a curriculum concept/u);
+  });
+
+  it("reads historical turns written before structured reasoning traces", () => {
+    const historical = PersistedTeachingTurnSchema.parse({
+      learner_id: "historical",
+      concept: "comparing_unit_fractions",
+      learner_answer: "One fourth.",
+      diagnosis: "Historical diagnosis.",
+      language_mode: "en",
+      next_strategy: "ask_reasoning",
+      mastery_status: "needs_support",
+      mastery_evidence: "No reasoning recorded.",
+      next_question: "Why?",
+      spoken_response: "What makes you think that?",
+      should_end_session: false,
+    });
+    expect(historical.reasoning_trace).toEqual([
+      {
+        source: "tutor_inference",
+        claim: "Historical diagnosis.",
+        status: "unclear",
+      },
+    ]);
+  });
+
+  it("keeps the auditable live teaching contract compatible with Structured Outputs", () => {
+    expect(() => zodTextFormat(TeachingTurnSchema, "teaching_turn")).not.toThrow();
   });
 });

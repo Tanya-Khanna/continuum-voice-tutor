@@ -277,3 +277,13 @@
 - Ran only the Spanish-English switch case. It passed with `es+en`, `retrieval_practice`, an independent evaluator pass, and no structural failures. The three calls recorded 4,064 input and 684 output text tokens.
 - This is a ten-scenario semantic pilot, not the plan's completed 24-case F51 suite. Disconnect/reconnect, shared-phone, placement, menu, history, and Sandbox adapters remain open.
 - Verification: 68 of 68 automated tests, 25 of 25 deterministic evals, spend-refusal CLI smoke, one-of-one live three-agent pilot, dashboard API/HTML smoke, and strict TypeScript pass.
+
+## 2026-07-17 — Auditable think-aloud reasoning traces
+
+- Extended every guided teaching decision with a bounded structured reasoning trace that separates `learner_stated` claims from `tutor_inference` entries and marks each `supported`, `unsupported`, or `unclear` against the frozen curriculum.
+- The live GPT-5.6 contract requires faithful learner evidence plus an explicit tutor inference, forbids invented reasoning steps, and states that language, accent, confidence, and brevity are not evidence of subject understanding.
+- The deterministic adapter now makes its evidence path inspectable: the denominator-as-whole-number claim is unsupported, the matching misconception diagnosis is supported, and correct piece-size reasoning is supported.
+- Full traces persist inside the existing turn JSON and appear in Mission Control. No extra learner data is collected.
+- Added a compatibility reader for historical turn JSON and saved agent reports. Old records receive only their historical diagnosis as a tutor inference marked unclear; the application neither fabricates missing learner claims nor discards the turn.
+- The agent pilot's trusted structural layer now fails future live cases that omit either learner-stated evidence or a tutor inference.
+- Verification: 70 of 70 automated tests, 25 of 25 deterministic evals, legacy SQLite/report compatibility, TeachingTurn Structured Outputs conversion, and strict TypeScript pass.

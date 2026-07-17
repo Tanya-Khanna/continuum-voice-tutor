@@ -21,6 +21,16 @@ describe("OfflineTeachingEngine", () => {
     expect(turn.next_strategy).toBe("concrete_analogy");
     expect(turn.mastery_status).toBe("needs_support");
     expect(turn.spoken_response.toLowerCase()).toContain("roti");
+    expect(turn.reasoning_trace).toEqual([
+      expect.objectContaining({
+        source: "learner_stated",
+        status: "unsupported",
+      }),
+      expect.objectContaining({
+        source: "tutor_inference",
+        status: "supported",
+      }),
+    ]);
   });
 
   it("guides instead of dumping an answer", async () => {
@@ -48,6 +58,10 @@ describe("OfflineTeachingEngine", () => {
     expect(turn.mastery_status).toBe("developing");
     expect(turn.next_strategy).toBe("retrieval_practice");
     expect(turn.mastery_evidence).toContain("justified");
+    expect(turn.reasoning_trace[0]).toMatchObject({
+      source: "learner_stated",
+      status: "supported",
+    });
   });
 
   it("detects a configured code-switching mode", async () => {

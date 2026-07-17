@@ -59,6 +59,13 @@ export class CurriculumTeachingEngine {
       learner_id: request.learnerId,
       concept: request.concept,
       learner_answer: answer,
+      reasoning_trace: [
+        {
+          source: "learner_stated" as const,
+          claim: answer || "No spoken answer was provided.",
+          status: "unclear" as const,
+        },
+      ],
       language_mode: language,
       should_end_session: false,
     } as const;
@@ -92,6 +99,14 @@ export class CurriculumTeachingEngine {
       return finalize({
         ...base,
         diagnosis,
+        reasoning_trace: [
+          ...base.reasoning_trace,
+          {
+            source: "tutor_inference",
+            claim: diagnosis,
+            status: "supported",
+          },
+        ],
         next_strategy: "safety_redirect",
         mastery_status: "needs_support",
         mastery_evidence:
@@ -128,9 +143,19 @@ export class CurriculumTeachingEngine {
     }
 
     if (!answer) {
+      const diagnosis =
+        "No reasoning evidence yet; the learner may need a smaller entry step.";
       return finalize({
         ...base,
-        diagnosis: "No reasoning evidence yet; the learner may need a smaller entry step.",
+        diagnosis,
+        reasoning_trace: [
+          ...base.reasoning_trace,
+          {
+            source: "tutor_inference",
+            claim: diagnosis,
+            status: "unclear",
+          },
+        ],
         next_strategy: "smaller_step",
         mastery_status: "needs_support",
         mastery_evidence: "No answer was provided.",
@@ -143,6 +168,14 @@ export class CurriculumTeachingEngine {
       return finalize({
         ...base,
         diagnosis: scaffold.answerRequestDiagnosis,
+        reasoning_trace: [
+          ...base.reasoning_trace,
+          {
+            source: "tutor_inference",
+            claim: scaffold.answerRequestDiagnosis,
+            status: "supported",
+          },
+        ],
         next_strategy: "ask_reasoning",
         mastery_status: "needs_support",
         mastery_evidence: scaffold.answerRequestEvidence,
@@ -158,6 +191,18 @@ export class CurriculumTeachingEngine {
       return finalize({
         ...base,
         diagnosis: misconception.diagnosis,
+        reasoning_trace: [
+          {
+            source: "learner_stated",
+            claim: answer,
+            status: "unsupported",
+          },
+          {
+            source: "tutor_inference",
+            claim: misconception.diagnosis,
+            status: "supported",
+          },
+        ],
         next_strategy: misconception.strategy,
         mastery_status: "needs_support",
         mastery_evidence: misconception.masteryEvidence,
@@ -177,6 +222,18 @@ export class CurriculumTeachingEngine {
       return finalize({
         ...base,
         diagnosis: evidenceRule.diagnosis,
+        reasoning_trace: [
+          {
+            source: "learner_stated",
+            claim: answer,
+            status: "supported",
+          },
+          {
+            source: "tutor_inference",
+            claim: evidenceRule.diagnosis,
+            status: "supported",
+          },
+        ],
         next_strategy: "retrieval_practice",
         mastery_status: "developing",
         mastery_evidence: evidenceRule.masteryEvidence,
@@ -190,6 +247,14 @@ export class CurriculumTeachingEngine {
     return finalize({
       ...base,
       diagnosis: scaffold.fallbackDiagnosis,
+      reasoning_trace: [
+        ...base.reasoning_trace,
+        {
+          source: "tutor_inference",
+          claim: scaffold.fallbackDiagnosis,
+          status: "unclear",
+        },
+      ],
       next_strategy: "ask_reasoning",
       mastery_status: "needs_support",
       mastery_evidence: scaffold.fallbackEvidence,

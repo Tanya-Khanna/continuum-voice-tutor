@@ -72,6 +72,12 @@ describe("mission-control snapshot", () => {
         expect.objectContaining({
           model_route: "offline",
           next_strategy: "concrete_analogy",
+          reasoning_trace: expect.arrayContaining([
+            expect.objectContaining({
+              source: "learner_stated",
+              status: "unsupported",
+            }),
+          ]),
         }),
       ],
     });

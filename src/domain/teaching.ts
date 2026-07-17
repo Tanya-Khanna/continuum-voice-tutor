@@ -56,11 +56,18 @@ export const TeachingRequestSchema = z.object({
   lessonState: TeachingLessonStateSchema.optional(),
 });
 
+export const ReasoningTraceEntrySchema = z.object({
+  source: z.enum(["learner_stated", "tutor_inference"]),
+  claim: z.string().min(1),
+  status: z.enum(["supported", "unsupported", "unclear"]),
+});
+
 export const TeachingTurnSchema = z.object({
   learner_id: z.string().min(1),
   concept: z.string().min(1),
   learner_answer: z.string(),
   diagnosis: z.string().min(1),
+  reasoning_trace: z.array(ReasoningTraceEntrySchema).min(1).max(6),
   language_mode: ResolvedLanguageModeSchema,
   next_strategy: TeachingStrategySchema,
   mastery_status: MasteryStatusSchema,
@@ -69,6 +76,26 @@ export const TeachingTurnSchema = z.object({
   spoken_response: z.string().min(1),
   should_end_session: z.boolean(),
 });
+
+export const PersistedTeachingTurnSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || "reasoning_trace" in value) {
+    return value;
+  }
+  const historical = value as Record<string, unknown>;
+  return {
+    ...historical,
+    reasoning_trace: [
+      {
+        source: "tutor_inference",
+        claim:
+          typeof historical.diagnosis === "string" && historical.diagnosis
+            ? historical.diagnosis
+            : "Historical turn recorded before structured reasoning traces.",
+        status: "unclear",
+      },
+    ],
+  };
+}, TeachingTurnSchema);
 
 export type LanguageMode = z.infer<typeof LanguageModeSchema>;
 export type LessonPhase = z.infer<typeof LessonPhaseSchema>;

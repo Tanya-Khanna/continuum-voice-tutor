@@ -36,6 +36,12 @@ export function structuralFailures(
   if (!scenario.allowedStrategies.includes(turn.next_strategy)) {
     failures.push(`strategy ${turn.next_strategy} was outside the reviewed set`);
   }
+  if (!turn.reasoning_trace.some((entry) => entry.source === "learner_stated")) {
+    failures.push("reasoning trace omitted learner-stated evidence");
+  }
+  if (!turn.reasoning_trace.some((entry) => entry.source === "tutor_inference")) {
+    failures.push("reasoning trace omitted the tutor inference");
+  }
   if (/[#*_`]|\d+\/\d+/u.test(turn.spoken_response)) {
     failures.push("spoken response contained non-voice formatting");
   }
