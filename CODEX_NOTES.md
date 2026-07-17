@@ -465,3 +465,12 @@
 - Added one secret-free server log after OpenAI SDK signature verification so the first valid delivery can be evidenced without printing the call ID, caller, project, or credentials.
 - Kept the release claim honest: 11/11 proves configuration, not G.711 clarity, latency, barge-in, unclear-audio behavior, or disconnect/redial. The number remains private until those real-carrier checks pass.
 - Verification: strict TypeScript and 111/111 automated tests pass, including the sole-open-check smoke-call rule and rejection of placeholder-shaped external account values.
+
+## 2026-07-17 — Host-neutral production artifact
+
+- Added a dedicated production TypeScript build and `node dist/server.js` start path rather than depending on the development-only `tsx` loader in deployment.
+- Added a multi-stage Node 22 container that runs as the unprivileged `node` user, includes only production dependencies plus runtime assets/curriculum, owns its default SQLite directory, and probes the host-provided port through `/health`. `.dockerignore` excludes local secrets, state, dependencies, Git history, and logs.
+- Added a zero-credit production smoke verifier. It blocks local `.env` loading, compiles the server, binds an ephemeral loopback port, and proves safe health metadata, token-protected Mission Control sessions, writable SQLite access, and HTTP range delivery of the sample audio.
+- The clean-clone gate now runs that compiled-server smoke before tests and deterministic evaluation. `HOST` is explicit and defaults to `0.0.0.0` for container platforms.
+- Added `docs/DEPLOYMENT.md` covering stable HTTPS, provider secret injection, a single persistent SQLite disk, single-instance operation, dashboard access checks, and the boundary between reachability and signed-webhook attestation.
+- Verification: the production smoke, strict TypeScript, and 112/112 automated tests pass locally. Docker itself is not installed in this workspace, so the image definition is source-reviewed but still needs one build on the selected deployment host.

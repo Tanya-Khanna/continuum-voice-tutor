@@ -18,7 +18,8 @@ only, and never paste `OPENAI_API_KEY`, `OPENAI_WEBHOOK_SECRET`,
 
 ## 1. Put the current server on stable public HTTPS
 
-Deploy the committed server, or expose it through a stable HTTPS tunnel, without
+Use the host-neutral [production deployment contract](DEPLOYMENT.md) to deploy
+the committed server, or expose it through a stable HTTPS tunnel, without
 changing these paths:
 
 - `GET /health`
@@ -148,4 +149,3 @@ substitute for carrier proof.
 | Call declined or busy | Check the server admission logs, active-call limit, and per-caller hourly limit before retrying. |
 | Call answers but no session appears | Complete name, mode, subject, and placement; then check the authenticated Mission Control Sessions tab. |
 | Audio is clipped or interruptions fail | Keep the number private and tune the provisional VAD settings only from measured carrier calls. |
-

@@ -1,4 +1,7 @@
-.PHONY: chat diagnostic eval test check
+.PHONY: build chat diagnostic eval test check smoke-production
+
+build:
+	npm run build
 
 chat:
 	npm run chat
@@ -14,3 +17,6 @@ test:
 
 check:
 	npm run check
+
+smoke-production:
+	npm run smoke:production

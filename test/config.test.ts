@@ -5,6 +5,7 @@ describe("environment configuration", () => {
   it("defaults to a credential-free offline mode", () => {
     const environment = loadEnvironment({});
     expect(environment.TEACHING_ENGINE).toBe("offline");
+    expect(environment.HOST).toBe("0.0.0.0");
     expect(environment.OPENAI_TEXT_MODEL).toBe("gpt-5.6-luna");
     expect(environment.OPENAI_COMPILER_MODEL).toBe("gpt-5.6-terra");
     expect(environment.OPENAI_VERIFIER_MODEL).toBe("gpt-5.6-terra");
@@ -20,6 +21,11 @@ describe("environment configuration", () => {
     expect(environment.NOMAD_SMS_RECAP_ENABLED).toBe(false);
     expect(environment.NOMAD_CURRICULUM_PATHS).toBeUndefined();
     expect(environment.NOMAD_DASHBOARD_TOKEN).toBeUndefined();
+  });
+
+  it("accepts an explicit production bind host", () => {
+    expect(loadEnvironment({ HOST: "127.0.0.1" }).HOST).toBe("127.0.0.1");
+    expect(() => loadEnvironment({ HOST: " " })).toThrow();
   });
 
   it("requires a sufficiently strong dashboard token when configured", () => {

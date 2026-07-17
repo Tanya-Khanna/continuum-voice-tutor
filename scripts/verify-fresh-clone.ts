@@ -49,7 +49,7 @@ try {
   if (extract.error) throw extract.error;
   if (extract.status !== 0) throw new Error("Could not extract Git archive.");
 
-  for (const forbiddenPath of [".env", ".data", "node_modules"]) {
+  for (const forbiddenPath of [".env", ".data", "node_modules", "dist"]) {
     if (existsSync(join(freshRoot, forbiddenPath))) {
       throw new Error(`Fresh archive unexpectedly contains ${forbiddenPath}.`);
     }
@@ -74,6 +74,7 @@ try {
     "fresh-clone-verification-only";
 
   run("npm", ["ci"], { environment: cleanEnvironment });
+  run("npm", ["run", "smoke:production"], { environment: cleanEnvironment });
   run("npm", ["run", "check"], { environment: cleanEnvironment });
   run("npm", ["run", "eval"], { environment: cleanEnvironment });
   run("npm", ["run", "seed:demo"], { environment: cleanEnvironment });
@@ -99,7 +100,7 @@ try {
   );
 
   console.log(
-    "\nFresh-clone gate passed: lockfile install, tests, deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
+    "\nFresh-clone gate passed: lockfile install, compiled production smoke, tests, deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
   );
 } finally {
   rmSync(freshRoot, { recursive: true, force: true });

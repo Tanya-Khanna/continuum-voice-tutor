@@ -134,7 +134,10 @@ Before shipping, run the reproducible clean-room gate:
 npm run verify:fresh
 ```
 
-It exports committed `HEAD` into a temporary directory, confirms `.env`, `.data`, and `node_modules` are absent, installs exactly from the lockfile, runs the TypeScript/tests and deterministic eval gates, seeds the synthetic paused lesson, and proves exact offline resume. OpenAI/Twilio credentials and both single- and multi-pack local curriculum overrides are removed from the child environment; the temporary copy is deleted afterward.
+It exports committed `HEAD` into a temporary directory, confirms `.env`, `.data`, `node_modules`, and generated `dist` output are absent, installs exactly from the lockfile, compiles and smokes the production server, runs the TypeScript/tests and deterministic eval gates, seeds the synthetic paused lesson, and proves exact offline resume. OpenAI/Twilio credentials and both single- and multi-pack local curriculum overrides are removed from the child environment; the temporary copy is deleted afterward.
+
+For stable public HTTPS, container startup, health checks, secret injection, and
+persistent SQLite requirements, use the [production deployment contract](docs/DEPLOYMENT.md).
 
 `npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 

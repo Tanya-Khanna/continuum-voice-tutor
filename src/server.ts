@@ -347,6 +347,8 @@ export const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(environment.PORT, () => {
-  console.log(`Nomad server listening on http://localhost:${environment.PORT}`);
+server.listen(environment.PORT, environment.HOST, () => {
+  console.log(
+    `Nomad server listening on http://${environment.HOST}:${environment.PORT}`,
+  );
 });

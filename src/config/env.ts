@@ -31,6 +31,7 @@ const optionalPathArray = z.preprocess((value) => {
 
 const EnvironmentSchema = z.object({
   TEACHING_ENGINE: z.enum(["offline", "openai"]).default("offline"),
+  HOST: z.string().trim().min(1).default("0.0.0.0"),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3_000),
   NOMAD_DATABASE_PATH: z.string().min(1).default(".data/nomad.db"),
   NOMAD_PHONE_HASH_SECRET: z
