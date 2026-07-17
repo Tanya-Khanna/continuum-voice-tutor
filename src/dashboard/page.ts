@@ -213,6 +213,10 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         : '$' + usage.estimated_cost_usd.toFixed(6) + (usage.pricing_as_of ? ' · rates ' + usage.pricing_as_of : '');
       addCard(analysis, 'Recorded model usage', usage.request_count + ' responses · ' + usage.total_tokens + ' tokens');
       addCard(analysis, 'Estimated API cost', cost);
+      const latency = usage.average_latency_ms === null
+        ? 'No measured teaching request yet'
+        : Math.round(usage.average_latency_ms) + ' ms average · ' + Math.round(usage.maximum_latency_ms) + ' ms max';
+      addCard(analysis, 'GPT-5.6 request latency', latency);
       details.append(transcript, analysis); root.append(hero, details);
     }
     function renderEvals() {

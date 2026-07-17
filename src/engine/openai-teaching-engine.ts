@@ -54,6 +54,7 @@ export function usageFromResponse(options: {
   source: ModelUsage["source"];
   modelRoute: string;
   providerResponseId?: string;
+  latencyMs?: number;
 }): ModelUsage {
   return {
     source: options.source,
@@ -67,6 +68,9 @@ export function usageFromResponse(options: {
     inputAudioTokens: 0,
     cachedInputAudioTokens: 0,
     outputAudioTokens: 0,
+    ...(options.latencyMs === undefined
+      ? {}
+      : { latencyMs: options.latencyMs }),
   };
 }
 
@@ -75,12 +79,14 @@ export interface OpenAITeachingEngineOptions {
   model?: string;
   client?: OpenAI;
   curriculumPack: CurriculumPack;
+  clock?: () => number;
 }
 
 export class OpenAITeachingEngine implements TeachingEngine {
   readonly #client: OpenAI;
   readonly #model: string;
   readonly #curriculumPack: CurriculumPack;
+  readonly #clock: () => number;
 
   get modelRoute(): string {
     return this.#model;
@@ -90,6 +96,7 @@ export class OpenAITeachingEngine implements TeachingEngine {
     this.#client = options.client ?? new OpenAI({ apiKey: options.apiKey });
     this.#model = options.model ?? "gpt-5.6-luna";
     this.#curriculumPack = options.curriculumPack;
+    this.#clock = options.clock ?? (() => performance.now());
   }
 
   async teach(
@@ -104,6 +111,7 @@ export class OpenAITeachingEngine implements TeachingEngine {
         `Concept ${request.concept} is not present in curriculum pack ${this.#curriculumPack.id}.`,
       );
     }
+    const startedAt = this.#clock();
     const response = await this.#client.responses.parse({
       model: this.#model,
       instructions: TEACHER_INSTRUCTIONS,
@@ -134,6 +142,7 @@ export class OpenAITeachingEngine implements TeachingEngine {
               source: "responses_teaching",
               modelRoute: this.#model,
               providerResponseId: response.id,
+              latencyMs: Math.max(0, this.#clock() - startedAt),
             }),
           }
         : {}),
@@ -144,6 +153,7 @@ export class OpenAITeachingEngine implements TeachingEngine {
     unparsedRequest: LearningHistoryRequest,
   ): Promise<ModelResult<LearningHistoryResponse>> {
     const request = LearningHistoryRequestSchema.parse(unparsedRequest);
+    const startedAt = this.#clock();
     const response = await this.#client.responses.parse({
       model: this.#model,
       instructions: HISTORY_INSTRUCTIONS,
@@ -170,6 +180,7 @@ export class OpenAITeachingEngine implements TeachingEngine {
               source: "responses_history",
               modelRoute: this.#model,
               providerResponseId: response.id,
+              latencyMs: Math.max(0, this.#clock() - startedAt),
             }),
           }
         : {}),

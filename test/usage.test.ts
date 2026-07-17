@@ -19,6 +19,7 @@ describe("model usage provenance", () => {
       source: "responses_teaching",
       modelRoute: "gpt-5.6-luna",
       providerResponseId: "resp_123",
+      latencyMs: 321.5,
     });
 
     const estimate = estimateUsageCost(
@@ -34,6 +35,7 @@ describe("model usage provenance", () => {
       inputTextTokens: 1_000,
       cachedInputTextTokens: 400,
       outputTextTokens: 200,
+      latencyMs: 321.5,
     });
     expect(estimate.usd).toBeCloseTo(0.00184, 8);
     expect(estimate.asOf).toBe("2026-07-17");
@@ -81,6 +83,7 @@ describe("model usage provenance", () => {
       inputAudioTokens: 100,
       cachedInputAudioTokens: 30,
       outputAudioTokens: 40,
+      latencyMs: 842.5,
       createdAt: "2026-07-17T12:00:01.000Z",
     });
 

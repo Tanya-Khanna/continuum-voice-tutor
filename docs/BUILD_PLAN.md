@@ -156,8 +156,10 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - **F10 Realtime streaming pipeline** — Twilio number → SIP trunk → OpenAI Realtime voice layer
   (fallback: Twilio Media Streams ↔ own WebSocket server). THE critical path.
 - **F12 VAD + barge-in** — Realtime API server VAD; caller can interrupt mid-sentence; configure + test.
-- **F13/F50 Preambles + latency choreography** — no dead air: fast model holds the floor Socratically
-  ("Good question — while I think, what would YOU guess?") while Sol works. The latency mask IS pedagogy.
+- **F13/F50 Preambles + latency choreography** — ~~Realtime gives a sub-six-word language-matched neutral
+  acknowledgment before the teaching tool call while GPT-5.6 remains the sole source of correctness, hints,
+  explanation, and questions; GPT-5.6 request latency is measured and stored per interaction~~ ✅. Real phone
+  mouth-to-ear latency measurement and tuning remain gated on the Twilio/SIP leg.
 - **F14 Connection-degradation recovery** — graceful "didn't catch that over the wire" + full session-state
   machinery for drop→resume (demo's emotional peak).
 - **F15 Warm voice, ~20% slower** — voice config + cultural persona name (builder picks; folklore archetype,
@@ -324,7 +326,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · F13/F50 preambles + latency choreography · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · ~~F16 universal code-switching (live model gate)~~ ✅ · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
+- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · ~~F13/F50 neutral preamble + engine-latency telemetry~~ ✅ *(real phone measurement remains)* · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · ~~F16 universal code-switching (live model gate)~~ ✅ · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**

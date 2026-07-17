@@ -26,6 +26,12 @@ describe("Realtime SIP boundary", () => {
       "get_teaching_turn",
       "get_learning_history",
     ]);
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "brief neutral acknowledgment",
+    );
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "must not judge correctness",
+    );
   });
 
   it("extracts the caller identity from the documented SIP From header", () => {

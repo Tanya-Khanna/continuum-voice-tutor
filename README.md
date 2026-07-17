@@ -74,7 +74,9 @@ Learners can ask what they worked on before. GPT-5.6 receives only that named pr
 
 Start the server and open `http://localhost:3000/dashboard` to inspect recent teaching sessions. The page refreshes automatically and shows the anonymized learner reference, transcript, diagnosis, mastery evidence, strategy, language mode, and actual model route stored for every turn. The **Eval gate** tab runs and displays the deterministic 25-case zero-credit gate. Names, caller numbers, and phone hashes are deliberately excluded from the dashboard API.
 
-The session view also displays recorded Responses and Realtime usage and an evidence-based cost estimate. Usage is stored by session with the provider response ID and separate text, cached-text, input-audio, cached-audio, and output-audio token counts. Cost uses exact-model rates dated 2026-07-17 for `gpt-5.6-luna` and `gpt-realtime-2.1-mini`; an unknown route is shown as unpriced instead of borrowing another model's rate.
+The session view also displays recorded Responses and Realtime usage, measured GPT-5.6 request latency, and an evidence-based cost estimate. Usage is stored by session with the provider response ID and separate text, cached-text, input-audio, cached-audio, and output-audio token counts. Cost uses exact-model rates dated 2026-07-17 for `gpt-5.6-luna` and `gpt-realtime-2.1-mini`; an unknown route is shown as unpriced instead of borrowing another model's rate.
+
+Before a teaching tool call, Realtime may say one neutral acknowledgment of fewer than six words in the learner's current language. It cannot judge correctness, hint, or ask a question; the GPT-5.6 structured turn remains the sole teaching authority. This masks part of the two-model handoff, while real phone mouth-to-ear latency still must be measured after Twilio/SIP setup.
 
 This is currently a local judge-demo surface, not an authenticated production dashboard. Do not expose it through a public tunnel with real learner data until the consent, retention, and access-control work in the plan is complete.
 

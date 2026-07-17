@@ -40,6 +40,9 @@ const DashboardSessionSchema = z.object({
     estimated_cost_usd: z.number().nonnegative().nullable(),
     pricing_as_of: z.string().optional(),
     unpriced_models: z.array(z.string()),
+    measured_latency_count: z.number().int().nonnegative(),
+    average_latency_ms: z.number().nonnegative().nullable(),
+    maximum_latency_ms: z.number().nonnegative().nullable(),
   }),
   turns: z.array(DashboardTurnSchema),
 });
@@ -93,6 +96,9 @@ export function buildDashboardSnapshot(options: {
       const outputTextTokens = sum("outputTextTokens");
       const inputAudioTokens = sum("inputAudioTokens");
       const outputAudioTokens = sum("outputAudioTokens");
+      const measuredLatencies = usageRecords.flatMap((usage) =>
+        usage.latencyMs === undefined ? [] : [usage.latencyMs],
+      );
 
       return {
       session_id: session.id,
@@ -123,6 +129,16 @@ export function buildDashboardSnapshot(options: {
           ? { pricing_as_of: pricingDates.sort().at(0) }
           : {}),
         unpriced_models: unpricedModels,
+        measured_latency_count: measuredLatencies.length,
+        average_latency_ms:
+          measuredLatencies.length === 0
+            ? null
+            : measuredLatencies.reduce((total, value) => total + value, 0) /
+              measuredLatencies.length,
+        maximum_latency_ms:
+          measuredLatencies.length === 0
+            ? null
+            : Math.max(...measuredLatencies),
       },
       turns: options.repository.listTurns(session.id).map((entry) => ({
         sequence: entry.sequence,

@@ -186,3 +186,12 @@
 - Added `/api/dashboard/evals` and an Eval gate view that exposes all deterministic case outcomes, pass rate, and voice-friendly rate without spending API credit.
 - Extended the session dashboard with recorded request/token totals and estimated API cost.
 - Verification: 44 of 44 automated tests, 25 of 25 deterministic eval cases, API/HTML smoke checks, and strict TypeScript pass.
+
+## 2026-07-17 — Latency choreography and measurement
+
+- Added a strict Realtime pre-tool acknowledgment: fewer than six words, language-matched, neutral, and prohibited from judging correctness, hinting, answering, or asking a new question.
+- Kept every teaching decision behind `get_teaching_turn`; the preamble is conversation-floor management only.
+- Measured each live GPT-5.6 Responses request at the application boundary and persisted the duration alongside its exact usage record.
+- Added average and maximum measured GPT-5.6 latency to the session dashboard.
+- Ran one intentional live Luna teaching turn after the change. The request returned a correct retrieval-practice turn in 2,701 ms and persisted 1,936 input tokens, 270 output tokens, and the measured duration.
+- Real phone mouth-to-ear latency, VAD, and barge-in tuning remain blocked on the Twilio number/SIP leg; the dashboard does not mislabel server request time as phone latency.

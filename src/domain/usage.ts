@@ -16,6 +16,7 @@ export const ModelUsageSchema = z.object({
   inputAudioTokens: z.number().int().nonnegative(),
   cachedInputAudioTokens: z.number().int().nonnegative(),
   outputAudioTokens: z.number().int().nonnegative(),
+  latencyMs: z.number().nonnegative().optional(),
 });
 
 export const StoredModelUsageSchema = ModelUsageSchema.extend({
@@ -26,4 +27,3 @@ export const StoredModelUsageSchema = ModelUsageSchema.extend({
 
 export type ModelUsage = z.infer<typeof ModelUsageSchema>;
 export type StoredModelUsage = z.infer<typeof StoredModelUsageSchema>;
-

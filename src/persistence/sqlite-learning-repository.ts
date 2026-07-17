@@ -63,6 +63,7 @@ interface UsageRow {
   input_audio_tokens: number;
   cached_input_audio_tokens: number;
   output_audio_tokens: number;
+  latency_ms: number | null;
   created_at: string;
 }
 
@@ -165,6 +166,7 @@ export class SqliteLearningRepository implements LearningRepository {
         input_audio_tokens INTEGER NOT NULL,
         cached_input_audio_tokens INTEGER NOT NULL,
         output_audio_tokens INTEGER NOT NULL,
+        latency_ms REAL,
         created_at TEXT NOT NULL
       );
 
@@ -178,6 +180,12 @@ export class SqliteLearningRepository implements LearningRepository {
       this.#database.exec(
         "ALTER TABLE teaching_turns ADD COLUMN model_route TEXT NOT NULL DEFAULT 'unknown'",
       );
+    }
+    const usageColumns = this.#database.pragma(
+      "table_info(model_usage)",
+    ) as { name: string }[];
+    if (!usageColumns.some((column) => column.name === "latency_ms")) {
+      this.#database.exec("ALTER TABLE model_usage ADD COLUMN latency_ms REAL");
     }
   }
 
@@ -329,8 +337,8 @@ export class SqliteLearningRepository implements LearningRepository {
           id, session_id, source, model_route, provider_response_id,
           input_text_tokens, cached_input_text_tokens, output_text_tokens,
           input_audio_tokens, cached_input_audio_tokens, output_audio_tokens,
-          created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          latency_ms, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         usage.id,
@@ -344,6 +352,7 @@ export class SqliteLearningRepository implements LearningRepository {
         usage.inputAudioTokens,
         usage.cachedInputAudioTokens,
         usage.outputAudioTokens,
+        usage.latencyMs ?? null,
         usage.createdAt,
       );
   }
@@ -369,6 +378,7 @@ export class SqliteLearningRepository implements LearningRepository {
         inputAudioTokens: row.input_audio_tokens,
         cachedInputAudioTokens: row.cached_input_audio_tokens,
         outputAudioTokens: row.output_audio_tokens,
+        ...(row.latency_ms === null ? {} : { latencyMs: row.latency_ms }),
         createdAt: row.created_at,
       }),
     );

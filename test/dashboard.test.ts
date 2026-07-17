@@ -36,6 +36,7 @@ describe("mission-control snapshot", () => {
         inputAudioTokens: 100,
         cachedInputAudioTokens: 30,
         outputAudioTokens: 40,
+        latencyMs: 840,
         createdAt: "2026-07-17T11:59:00.000Z",
       }),
     );
@@ -57,6 +58,9 @@ describe("mission-control snapshot", () => {
         estimated_cost_usd: expect.any(Number),
         pricing_as_of: "2026-07-17",
         unpriced_models: [],
+        measured_latency_count: 1,
+        average_latency_ms: 840,
+        maximum_latency_ms: 840,
       }),
       turns: [
         expect.objectContaining({
