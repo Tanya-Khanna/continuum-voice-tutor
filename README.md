@@ -2,7 +2,7 @@
 
 > The connection may drop. The learning continues.
 
-Nomad is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated only on Twilio number and trunk setup.
+Nomad is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated on an OpenAI project/webhook with a public signed-delivery path plus Twilio credentials, a voice-ready number, and the SIP trunk.
 
 ## Universal architecture
 
@@ -81,6 +81,15 @@ It currently covers Hindi/English, Spanish/English, and French/English code-swit
 The separate `npm run eval:live-history` check validates one synthetic Hindi/English learning-history narration. Realtime exposes this capability through `get_learning_history` after the caller selects their name.
 
 ## Phone architecture
+
+Run the secret-safe readiness check before attempting a paid call:
+
+```bash
+npm run secrets:init
+npm run phone:preflight
+```
+
+The initializer changes only a missing/development-default phone HMAC secret, preserves every other `.env` line, sets owner-only file permissions, and never prints the generated value. The preflight reports booleans and next actions only—never keys, tokens, project IDs, webhook secrets, or phone numbers. Three operator attestations remain false until a human has actually verified the public signed webhook, Twilio voice routing, and SIP trunk; possession of credentials alone is not reported as readiness.
 
 For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Nomad accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
 

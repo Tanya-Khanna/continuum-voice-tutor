@@ -306,3 +306,14 @@
 - Did not set an idle timeout: an automatic timeout response could bypass the current lesson-tool rhythm, and silence handling is already explicit in the teaching flow.
 - Real G.711 phone audio, noisy-line activation, cut-off pauses, mouth-to-ear latency, and physical barge-in remain blocked on the Twilio number and SIP trunk.
 - Verification: 78 of 78 automated tests, exact accept-payload assertions, invalid-env rejection, and strict TypeScript pass.
+
+## 2026-07-17 — Secret-safe phone readiness boundary
+
+- Added `npm run phone:preflight`, a ten-check report covering live engine selection, OpenAI key/project/webhook, public signed delivery, deployment phone-HMAC secret, Twilio credentials/number, verified voice routing, and the SIP trunk.
+- The report contains only pass/open booleans, labels, and next actions. Tests prove it never serializes API keys, auth tokens, project values, webhook secrets, or phone numbers.
+- Added explicit operator attestations for public webhook reachability, Twilio voice readiness, and SIP trunk routing. Credentials alone cannot turn these checks green.
+- Added `npm run secrets:init` to rotate only a missing/development-default phone-HMAC secret, preserve the rest of `.env`, enforce mode 0600, and print no value. Ran it successfully on the local ignored environment.
+- Local readiness moved from 2/10 to 3/10. The live engine, API key, and deployment hash secret are ready.
+- The remaining seven checks require external state: OpenAI project ID, webhook/signing secret, public signed delivery, Twilio credentials, a purchased/assigned number, verified inbound voice, and the Twilio-to-OpenAI SIP trunk.
+- Corrected the README's previously too-narrow claim that only a Twilio number/trunk blocked the real call.
+- Verification: 81 of 81 automated tests, secret-initializer idempotency and permissions, live local preflight without value exposure, and strict TypeScript pass.

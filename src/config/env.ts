@@ -52,9 +52,12 @@ const EnvironmentSchema = z.object({
   OPENAI_SPEECH_MODEL: z.string().min(1).default("tts-1-hd"),
   OPENAI_WEBHOOK_SECRET: optionalNonEmpty,
   OPENAI_PROJECT_ID: optionalNonEmpty,
+  NOMAD_OPENAI_WEBHOOK_PUBLIC: booleanFromEnvironment,
   TWILIO_ACCOUNT_SID: optionalNonEmpty,
   TWILIO_AUTH_TOKEN: optionalNonEmpty,
   TWILIO_PHONE_NUMBER: optionalNonEmpty,
+  NOMAD_TWILIO_SIP_TRUNK_CONFIGURED: booleanFromEnvironment,
+  NOMAD_TWILIO_NUMBER_VOICE_READY: booleanFromEnvironment,
   NOMAD_SMS_RECAP_ENABLED: booleanFromEnvironment,
 });
 

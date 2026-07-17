@@ -330,6 +330,10 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Open THE main Codex session (this becomes the `/feedback` session — everything core happens here). First prompt: point it at this file + repo init + AGENTS.md + CODEX_NOTES.md skeleton.~~ ✅
 - Access checks in practice: ~~first live structured-output API call to GPT-5.6 Luna~~ ✅ *(Jul 17; correct misconception diagnosis returned)*; Terra/Sol smoke checks; ~~Realtime session hello-world~~ ✅ *(Jul 17; text-only Realtime Mini selected the live `start_lesson` tool)*; voice catalog listen-through (pick the warm voice; note accent options).
 - Twilio: buy US number, configure SIP trunk → OpenAI Realtime SIP connector.
+- ~~Secret-safe `phone:preflight` now distinguishes local credential/config presence from three operator-verified
+  external states and prints no values; `secrets:init` replaced the development phone-HMAC default locally with
+  owner-only permissions~~ ✅. Current local result: 3/10 ready; project ID, webhook creation/public signed delivery,
+  Twilio credentials/number/voice routing/trunk remain explicit external-console work.
 **Afternoon:**
 - The bridge: phone call → Twilio → SIP → Realtime → AI voice answers. G.711 8kHz confirmed.
 - Measure real latency (phone-to-response). Tune VAD/barge-in settings.
