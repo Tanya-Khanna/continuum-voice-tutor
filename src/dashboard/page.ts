@@ -81,6 +81,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .eval-view { margin-top: 18px; }
     .eval-hero { padding: 24px; display: grid; grid-template-columns: 1fr repeat(3, minmax(135px, .35fr)); gap: 14px; }
     .eval-list { border-top: 1px solid var(--line); }
+    .eval-section { padding: 22px 20px 12px; border-top: 1px solid var(--line); }
     .eval-row { display: grid; grid-template-columns: minmax(180px, 1fr) 160px 90px minmax(240px, 1.5fr); gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); align-items: center; }
     .pass { color: var(--lime); }
     .fail { color: var(--orange); }
@@ -260,6 +261,28 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         list.append(row);
       }
       root.append(hero, list);
+      const agent = report.agent_report;
+      const agentHead = text('div', '', 'eval-section');
+      agentHead.append(text('div', 'GPT-5.6 simulated learner + evaluator', 'eyebrow'));
+      if (!agent) {
+        agentHead.append(text('h2', 'Semantic pilot has not been run.'));
+        agentHead.append(text('p', 'Opt-in only: npm run eval:agents -- --confirm-spend --case <id>', 'count'));
+        root.append(agentHead);
+        return;
+      }
+      agentHead.append(text('h2', agent.passed === agent.total ? 'Semantic pilot is green.' : 'Semantic pilot needs attention.'));
+      agentHead.append(text('p', agent.passed + '/' + agent.total + ' passed · ' + (agent.input_tokens + agent.output_tokens) + ' recorded text tokens · ' + new Date(agent.generated_at).toLocaleString(), 'count'));
+      const agentList = text('div', '', 'eval-list');
+      for (const result of agent.results) {
+        const row = text('div', '', 'eval-row');
+        row.append(text('strong', result.id));
+        row.append(text('span', result.category));
+        row.append(text('span', result.passed ? 'PASS' : 'FAIL', result.passed ? 'pass' : 'fail'));
+        const failures = [...result.structural_failures, ...result.evaluation.failures];
+        row.append(text('span', failures.join(' · ') || result.evaluation.rationale, 'count'));
+        agentList.append(row);
+      }
+      root.append(agentHead, agentList);
     }
     function renderSample() {
       const root = document.querySelector('#sample-view');

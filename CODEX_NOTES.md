@@ -266,3 +266,14 @@
 - Curriculum source briefs can declare required vocabulary. Trusted application code now checks the exact concept ID, canonical term, term language, and reviewed meaning after compilation and before verification, failing closed on substitutions.
 - Added denominator, unit-fraction, and equal-shares bridges to the flagship pack. Offline signals remain test fixtures, not a closed list of phrases the live product understands.
 - Verification: 65 of 65 automated tests, the 25-of-25 deterministic teaching gate, Structured Outputs schema conversion, and strict TypeScript pass.
+
+## 2026-07-17 — Spend-gated GPT-5.6 agent evaluation pilot
+
+- Added ten reviewed semantic scenarios covering correct reasoning, correct answer with wrong reasoning, the denominator misconception, Hindi-only confusion, Spanish-English and French-English switching, answer pressure, benign off-topic drift, unsafe content, and prompt injection.
+- Each live case makes three explicit GPT-5.6 calls: a synthetic learner produces a natural utterance from intent rather than a fixed answer, the production teaching engine responds, and an independent evaluator grades diagnosis, language, voice format, answer leakage, follow-up quality, mastery justification, and safety.
+- Trusted application checks independently enforce required language tags, an allowed strategy set, exactly one spoken question, no Markdown or symbolic fractions, and no answer reveal under pressure. Model evaluation cannot override these failures.
+- The CLI refuses to spend without `--confirm-spend`, supports one-case targeting, records all three model routes and text-token totals, and writes the latest validated report to a Git-ignored `.data` path.
+- Mission Control now shows the saved semantic report below the deterministic zero-credit gate, or states plainly that no agent run exists.
+- Ran only the Spanish-English switch case. It passed with `es+en`, `retrieval_practice`, an independent evaluator pass, and no structural failures. The three calls recorded 4,064 input and 684 output text tokens.
+- This is a ten-scenario semantic pilot, not the plan's completed 24-case F51 suite. Disconnect/reconnect, shared-phone, placement, menu, history, and Sandbox adapters remain open.
+- Verification: 68 of 68 automated tests, 25 of 25 deterministic evals, spend-refusal CLI smoke, one-of-one live three-agent pilot, dashboard API/HTML smoke, and strict TypeScript pass.

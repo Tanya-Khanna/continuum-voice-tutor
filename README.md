@@ -52,6 +52,14 @@ npm run eval
 
 `npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 
+The semantic agent pilot is deliberately separate and paid. Each case uses GPT-5.6 once as a synthetic learner, once through the real teaching engine, and once as an independent evaluator; trusted code then adds language-tag, strategy, question-count, voice-format, and answer-leak checks. It will not run without explicit confirmation:
+
+```bash
+npm run eval:agents -- --confirm-spend --case agent-spanish-english-switch
+```
+
+Omit `--case` only when intentionally running all ten pilot scenarios. The latest validated report is written under `.data`, stays out of Git, and appears below the deterministic gate in Mission Control. This pilot covers semantic turn quality; the plan's remaining orchestration cases for disconnect/reconnect, shared-phone identity, placement, menu routing, history, and Sandbox still require their dedicated adapters before the full 24-case F51 claim is complete.
+
 With an API key configured, this low-cost command verifies live Realtime name capture and guided-subject/Sandbox menu routing using text only:
 
 ```bash
@@ -92,7 +100,7 @@ Learners can explicitly enter **Curious Sandbox** after choosing their name. Rea
 
 Start the server and open `http://localhost:3000/dashboard` to inspect recent teaching sessions. The page refreshes automatically and shows the anonymized learner reference, transcript, diagnosis, mastery evidence, strategy, language mode, and actual model route stored for every turn. The **Eval gate** tab runs and displays the deterministic 25-case zero-credit gate. Names, caller numbers, and phone hashes are deliberately excluded from the dashboard API.
 
-The session view also displays recorded Responses and Realtime usage, measured GPT-5.6 request latency, and an evidence-based cost estimate. Usage is stored by session with the provider response ID and separate text, cached-text, input-audio, cached-audio, and output-audio token counts. Cost uses exact-model rates dated 2026-07-17 for `gpt-5.6-luna` and `gpt-realtime-2.1-mini`; an unknown route is shown as unpriced instead of borrowing another model's rate.
+The session view also displays recorded Responses and Realtime usage, measured GPT-5.6 request latency, and an evidence-based cost estimate. Usage is stored by session with the provider response ID and separate text, cached-text, input-audio, cached-audio, and output-audio token counts. Cost uses exact-model rates dated 2026-07-17 for `gpt-5.6-luna` and `gpt-realtime-2.1-mini`; an unknown route is shown as unpriced instead of borrowing another model's rate. The Eval gate also shows the latest saved GPT-5.6 learner/teacher/evaluator report when one exists; absence is labeled plainly rather than presented as a pass.
 
 The **Sample** tab ships a 33-second Spanish-English code-switching exhibit with a click-to-seek synced transcript. It is labeled as a curated synthetic fixture, not presented as a child or live-call recording. The manifest accepts arbitrary language tags and is separate from the teaching engine. The checked-in audio uses local es-MX system voices because the current restricted project key lacks the `api.model.audio.request` scope. After enabling that scope, regenerate with `npm run sample:audio`; use `NOMAD_SAMPLE_AUDIO_BACKEND=system npm run sample:audio` for the zero-credit fallback.
 

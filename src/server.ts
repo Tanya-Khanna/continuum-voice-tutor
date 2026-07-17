@@ -6,6 +6,7 @@ import { loadCurriculumPack } from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
 import { runOfflineEvaluation } from "./evals/offline-evaluator.js";
+import { readAgentEvalReport } from "./evals/agent/report.js";
 import { hashPhoneNumber } from "./domain/identity.js";
 import {
   resolveTwilioSmsConfig,
@@ -156,7 +157,10 @@ export const server = createServer(async (request, response) => {
     }
 
     if (request.method === "GET" && url.pathname === "/api/dashboard/evals") {
-      const report = await runOfflineEvaluation();
+      const [report, agentReport] = await Promise.all([
+        runOfflineEvaluation(),
+        readAgentEvalReport(environment.NOMAD_AGENT_EVAL_REPORT_PATH),
+      ]);
       response.writeHead(200, {
         "Content-Type": "application/json",
         "Cache-Control": "no-store",
@@ -166,6 +170,7 @@ export const server = createServer(async (request, response) => {
           generated_at: new Date().toISOString(),
           gate: "deterministic_offline",
           ...report,
+          agent_report: agentReport,
         }),
       );
       return;

@@ -252,7 +252,11 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   menu routing×2 · sandbox hedging · voice-math formatting · Spanish smoke-test (untuned-language claim check).
   Judged on: diagnosis correctness, language mixture,
   voice-friendly explanation, no premature answer, follow-up quality, resume state, justified mastery decision.
-  **Results displayed on dashboard.**
+  **Results displayed on dashboard.** ~~A spend-confirmed v1 semantic pilot now runs ten teaching/safety/language
+  scenarios through GPT-5.6 simulated learner → real teaching engine → independent GPT-5.6 evaluator, adds trusted
+  structural checks, records model routes/tokens, saves a Git-ignored report, and renders it beside the zero-credit
+  gate; one Spanish-English three-agent case passes live~~ ✅. The remaining 14 orchestration-focused cases and full
+  24-case run are still open; do not present the pilot as the completed suite.
 
 ### 4.2 STRETCH — day 4 only, strict order, never at stability's expense
 1. **F4 WhatsApp voice notes** — same brain, async channel; zero latency pressure = demo insurance; Twilio WhatsApp API.

@@ -14,6 +14,7 @@
     "eval:live-safety": "tsx src/evals/live-safety-run.ts",
     "eval:live-sandbox": "tsx src/evals/live-sandbox-run.ts",
     "eval:live-placement": "tsx src/evals/live-placement-run.ts",
+    "eval:agents": "tsx src/evals/agent/run.ts",
     "smoke:realtime": "tsx src/cli/realtime-smoke.ts",
     "sample:audio": "tsx scripts/generate-sample-audio.ts",
     "start": "tsx src/server.ts",
