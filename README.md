@@ -1,5 +1,7 @@
 # Nomad AI
 
+[![Release gate](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml/badge.svg)](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml)
+
 > The connection may drop. The learning continues.
 
 Nomad is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated on an OpenAI project/webhook with a public signed-delivery path plus Twilio credentials, a voice-ready number, and the SIP trunk.
@@ -135,6 +137,9 @@ npm run verify:fresh
 ```
 
 It exports committed `HEAD` into a temporary directory, confirms `.env`, `.data`, `node_modules`, and generated `dist` output are absent, installs exactly from the lockfile, compiles and smokes the production server, runs the TypeScript/tests and deterministic eval gates, seeds the synthetic paused lesson, and proves exact offline resume. OpenAI/Twilio credentials and both single- and multi-pack local curriculum overrides are removed from the child environment; the temporary copy is deleted afterward.
+
+The same command runs in the repository's read-only GitHub Actions release gate
+on every `main` push and pull request. It receives no OpenAI or Twilio secrets.
 
 For stable public HTTPS, container startup, health checks, secret injection, and
 persistent SQLite requirements, use the [production deployment contract](docs/DEPLOYMENT.md).

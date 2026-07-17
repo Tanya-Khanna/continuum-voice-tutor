@@ -482,3 +482,10 @@
 - The browser UI links directly to the checked-in phone setup guide and gives every open check a concrete next action, so setup can be driven from Mission Control without pasting credentials into terminal output or screenshots.
 - Browser verification passed at the normal desktop viewport and at 390 by 844: all 11 checks rendered, the active tab and guide were accessible, no horizontal overflow occurred, and the browser console had no warnings or errors.
 - Verification: compiled production smoke, strict TypeScript, 113/113 automated tests, and browser inspection pass. The current local real-account state remains 4/11; this view does not infer or change external console state.
+
+## 2026-07-17 — Repository-enforced release gate
+
+- Added a read-only GitHub Actions workflow for every `main` push, pull request, and manual dispatch. It installs from the lockfile and runs the same committed-archive `verify:fresh` gate used locally.
+- The job receives no OpenAI or Twilio secrets and has only `contents: read`; checkout persistence is disabled. Concurrency cancels stale runs for the same ref, and a 15-minute timeout bounds failures.
+- Pinned the current official major lines, `actions/checkout@v6` and `actions/setup-node@v6`, after checking their 2026 release pages rather than copying older workflow examples. Node remains fixed to the repository's supported major, 22.
+- Added the Release gate badge and documented that CI repeats the compiled-server smoke, 113 tests, 25-case deterministic eval, synthetic seed, and exact resume proof.
