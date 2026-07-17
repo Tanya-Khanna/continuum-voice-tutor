@@ -421,3 +421,9 @@
 - Public-webhook server startup now fails closed without a 24-character-or-longer dashboard token, and phone preflight includes the same readiness boundary. The synthetic sample and eval scorecard remain accessible because they contain no real learner sessions.
 - This is an honest hackathon judge-access control, not role-based production authorization or an enforced retention policy.
 - HTTP smoke proof: missing and incorrect tokens returned 401, the exact token returned 200, the synthetic sample remained 200, the dashboard returned no-referrer/no-sniff headers, and public-webhook startup without a token exited before listening. Local phone readiness is now 3/11; the new access-token check is intentionally open until deployment.
+
+## 2026-07-17 — Evidence-bound submission package
+
+- Added a compact README architecture map plus explicit Codex-build evidence and honest-limitations sections.
+- Added `docs/SUBMISSION_COPY.md` with capability-first Devpost prose, the executable zero-credit judge path, a gated real-phone paragraph, final field placeholders, and a claim-by-claim release ledger.
+- The copy keeps software proof separate from external proof: it does not call the carrier path live, does not claim five reviewed subjects, does not turn selected language checks into “every language proven,” and does not present a shared judge token as institutional access control.

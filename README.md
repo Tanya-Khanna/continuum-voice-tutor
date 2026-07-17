@@ -4,6 +4,20 @@
 
 Nomad is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated on an OpenAI project/webhook with a public signed-delivery path plus Twilio credentials, a voice-ready number, and the SIP trunk.
 
+```mermaid
+flowchart LR
+    Caller["Any phone / G.711 call"] --> Twilio["Twilio number + SIP trunk"]
+    Twilio --> Realtime["OpenAI Realtime voice layer"]
+    Realtime <-->|"sideband tools"| Server["Nomad server"]
+    Server --> Catalog["Validated subject catalog"]
+    Catalog --> Packs["Frozen reviewed curriculum packs"]
+    Server <-->|"structured teaching turns"| GPT["GPT-5.6 teaching engine"]
+    Server <--> State["SQLite named learner state"]
+    State --> Dashboard["Access-controlled Mission Control"]
+```
+
+Realtime owns listening, speech, interruption, and tool choice. GPT-5.6 owns diagnosis and the next teaching move. Trusted application code validates the structured turn against the selected frozen pack before it can be spoken or persisted.
+
 ## Universal architecture
 
 The teaching engine contains no subject, country, grade, or language list. A deployment supplies a frozen curriculum pack with its concepts, misconception evidence, teaching scaffolds, placement diagnostic, syllabus identity, and locally tested language modes. The live model contract accepts any BCP-47-style language tag or code-switching combination. India Grade 6 fractions is the first deployment pack and demo fixture, not the product boundary.
@@ -177,6 +191,20 @@ Learner speech is untrusted input: prompt-injection attempts cannot change the s
 
 This remains a supervised prototype—not an approved child deployment. The required consent flow, actual data inventory, dashboard warning, current retention limitation, and pre-pilot checklist are documented in [`docs/SAFETY_PRIVACY.md`](docs/SAFETY_PRIVACY.md).
 
+## How Codex built it
+
+The project was built in one continuous Codex task using a plan → implementation → diff review → deterministic gate → clean-clone gate loop. Codex implemented the telephony sideband bridge, structured teaching engine, learner state machine, curriculum compiler, subject catalog, evaluation harness, Mission Control, privacy boundaries, tests, and executable runbooks. Each meaningful increment was committed separately so the build history is inspectable rather than reconstructed for submission.
+
+Human decisions stayed explicit: the builder corrected the product from a Hinglish-specific demo to a universal engine with one India deployment, chose when to fund API work, owns every curriculum source approval, and must perform the real-phone and release checks. GPT-5.6 Luna is the live structured teacher; Terra powers curriculum compilation/verification; GPT-5.6 synthetic learners and evaluators produced the separate 24/24 paid behavior gate. [`CODEX_NOTES.md`](CODEX_NOTES.md) is the dated evidence log, including failed gates and corrections rather than only successes.
+
+## Honest limitations
+
+- The current repository proves the complete local teaching/state path, but the real Twilio → SIP → Realtime carrier leg has not yet passed the release gate.
+- Math is the only reviewed callable subject. Science, English, History, and Geography have official-source draft briefs but remain human-gated; the product must not claim five live subjects yet.
+- The architecture accepts arbitrary language tags and the live model passed selected Hindi/English, Spanish/English, and French/English checks. That is not proof of every language, accent, or noisy G.711 connection.
+- Mission Control's shared Bearer token is appropriate for controlled hackathon judging, not institutional role-based access. SQLite retention is still an explicit pre-pilot policy gap.
+- Voice-only access excludes deaf and hard-of-hearing learners; a complementary text channel is roadmap, not a shipped claim.
+
 ## Configuration
 
 Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requires no credentials. Local learner state is stored in `.data/nomad.db`, which is ignored by Git. Change `NOMAD_PHONE_HASH_SECRET` before any real deployment; it keys the one-way caller identifiers. Development defaults to `gpt-realtime-2.1-mini`; switch to the full Realtime model only for planned quality checks and the final demo.
@@ -186,3 +214,5 @@ SMS recaps are off by default. Enable `NOMAD_SMS_RECAP_ENABLED=true` only after 
 The complete product scope and schedule are in [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md). Current decisions and progress are in [`CODEX_NOTES.md`](CODEX_NOTES.md).
 
 The executable local-judge path, real-phone release gates, three-minute recording order, and submission placeholders are in [`docs/DEMO_AND_JUDGE_RUNBOOK.md`](docs/DEMO_AND_JUDGE_RUNBOOK.md).
+
+Ready-to-paste Devpost copy, judge instructions, and the claim-by-claim release ledger are in [`docs/SUBMISSION_COPY.md`](docs/SUBMISSION_COPY.md).

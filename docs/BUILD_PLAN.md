@@ -411,7 +411,9 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. Stop the moment anything core wobbles.
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6, all beats incl. sandbox flash + language montage — spot-check montage languages in text first). Multiple takes; pick the best; upload unlisted.
-- ✍️ README (§8, all 11 sections + 2.5 + 7.5) + Devpost description + Judge Experience card with the real number. Distill CODEX_NOTES → README §6.
+- ✍️ ~~README architecture/Codex/limitations sections plus ready-to-paste Devpost description, local judge path,
+  gated final phone paragraph, and claim-by-claim release ledger~~ ✅. Final phone/dashboard/video URLs, impact-source
+  citations, and the real-number Judge Experience card remain release-time work. Distill CODEX_NOTES → README §6.
 - **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
 - **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
 
