@@ -28,13 +28,13 @@ change + a compiler run, never a rebuild. Grade 6 ships first (fractions = the c
 age ~11 = the documented heart of the learning crisis). Off-grade callers are never turned away: the placement
 diagnostic adapts difficulty, and the sandbox teaches any age, any topic.
 **Born global, proven in India first:** the flagship deployment showcased this week is India (Hindi/English/Hinglish,
-NCERT Grade 6) because (a) it's the largest usage-gap population on Earth, (b) a 22-language society is the hardest
+NCERT Grade 6) because (a) it is a large multilingual deployment context, (b) a 22-language society is a demanding
 code-switching test — pass it and easier cases follow, and (c) the builder speaks it, so the demo is authentic.
 India is deployment #1, not the boundary.
 
 - **Tagline:** *"The connection may drop. The learning continues."*
 - **Framing:** *"Two-way radio for the offline half of the world."*
-- **Three audiences:** (1) the usage gap — cell coverage, no internet (63% of Africans; 2.5–3.4B people offline; ~900M feature phones); (2) low-literacy learners; (3) text-barrier learners (dyslexia) — voice as equalizer.
+- **Three audiences:** (1) the usage gap — GSMA estimates 3.1B people are covered by mobile broadband but do not use it, including a 60% usage gap in Sub-Saharan Africa; ITU separately estimates 2.6B people offline globally (overlapping populations; never add them); (2) low-literacy learners; (3) text-barrier learners (dyslexia) — voice as equalizer.
 - **Positioning:** "Bakame proved learners will call an AI. Viamo proved the channel scales to 22 countries.
   1-800-ChatGPT proved frontier voice AI works over a phone line. **Nobody has put an actual teacher on that line.**
   Nomad is that teacher." (Never claim channel novelty — always claim the teacher.)
@@ -67,7 +67,7 @@ or anything else you're curious about?"* And then it **teaches them. By talking.
 And it's the **same brain behind both** — learn on a call today, ask a follow-up on WhatsApp tonight, and it
 remembers you're Ravi and you were fighting with fractions.
 
-**Who it's for:** the ~3 billion people with phone signal but no real internet — plus kids who can't read well
+**Who it's for:** the 3.1 billion people GSMA estimates are covered by mobile broadband but do not use it — plus kids who can't read well
 yet, and kids for whom reading itself is the barrier. Every learning app ever made assumes a screen, a download,
 and data. This assumes nothing but a dial tone — or a WhatsApp voice note.
 
@@ -109,7 +109,7 @@ onboarding, named memory, lesson arc with recap, SMS follow-up, dashboard, safet
 
 ### Criterion 3 — Potential Impact
 *"**credible, specific** case"* → numbers, named audience, cost math (README evidence stack §8).
-*"**real problem** for a **real audience**"* → the usage-gap learner; UNESCO 17M teacher shortfall.
+*"**real problem** for a **real audience**"* → the usage-gap learner; UNESCO's projected 44M primary/secondary teacher deficit by 2030.
 *"does the solution **actually address** that problem **based on what's demonstrated**"* → **THE key phrase.**
 The demonstration must carry the claim → **the judge personally gets taught** (§3 Judge Experience), the video shows
 a real learner journey end-to-end, and the dashboard proves teaching (mastery evidence), not chatting.
@@ -412,8 +412,9 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6, all beats incl. sandbox flash + language montage — spot-check montage languages in text first). Multiple takes; pick the best; upload unlisted.
 - ✍️ ~~README architecture/Codex/limitations sections plus ready-to-paste Devpost description, local judge path,
-  gated final phone paragraph, and claim-by-claim release ledger~~ ✅. Final phone/dashboard/video URLs, impact-source
-  citations, and the real-number Judge Experience card remain release-time work. Distill CODEX_NOTES → README §6.
+  gated final phone paragraph, claim-by-claim release ledger, and primary-source impact/pedagogy evidence with
+  explicit overlap/sample-size caveats~~ ✅. Final phone/dashboard/video URLs and the real-number Judge Experience
+  card remain release-time work. Distill CODEX_NOTES → README §6.
 - **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
 - **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
 
@@ -459,8 +460,8 @@ Record against the real system (rehearse the script, never fake the tech). No co
    number. Any language."* (Rule: only include languages spot-checked for output quality before filming; 3–4
    languages is plenty — this proves the claim, it doesn't inventory it.)
 9. (2:22–2:55) WhatsApp voice-note encore (if built) → voiceover over architecture diagram covering, in order:
-   **the three audiences in one line** ("No screen, no text, no app — so it works for the 3 billion without
-   internet, for learners who can't yet read, and for kids for whom text itself is the barrier") → **the global
+   **the three audiences in one line** ("No screen, no text, no app — designed for the 3.1 billion covered by
+   mobile broadband but not using it, for learners who can't yet read, and for kids for whom text itself is the barrier") → **the global
    line** ("It already speaks dozens of languages — a new country is a config file and one compiler run on its
    syllabus. India is deployment #1, not the boundary") → **how Codex built it** (telephony bridge, compiler,
    eval harness — one main session) and **how GPT-5.6 powers it** (teaching-engine JSON, Luna/Terra/Sol routing,
@@ -482,7 +483,7 @@ Record against the real system (rehearse the script, never fake the tech). No co
 
 **README (11 sections):**
 1. Hero: product + tagline + **THE PHONE NUMBER** ("it will teach you — call it") + dashboard link + architecture diagram.
-2. Why: three audiences · 63% usage-gap · 2.5–3.4B offline · ~900M feature phones · UNESCO 17M teacher shortfall ·
+2. Why: three audiences · GSMA 3.1B usage gap (60% in Sub-Saharan Africa) · separate ITU 2.6B offline estimate, never added · UNESCO projected 44M teacher deficit by 2030 ·
    Rori benchmark (~1 yr schooling gain @ ~$5/child) · rural-India voice adoption (12% MAU organic).
 2.5 **Distribution & adoption path (the "who hands the child the number?" answer):** learner-direct digital
    acquisition FAILS in these markets (documented in the rural-India 2G deployment — adoption came via teachers,

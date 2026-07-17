@@ -427,3 +427,11 @@
 - Added a compact README architecture map plus explicit Codex-build evidence and honest-limitations sections.
 - Added `docs/SUBMISSION_COPY.md` with capability-first Devpost prose, the executable zero-credit judge path, a gated real-phone paragraph, final field placeholders, and a claim-by-claim release ledger.
 - The copy keeps software proof separate from external proof: it does not call the carrier path live, does not claim five reviewed subjects, does not turn selected language checks into “every language proven,” and does not present a shared judge token as institutional access control.
+
+## 2026-07-17 — Primary-source evidence stack
+
+- Replaced the stale 17-million-teacher-shortage plan figure with UNESCO's 44-million primary/secondary teacher deficit projection for 2030.
+- Added direct ITU and GSMA receipts for 2.6 billion people offline and the separate 3.1 billion mobile-internet usage gap. The README explicitly forbids adding these overlapping populations or treating coverage as proof of affordable calls.
+- Grounded strict Socratic guardrails in the nearly 1,000-student Bastani et al. field experiment: unrestricted GPT-4 hurt unaided grades after practice access was removed, while hint-based safeguards largely mitigated that effect.
+- Added preliminary Rori and Adesua receipts with their limitations intact: Rori's roughly 500-student year-one study and estimated marginal cost cannot be inherited by Nomad; Adesua's 93.75% helpfulness came from only 16 ratings.
+- Added the peer-reviewed SIGDIAL code-switching tutoring paper as a design receipt without turning selected model checks into a universal quality claim.

@@ -21,6 +21,13 @@ question, analogy, or retrieval check, and returns one short voice-native teachi
 turn. If the connection drops, phone identity plus learner name restores the exact
 pending question.
 
+The access mismatch is concrete: ITU estimated 2.6 billion people were offline
+in 2024, while GSMA separately counted a 3.1 billion-person usage gap—people
+covered by mobile broadband but not using it. Those groups overlap and are not
+added together. UNESCO projects a 44 million primary/secondary teacher deficit by
+2030, so Nomad is designed to extend supervised learning support, not replace
+teachers. Direct source links and caveats are in the README.
+
 The system separates voice from teaching. OpenAI Realtime handles listening,
 speech, interruption, and tool orchestration. A server-side GPT-5.6 teaching engine
 owns diagnosis and pedagogy. Trusted code validates every structured turn against
@@ -107,6 +114,11 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 | SMS recap | Opt-in, exactly-once code and tests | Say implemented; call it live only after Twilio delivery and consent test |
 | WhatsApp, homework camera, parent SMS | Not shipped | Roadmap only |
 | Cost per call | Exact-model API token estimate in Mission Control | Label as API estimate, not total carrier/unit economics |
+| 2.6B offline / 3.1B usage gap | Separate ITU and GSMA 2024 estimates | Never add them; the populations overlap and neither proves affordable calling |
+| 44M teacher deficit | UNESCO 2024 projection for primary and secondary teachers needed by 2030 | Say “projected deficit,” not current vacancies |
+| Rori effect and ~$5 marginal cost | Preliminary year-one Ghana study of roughly 500 students | Attribute to Rori; Nomad cannot inherit the outcome |
+| Adesua 93.75% helpfulness | Six-month feasibility deployment; only 16 ratings | Always state n=16 and preliminary scope |
+| Socratic guardrails protect learning | Nearly 1,000-student math field experiment; unrestricted AI harmed unaided grades, hint safeguards mitigated | Use as design motivation, not a Nomad learning-outcome claim |
 | Child-ready deployment | Safety behavior and privacy checklist exist | Never claim; supervised prototype until local review/consent/retention pass |
 
 ## Final submission fields
