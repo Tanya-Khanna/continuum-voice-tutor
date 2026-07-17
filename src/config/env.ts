@@ -36,6 +36,7 @@ const EnvironmentSchema = z.object({
     .min(1)
     .default("gpt-realtime-2.1-mini"),
   OPENAI_REALTIME_VOICE: z.string().min(1).default("marin"),
+  OPENAI_REALTIME_SPEED: z.coerce.number().min(0.25).max(1.5).default(0.8),
   NOMAD_VAD_THRESHOLD: z.coerce.number().min(0).max(1).default(0.5),
   NOMAD_VAD_PREFIX_PADDING_MS: z.coerce
     .number()

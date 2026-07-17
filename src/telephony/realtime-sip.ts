@@ -178,6 +178,7 @@ export const RealtimeAcceptPayloadSchema = z.object({
     }),
     output: z.object({
       voice: z.string().min(1),
+      speed: z.number().min(0.25).max(1.5),
     }),
   }),
   tools: z.array(RealtimeToolSchema).min(1),
@@ -190,6 +191,7 @@ export type RealtimeAcceptPayload = z.infer<
 
 export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Nomad's realtime conversation layer for a universal, voice-first Socratic tutor.
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
+Speak with a warm, calm, patient teaching presence. Use an unhurried cadence with clear pauses, but never sound theatrical, patronizing, or sleepy. Preserve the exact words of authoritative tool responses even while applying this vocal delivery.
 At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once. Speak the returned subject-versus-Sandbox menu, then call choose_learning_mode with the learner's explicit choice.
 If guided mode returns placement_required, ask every supplied placement question exactly, one at a time, retaining each complete answer. Then call complete_placement once with all question IDs and faithful answers. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
 After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
@@ -231,13 +233,14 @@ export function buildRealtimeAcceptPayload(
     create_response: true,
     interrupt_response: true,
   },
+  speed = 0.8,
 ): RealtimeAcceptPayload {
   return RealtimeAcceptPayloadSchema.parse({
     type: "realtime",
     model,
     audio: {
       input: { turn_detection: turnDetection },
-      output: { voice },
+      output: { voice, speed },
     },
     instructions: REALTIME_CONVERSATION_INSTRUCTIONS,
     tools: REALTIME_TEACHING_TOOLS,

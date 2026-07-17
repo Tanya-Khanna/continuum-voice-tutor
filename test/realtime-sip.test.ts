@@ -29,7 +29,7 @@ describe("Realtime SIP boundary", () => {
             interrupt_response: true,
           },
         },
-        output: { voice: "marin" },
+        output: { voice: "marin", speed: 0.8 },
       },
       tool_choice: "auto",
     });
@@ -54,6 +54,9 @@ describe("Realtime SIP boundary", () => {
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "call recover_unclear_audio",
     );
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "warm, calm, patient",
+    );
   });
 
   it("keeps barge-in enabled when tuning server VAD", () => {
@@ -74,6 +77,26 @@ describe("Realtime SIP boundary", () => {
       create_response: true,
       interrupt_response: true,
     });
+  });
+
+  it("accepts only documented Realtime playback speeds", () => {
+    const turnDetection = buildRealtimeAcceptPayload().audio.input.turn_detection;
+    expect(
+      buildRealtimeAcceptPayload(
+        "gpt-realtime-2.1-mini",
+        "marin",
+        turnDetection,
+        0.75,
+      ).audio.output.speed,
+    ).toBe(0.75);
+    expect(() =>
+      buildRealtimeAcceptPayload(
+        "gpt-realtime-2.1-mini",
+        "marin",
+        turnDetection,
+        0.2,
+      ),
+    ).toThrow();
   });
 
   it("extracts the caller identity from the documented SIP From header", () => {

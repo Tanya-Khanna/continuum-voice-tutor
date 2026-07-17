@@ -12,6 +12,7 @@ describe("environment configuration", () => {
       "gpt-realtime-2.1-mini",
     );
     expect(environment.OPENAI_REALTIME_VOICE).toBe("marin");
+    expect(environment.OPENAI_REALTIME_SPEED).toBe(0.8);
     expect(environment.NOMAD_VAD_THRESHOLD).toBe(0.5);
     expect(environment.NOMAD_VAD_PREFIX_PADDING_MS).toBe(300);
     expect(environment.NOMAD_VAD_SILENCE_MS).toBe(650);
@@ -49,5 +50,12 @@ describe("environment configuration", () => {
       NOMAD_VAD_PREFIX_PADDING_MS: 400,
       NOMAD_VAD_SILENCE_MS: 800,
     });
+  });
+
+  it("bounds Realtime playback speed", () => {
+    expect(loadEnvironment({ OPENAI_REALTIME_SPEED: "0.25" }).OPENAI_REALTIME_SPEED).toBe(0.25);
+    expect(loadEnvironment({ OPENAI_REALTIME_SPEED: "1.5" }).OPENAI_REALTIME_SPEED).toBe(1.5);
+    expect(() => loadEnvironment({ OPENAI_REALTIME_SPEED: "0.2" })).toThrow();
+    expect(() => loadEnvironment({ OPENAI_REALTIME_SPEED: "1.6" })).toThrow();
   });
 });

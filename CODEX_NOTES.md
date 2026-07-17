@@ -346,3 +346,11 @@
 - Recovery localizes only the neutral connection retry lead and preserves the pending prompt's meaning. It makes no teaching-engine request and leaves lesson turns, mastery, placement, and Sandbox history unchanged.
 - Existing close/pause and phone-plus-normalized-name resume behavior completes the drop-to-redial path; real packet-loss and noisy-line validation remains gated on the Twilio/SIP leg.
 - Verification: targeted Realtime SIP/controller tests cover all five recovery stages, exact guided-prompt continuity, specialized speech instructions, and zero state mutation; strict TypeScript passes.
+
+## 2026-07-17 — Bounded warm Realtime voice policy
+
+- Verified from current official Realtime prompting guidance and the installed SDK contract that output `speed` is a playback multiplier from 0.25 to 1.5, while vocal pacing should also be instructed because post-processing alone does not shape cadence.
+- Added `OPENAI_REALTIME_SPEED`, bounded at startup and defaulting to 0.8, to the actual SIP call-accept `audio.output` payload alongside the configurable `marin` voice.
+- Added a provider-neutral delivery contract: warm, calm, patient, unhurried, clear pauses, and never theatrical, patronizing, or sleepy. Authoritative tool words remain unchanged.
+- Nomad remains the disclosed product/tutor persona rather than imitating a real person. Perceived pace, voice fit, and accent behavior remain real-phone listening tasks after the Twilio/SIP leg is available.
+- Verification: exact accept-payload assertions, lower/upper speed bounds, invalid-speed rejection, warm-delivery prompt assertion, and strict TypeScript pass.

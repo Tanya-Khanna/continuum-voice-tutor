@@ -168,8 +168,10 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   prompt without calling the teaching engine or advancing persisted state; call close pauses the exact session and
   phone plus normalized learner name resumes the pending question on redial~~ ✅. Real-carrier packet loss and noisy
   G.711 behavior still require the Twilio/SIP phone leg.
-- **F15 Warm voice, ~20% slower** — voice config + cultural persona name (builder picks; folklore archetype,
-  NOT real-person cosplay). Accent options → roadmap; check voice catalog D1.
+- **F15 Warm voice, ~20% slower** — ~~Nomad is the disclosed tutor persona; the SIP accept payload uses the
+  configurable `marin` voice, a bounded 0.8 playback multiplier, and explicit warm, calm, patient, unhurried
+  delivery instructions without real-person cosplay~~ ✅. Final voice choice, perceived pace, and accent behavior
+  still require listening over the real G.711 phone leg; alternate accents remain roadmap.
 
 **Language**
 - **F16 Mid-sentence code-switching** — Hindi/English/Hinglish held fluidly; the demo's soul; proven by eval cases.

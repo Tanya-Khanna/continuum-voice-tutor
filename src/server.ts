@@ -239,6 +239,7 @@ export const server = createServer(async (request, response) => {
                 create_response: true,
                 interrupt_response: true,
               },
+              environment.OPENAI_REALTIME_SPEED,
             ),
           });
 
