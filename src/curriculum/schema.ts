@@ -29,6 +29,14 @@ export const EvidenceRuleSchema = z.object({
   nextQuestion: z.string().min(1),
 });
 
+export const VocabularyBridgeSchema = z.object({
+  canonicalTerm: z.string().min(1),
+  termLanguage: ResolvedLanguageModeSchema,
+  spokenDefinition: z.string().min(1),
+  informalSignals: z.array(z.string().min(1)).min(1),
+  offlineBridgeLead: z.string().min(1),
+});
+
 export const RationalNumberSchema = z.object({
   numerator: z.number().int().min(-10_000).max(10_000),
   denominator: z.number().int().min(1).max(10_000),
@@ -66,6 +74,7 @@ export const CurriculumConceptSchema = z.object({
   grade: z.number().int().positive(),
   learningObjective: z.string().min(1),
   verifiedFacts: z.array(z.string().min(1)).min(1),
+  vocabularyBridges: z.array(VocabularyBridgeSchema).min(1),
   verifiedRationalComparisons: z
     .array(VerifiedRationalComparisonSchema)
     .default([]),

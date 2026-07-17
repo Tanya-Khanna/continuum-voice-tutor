@@ -9,6 +9,7 @@ import {
   CurriculumPackDraftSchema,
   CurriculumPackSchema,
 } from "../src/curriculum/schema.js";
+import { assertRequiredVocabulary } from "../src/compiler/openai-curriculum-compiler.js";
 
 const sourceBrief = {
   id: "example-science-brief",
@@ -61,6 +62,36 @@ describe("curriculum compiler contracts", () => {
     expect(() =>
       zodTextFormat(CurriculumPackDraftSchema, "curriculum_pack_draft"),
     ).not.toThrow();
+  });
+
+  it("fails closed when a compiled pack changes reviewed vocabulary", () => {
+    const reviewedBrief = CurriculumSourceBriefSchema.parse({
+      ...sourceBrief,
+      requiredVocabulary: [
+        {
+          conceptId: "comparing_unit_fractions",
+          canonicalTerm: "denominator",
+          termLanguage: "en",
+          meaning:
+            "the number that tells how many equal parts make the whole",
+        },
+      ],
+    });
+    expect(() => assertRequiredVocabulary(reviewedBrief, fractionsPack)).not.toThrow();
+    expect(() =>
+      assertRequiredVocabulary(
+        {
+          ...reviewedBrief,
+          requiredVocabulary: [
+            {
+              ...reviewedBrief.requiredVocabulary[0]!,
+              canonicalTerm: "invented term",
+            },
+          ],
+        },
+        fractionsPack,
+      ),
+    ).toThrow(/missing reviewed vocabulary/u);
   });
 
   it("cannot approve a verifier result that omits required checks", () => {

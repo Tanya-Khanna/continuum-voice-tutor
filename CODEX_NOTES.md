@@ -257,3 +257,12 @@
 - The prototype deliberately does not collect or infer a parent number. Shared-phone recipient consent, lock-screen disclosure, provider retention, opt-out handling, and local messaging compliance remain pre-pilot requirements.
 - No live SMS was sent because Twilio number/upgrade setup remains an external account gate. Verification used an exact mock of Twilio's documented Messages request.
 - Verification: 62 of 62 automated tests, including request/auth shape, default-off configuration, missing-credential fail-closed behavior, exactly-once completion, and safety-ending exclusion; strict TypeScript passes.
+
+## 2026-07-17 — Universal curriculum vocabulary bridging
+
+- Replaced the plan's Hindi-to-English prompt shorthand with a universal pack contract: every concept now declares canonical curriculum terms, each term's own language, a voice-friendly meaning, informal-expression test signals, and deterministic fallback bridge copy.
+- Live GPT-5.6 instructions preserve the learner's informal or other-language expression, connect it briefly to the pack's reviewed term, explain it in the learner's current language pattern, and continue Socratically. Language choice is not treated as weak subject reasoning.
+- The offline engine contains only a generic signal-to-bridge mechanism. A separate Science/Swahili-English fixture introduces `mass` from the learner's word `heaviness` without exposing any fraction or Hindi-specific behavior.
+- Curriculum source briefs can declare required vocabulary. Trusted application code now checks the exact concept ID, canonical term, term language, and reviewed meaning after compilation and before verification, failing closed on substitutions.
+- Added denominator, unit-fraction, and equal-shares bridges to the flagship pack. Offline signals remain test fixtures, not a closed list of phrases the live product understands.
+- Verification: 65 of 65 automated tests, the 25-of-25 deterministic teaching gate, Structured Outputs schema conversion, and strict TypeScript pass.

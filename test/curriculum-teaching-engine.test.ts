@@ -33,6 +33,16 @@ const sciencePack = CurriculumPackSchema.parse({
       title: "States of matter",
       learningObjective: "Explain that gases occupy space and have mass.",
       verifiedFacts: ["Gases occupy space.", "Gases have mass."],
+      vocabularyBridges: [
+        {
+          canonicalTerm: "mass",
+          termLanguage: "en",
+          spokenDefinition: "the amount of matter in something",
+          informalSignals: ["heaviness"],
+          offlineBridgeLead:
+            "You called it heaviness. The curriculum word is mass: the amount of matter in something.",
+        },
+      ],
       misconceptions: [
         {
           id: "gas_has_no_mass",
@@ -87,5 +97,22 @@ describe("CurriculumTeachingEngine", () => {
     expect(turn.spoken_response).toContain("balloons");
     expect(turn.spoken_response).not.toContain("fraction");
     expect(turn.language_mode).toBe("fr");
+  });
+
+  it("uses each pack's vocabulary bridge without a language-pair rule in the engine", async () => {
+    const engine = new CurriculumTeachingEngine({
+      pack: sciencePack,
+      languageDetector: new ConfiguredLanguageDetector(sciencePack.deployment),
+    });
+    const turn = await engine.teach({
+      learnerId: "amani",
+      concept: "states_of_matter",
+      learnerAnswer: "Maybe air has heaviness when the balloon fills.",
+      requestedLanguageMode: "sw+en",
+    });
+
+    expect(turn.spoken_response).toContain("curriculum word is mass");
+    expect(turn.spoken_response).not.toContain("denominator");
+    expect(turn.language_mode).toBe("sw+en");
   });
 });

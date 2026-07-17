@@ -48,6 +48,13 @@ export class CurriculumTeachingEngine {
       request.requestedLanguageMode,
     );
     const scaffold = concept.teachingScaffold;
+    const vocabularyBridge = concept.vocabularyBridges.find((bridge) =>
+      includesAny(normalized, bridge.informalSignals),
+    );
+    const withVocabularyBridge = (spokenResponse: string): string =>
+      vocabularyBridge
+        ? `${vocabularyBridge.offlineBridgeLead} ${spokenResponse}`
+        : spokenResponse;
     const base = {
       learner_id: request.learnerId,
       concept: request.concept,
@@ -155,7 +162,9 @@ export class CurriculumTeachingEngine {
         mastery_status: "needs_support",
         mastery_evidence: misconception.masteryEvidence,
         next_question: misconception.nextQuestion,
-        spoken_response: `${misconception.responseLead} ${misconception.nextQuestion}`,
+        spoken_response: withVocabularyBridge(
+          `${misconception.responseLead} ${misconception.nextQuestion}`,
+        ),
       });
     }
 
@@ -172,7 +181,9 @@ export class CurriculumTeachingEngine {
         mastery_status: "developing",
         mastery_evidence: evidenceRule.masteryEvidence,
         next_question: evidenceRule.nextQuestion,
-        spoken_response: `${evidenceRule.responseLead} ${evidenceRule.nextQuestion}`,
+        spoken_response: withVocabularyBridge(
+          `${evidenceRule.responseLead} ${evidenceRule.nextQuestion}`,
+        ),
       });
     }
 
@@ -183,7 +194,9 @@ export class CurriculumTeachingEngine {
       mastery_status: "needs_support",
       mastery_evidence: scaffold.fallbackEvidence,
       next_question: scaffold.fallbackQuestion,
-      spoken_response: `${scaffold.fallbackResponseLead} ${scaffold.fallbackQuestion}`,
+      spoken_response: withVocabularyBridge(
+        `${scaffold.fallbackResponseLead} ${scaffold.fallbackQuestion}`,
+      ),
     });
   }
 

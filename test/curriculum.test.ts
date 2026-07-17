@@ -21,6 +21,14 @@ describe("frozen fractions curriculum", () => {
     ).toBe(true);
   });
 
+  it("keeps canonical vocabulary and learner-language bridge hints in the pack", () => {
+    const denominator = fractionsPack.concepts[0]!.vocabularyBridges.find(
+      (bridge) => bridge.canonicalTerm === "denominator",
+    );
+    expect(denominator).toMatchObject({ termLanguage: "en" });
+    expect(denominator?.informalSignals).toContain("neeche wala number");
+  });
+
   it("machine-verifies every declared rational comparison", () => {
     const comparisons = fractionsPack.concepts.flatMap(
       (concept) => concept.verifiedRationalComparisons,

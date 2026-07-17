@@ -23,6 +23,16 @@ export const CurriculumSourceBriefSchema = z.object({
     )
     .min(1),
   requiredConcepts: z.array(z.string().min(1)).min(1),
+  requiredVocabulary: z
+    .array(
+      z.object({
+        conceptId: z.string().min(1),
+        canonicalTerm: z.string().min(1),
+        termLanguage: ResolvedLanguageModeSchema,
+        meaning: z.string().min(1),
+      }),
+    )
+    .default([]),
   localContextNotes: z.array(z.string().min(1)).default([]),
   originalityRequirements: z.array(z.string().min(1)).min(1),
 });

@@ -8,6 +8,8 @@ Nomad is a multilingual Socratic tutor designed for learners who may have only a
 
 The teaching engine contains no subject, country, grade, or language list. A deployment supplies a frozen curriculum pack with its concepts, misconception evidence, teaching scaffolds, placement diagnostic, syllabus identity, and locally tested language modes. The live model contract accepts any BCP-47-style language tag or code-switching combination. India Grade 6 fractions is the first deployment pack and demo fixture, not the product boundary.
 
+Academic vocabulary is pack-driven too. Every concept declares reviewed canonical terms, the language each term belongs to, a short spoken meaning, and informal learner expressions used only by the offline test adapter. In live teaching, GPT-5.6 can preserve a learner's own phrase, connect it briefly to the reviewed curriculum term, and continue in the learner's current language pattern. The engine contains no Hindi-to-English—or any other fixed language-pair—bridge.
+
 Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to change the deployment without changing teaching-engine code. Leaving it blank loads the built-in India fractions demo pack.
 
 The offline language detector is deliberately a configurable test adapter; it does not claim to translate arbitrary languages. In live mode, the model detects and responds in the learner's actual language while remaining grounded in the selected pack.
@@ -17,6 +19,8 @@ The offline language detector is deliberately a configurable test adapter; it do
 `npm run curriculum:compile -- --source reviewed-source.json --out frozen-pack.json` runs a build-time GPT-5.6 Terra compiler followed by an independent verifier pass. The source brief must include official-source URLs, reviewed themes, bounded required concepts, local-context notes, and explicit originality requirements. Source prose is used only for scope; learner-facing questions and explanations must be original.
 
 The command writes nothing unless the generated pack passes the full schema and the verifier reports no errors. Output is create-only, carries trusted provenance attached by application code, and is never fetched or changed during a live lesson. Do not run this command on an unreviewed source brief merely to produce more subjects quickly.
+
+Source briefs may provide `requiredVocabulary`. Trusted application code checks concept ID, canonical term, term language, and reviewed spoken meaning exactly after compilation and before verification; a model cannot silently replace a required curriculum term with a plausible alternative.
 
 Numerical fraction claims use a bounded, machine-checkable rational-comparison contract. The application verifies them by integer cross-multiplication when a pack is compiled or loaded; a false declared comparison is rejected before teaching. This currently covers rational comparisons and should be extended explicitly when reviewed packs introduce other operation types.
 

@@ -157,6 +157,30 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "For equal wholes, dividing into more equal parts makes each part smaller.",
         "One third is greater than one fourth when the wholes are equal.",
       ],
+      vocabularyBridges: [
+        {
+          canonicalTerm: "denominator",
+          termLanguage: "en",
+          spokenDefinition:
+            "the number that tells how many equal parts make the whole",
+          informalSignals: [
+            "bottom number",
+            "number underneath",
+            "neeche wala number",
+          ],
+          offlineBridgeLead:
+            "You described the bottom number. The curriculum word is denominator: the number that tells how many equal parts make the whole.",
+        },
+        {
+          canonicalTerm: "unit fraction",
+          termLanguage: "en",
+          spokenDefinition:
+            "a fraction that names one equal part of a whole",
+          informalSignals: ["one piece out of", "one equal piece", "one on top"],
+          offlineBridgeLead:
+            "You described one equal piece. The curriculum phrase is unit fraction: one equal part of a whole.",
+        },
+      ],
       verifiedRationalComparisons: [
         {
           id: "one_third_greater_than_one_fourth",
@@ -260,6 +284,17 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "Equal shares of the same whole have the same size.",
         "One of two equal shares is one half.",
         "Two halves make one whole.",
+      ],
+      vocabularyBridges: [
+        {
+          canonicalTerm: "equal shares",
+          termLanguage: "en",
+          spokenDefinition:
+            "parts of the same whole that have exactly the same size",
+          informalSignals: ["same amount", "same size for both", "fair pieces"],
+          offlineBridgeLead:
+            "You described the same amount for each person. The curriculum phrase is equal shares: parts of one whole with exactly the same size.",
+        },
       ],
       verifiedRationalComparisons: [
         {
