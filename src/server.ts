@@ -7,6 +7,10 @@ import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
 import { runOfflineEvaluation } from "./evals/offline-evaluator.js";
 import { hashPhoneNumber } from "./domain/identity.js";
+import {
+  resolveTwilioSmsConfig,
+  sendTwilioSms,
+} from "./messaging/twilio-sms.js";
 import { buildDashboardSnapshot } from "./observability/dashboard.js";
 import { SqliteLearningRepository } from "./persistence/sqlite-learning-repository.js";
 import { createLessonRuntime } from "./runtime/lesson-runtime.js";
@@ -42,6 +46,7 @@ async function readBody(request: NodeJS.ReadableStream): Promise<string> {
 }
 
 const environment = loadEnvironment();
+const twilioSmsConfig = resolveTwilioSmsConfig(environment);
 const activeCallIds = new Set<string>();
 const callAdmission = new CallAdmissionGuard({
   maxCallsPerWindow: environment.NOMAD_MAX_CALLS_PER_HOUR,
@@ -232,6 +237,20 @@ export const server = createServer(async (request, response) => {
             modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
               console.error(`Realtime call ${callId}:`, bridgeError.message),
+            ...(twilioSmsConfig
+              ? {
+                  onLessonCompleted: async ({
+                    callerNumber: to,
+                    turn,
+                  }) => {
+                    await sendTwilioSms({
+                      ...twilioSmsConfig,
+                      to,
+                      body: turn.spoken_response,
+                    });
+                  },
+                }
+              : {}),
           });
           void bridge
             .run()

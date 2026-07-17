@@ -6,6 +6,13 @@ const optionalNonEmpty = z.preprocess(
   z.string().min(1).optional(),
 );
 
+const booleanFromEnvironment = z.preprocess((value) => {
+  if (value === undefined || value === "") return false;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return value;
+}, z.boolean());
+
 const EnvironmentSchema = z.object({
   TEACHING_ENGINE: z.enum(["offline", "openai"]).default("offline"),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3_000),
@@ -31,6 +38,7 @@ const EnvironmentSchema = z.object({
   TWILIO_ACCOUNT_SID: optionalNonEmpty,
   TWILIO_AUTH_TOKEN: optionalNonEmpty,
   TWILIO_PHONE_NUMBER: optionalNonEmpty,
+  NOMAD_SMS_RECAP_ENABLED: booleanFromEnvironment,
 });
 
 export type Environment = z.infer<typeof EnvironmentSchema>;

@@ -1,6 +1,9 @@
 import WebSocket, { type RawData } from "ws";
 import { z } from "zod";
-import { ResolvedLanguageModeSchema } from "../domain/teaching.js";
+import {
+  ResolvedLanguageModeSchema,
+  type TeachingTurn,
+} from "../domain/teaching.js";
 import { ModelUsageSchema, type ModelUsage } from "../domain/usage.js";
 import type {
   LessonContext,
@@ -82,6 +85,12 @@ const ResponseDoneSchema = z.object({
 
 export type RealtimeClientEvent = Record<string, unknown> & { type: string };
 export type RealtimeEventSender = (event: RealtimeClientEvent) => void;
+
+export interface CompletedGuidedLesson {
+  callerNumber: string;
+  context: LessonContext;
+  turn: TeachingTurn;
+}
 
 interface LessonOrchestrator {
   beginOrResume: LessonService["beginOrResume"];
@@ -192,8 +201,13 @@ export class RealtimeTeachingController {
   readonly #handledUsageIds = new Set<string>();
   readonly #modelRoute: string;
   readonly #onError: (error: Error) => void;
+  readonly #onLessonCompleted:
+    | ((lesson: CompletedGuidedLesson) => Promise<void> | void)
+    | undefined;
+  readonly #sideEffects = new Set<Promise<void>>();
   #context: LessonContext | undefined;
   #learningMode: "guided" | "curious_sandbox" | undefined;
+  #completionNotified = false;
   #closed = false;
   #queue: Promise<void> = Promise.resolve();
   #pendingUsage: ModelUsage[] = [];
@@ -203,11 +217,15 @@ export class RealtimeTeachingController {
     lessonService: LessonOrchestrator;
     modelRoute: string;
     onError?: (error: Error) => void;
+    onLessonCompleted?: (
+      lesson: CompletedGuidedLesson,
+    ) => Promise<void> | void;
   }) {
     this.#callerNumber = options.callerNumber;
     this.#lessonService = options.lessonService;
     this.#modelRoute = options.modelRoute;
     this.#onError = options.onError ?? (() => undefined);
+    this.#onLessonCompleted = options.onLessonCompleted;
   }
 
   handleServerEvent(
@@ -258,6 +276,7 @@ export class RealtimeTeachingController {
     try {
       let output: Record<string, unknown>;
       let speechPolicy: "exact" | "localize_onboarding" = "exact";
+      let completedLesson: CompletedGuidedLesson | undefined;
       if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
         if (this.#context) {
@@ -376,6 +395,17 @@ export class RealtimeTeachingController {
           );
           this.#context = result.context;
           output = { ok: true, ...result.turn };
+          if (
+            result.turn.should_end_session &&
+            result.turn.next_strategy === "recap" &&
+            !this.#completionNotified
+          ) {
+            completedLesson = {
+              callerNumber: this.#callerNumber,
+              context: result.context,
+              turn: result.turn,
+            };
+          }
         }
       } else if (call.name === "get_learning_history") {
         if (!this.#context) {
@@ -418,6 +448,22 @@ export class RealtimeTeachingController {
 
       send(toolOutputEvent(call.call_id, output));
       send(speakToolOutputEvent(speechPolicy));
+      if (completedLesson && this.#onLessonCompleted) {
+        this.#completionNotified = true;
+        const sideEffect = (async () => {
+          try {
+            await this.#onLessonCompleted!(completedLesson);
+          } catch (error) {
+            this.#onError(
+              error instanceof Error
+                ? error
+                : new Error("Lesson completion side effect failed"),
+            );
+          }
+        })();
+        this.#sideEffects.add(sideEffect);
+        void sideEffect.finally(() => this.#sideEffects.delete(sideEffect));
+      }
     } catch (error) {
       this.#onError(error instanceof Error ? error : new Error("Tool failed"));
       send(
@@ -435,6 +481,7 @@ export class RealtimeTeachingController {
     if (this.#closed) return;
     this.#closed = true;
     await this.#queue;
+    await Promise.allSettled([...this.#sideEffects]);
     if (this.#context) this.#context = this.#lessonService.pause(this.#context);
   }
 }
@@ -454,6 +501,9 @@ export class RealtimeTeachingBridge {
     modelRoute: string;
     WebSocketImplementation?: typeof WebSocket;
     onError?: (error: Error) => void;
+    onLessonCompleted?: (
+      lesson: CompletedGuidedLesson,
+    ) => Promise<void> | void;
   }) {
     this.#apiKey = options.apiKey;
     this.#callId = options.callId;
@@ -465,6 +515,9 @@ export class RealtimeTeachingBridge {
       lessonService: options.lessonService,
       modelRoute: options.modelRoute,
       onError: this.#onError,
+      ...(options.onLessonCompleted
+        ? { onLessonCompleted: options.onLessonCompleted }
+        : {}),
     });
   }
 

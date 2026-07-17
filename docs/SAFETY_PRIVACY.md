@@ -10,6 +10,7 @@ Nomad is a hackathon prototype, not an approved child deployment. Do not invite 
 4. Use a nickname or chosen first name, never a full legal name. Do not request an address, school identifier, account credential, parent contact, or other unnecessary personal data.
 5. Test the deployment's languages and local emergency wording with native speakers. Nomad does not infer a caller's language from their country.
 6. Keep the mission-control dashboard private and restrict it to authorized adults. Anonymized references reduce exposure but do not make conversation transcripts anonymous.
+7. Keep SMS recaps disabled unless the caller or responsible adult explicitly consents to lesson content appearing on that exact phone. Treat shared phones and lock-screen previews as disclosure risks; do not assume the learner is the sole recipient.
 
 ## Data currently stored
 
@@ -19,6 +20,8 @@ Nomad is a hackathon prototype, not an approved child deployment. Do not invite 
 - Likely email addresses, links, long phone-like numbers, and explicit address phrases are redacted before model processing and persistence. Pattern redaction is defense in depth, not a guarantee that every possible identifier will be recognized.
 
 OpenAI Responses requests use `store: false` and a one-way safety identifier. The local SQLite database remains on the operator's machine. The application does not send live lesson content to web search.
+
+Optional Twilio SMS recaps reuse the final language-matched guided-lesson recap and send it only to the originating caller number. They are disabled by default, never run for Sandbox or safety-forced endings, and are not written to a separate local message log. Twilio necessarily receives the destination, sender, and message body when the feature is enabled; provider-side messaging records and retention must be included in the deployment's consent and deletion policy.
 
 ## Retention
 

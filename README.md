@@ -78,6 +78,8 @@ Every later guided learner answer must call `get_teaching_turn`; the server runs
 
 The lesson arc is deployment-configured. The first pack uses eight teaching turns with explicit explore, independent-check, and recap phases. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. The server also prevents any model from marking mastery secure until it has observed at least two reasoning turns.
 
+After a normally completed guided lesson, Nomad can send the exact language-matched spoken recap to the caller through Twilio SMS. This is a non-blocking side effect: a messaging failure cannot replace the voice response or undo lesson completion. It never runs for Sandbox turns or safety-forced endings, and duplicate Realtime lifecycle events cannot send it twice.
+
 Learners can ask what they worked on before. GPT-5.6 receives only that named profile's persisted, curriculum-grounded summaries and returns a short structured narration in the learner's current language mode. The Realtime layer says that narration exactly; it does not invent history from the conversation.
 
 Learners can explicitly enter **Curious Sandbox** after choosing their name. Realtime routes that request to a separate GPT-5.6 structured contract for child-safe open curiosity: a small idea, honest low/medium/high certainty, and exactly one Socratic follow-up in any detected language combination. Sandbox questions are PII-redacted and stored in a separate trace; they never change guided lesson progress or mastery. The zero-credit adapter refuses to invent open-world facts and instead helps the learner reason from what they know.
@@ -105,5 +107,7 @@ This remains a supervised prototype—not an approved child deployment. The requ
 ## Configuration
 
 Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requires no credentials. Local learner state is stored in `.data/nomad.db`, which is ignored by Git. Change `NOMAD_PHONE_HASH_SECRET` before any real deployment; it keys the one-way caller identifiers. Development defaults to `gpt-realtime-2.1-mini`; switch to the full Realtime model only for planned quality checks and the final demo.
+
+SMS recaps are off by default. Enable `NOMAD_SMS_RECAP_ENABLED=true` only after the caller or responsible adult has explicitly consented to lesson content appearing on that specific phone, then provide the three Twilio variables in `.env`. The prototype sends only to the number that placed the call; it does not collect or infer a parent number. Shared-phone deployments need a stricter recipient policy before this flag is enabled.
 
 The complete product scope and schedule are in [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md). Current decisions and progress are in [`CODEX_NOTES.md`](CODEX_NOTES.md).

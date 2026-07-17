@@ -247,3 +247,13 @@
 - Placement level reaches each teaching request for pace/scaffold adaptation and is displayed with evidence in mission control.
 - Extended the live Realtime smoke through name, menu, and placement tool routing. A separate live Luna Spanish placement gate passed three of three as grade-ready.
 - Verification: 56 of 56 automated tests, 25 of 25 deterministic teaching evals, live Realtime three-tool routing, 1 of 1 live Spanish placement gate, backward-compatible database migration, and strict TypeScript pass.
+
+## 2026-07-17 — Opt-in language-matched SMS recap
+
+- Added a dependency-free Twilio Messages REST boundary using form encoding and HTTP Basic authentication, with request validation, a ten-second timeout, and sanitized failures that do not expose credentials or provider response text.
+- SMS is disabled by default and fails closed at startup if explicitly enabled without a complete Account SID, auth token, and Twilio sender number.
+- A normal guided lesson recap schedules the exact already-language-matched `spoken_response` to the originating caller after the authoritative Realtime output is sent. Messaging failure cannot replace the voice result or undo lesson state.
+- Realtime function-call idempotency plus a controller completion guard limits the recap to one attempt per call. Curious Sandbox and safety-forced endings never trigger it.
+- The prototype deliberately does not collect or infer a parent number. Shared-phone recipient consent, lock-screen disclosure, provider retention, opt-out handling, and local messaging compliance remain pre-pilot requirements.
+- No live SMS was sent because Twilio number/upgrade setup remains an external account gate. Verification used an exact mock of Twilio's documented Messages request.
+- Verification: 62 of 62 automated tests, including request/auth shape, default-off configuration, missing-credential fail-closed behavior, exactly-once completion, and safety-ending exclusion; strict TypeScript passes.
