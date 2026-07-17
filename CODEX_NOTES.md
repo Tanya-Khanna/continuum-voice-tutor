@@ -386,3 +386,9 @@
 - The gate fails if local `.env`, `.data`, or `node_modules` leaks into the archive, strips OpenAI/Twilio credentials and curriculum overrides from its child environment, forces the offline engine, and installs from `package-lock.json` with `npm ci`.
 - It then runs strict TypeScript plus all tests, the full deterministic eval suite, and a scripted one-turn REPL lesson before deleting the temporary copy.
 - Reran the command after committing the verifier itself: 91 of 91 tests, 25 of 25 eval cases, one saved offline teaching turn, and zero npm audit vulnerabilities passed from the clean archive.
+
+## 2026-07-17 — Evidence-based plan reconciliation
+
+- Reconciled the core manifest against implemented paths and current gates, striking only the completed software behavior for universal code-switching architecture, strict Socratic routing, flagship auditory grounding, short verbal units, adaptive/judgment-free teaching, the lesson arc, named/shared-phone continuity, callback retrieval, and two-layer model routing.
+- Kept the claims narrower than the product aspiration: actual G.711 accent/timing behavior remains open; Science/English/History/Geography flavor remains in F21; “every language” is not claimed from a finite multilingual gate.
+- Re-ran the secret-safe phone preflight. Readiness remains 3/10: live teaching mode, API key, and the phone HMAC secret pass; OpenAI project/webhook/public delivery plus Twilio credentials/number/routing/trunk remain external setup work.

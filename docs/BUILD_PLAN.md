@@ -174,17 +174,18 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   still require listening over the real G.711 phone leg; alternate accents remain roadmap.
 
 **Language**
-- **F16 Mid-sentence code-switching** — Hindi/English/Hinglish held fluidly; the demo's soul; proven by eval cases.
+- **F16 Mid-sentence code-switching** — ~~Hindi/English/Hinglish held fluidly without a language-pair branch;
+  deterministic multilingual fixtures, live GPT-5.6 Hindi/English, Spanish/English, and French/English cases, and
+  the complete agent gate pass~~ ✅. Real G.711 phone audio remains part of F19 validation.
 - **F17/F31 Concept bridging + in-context vocabulary** — ~~each concept carries reviewed canonical terms,
   term-language metadata, spoken meanings, and informal-expression hints; live teaching preserves the learner's
   own wording and bridges to the curriculum term in any language/code-switching pattern, while trusted compiler
   validation fails closed if required vocabulary changes~~ ✅. English/Hindi is one deployment example, not an
   engine rule.
-- **F18 Multi-language architecture** — `language_mode` in the JSON schema; per-country deployment profile
-  {language pair + syllabus + phone number} as config. **No language restriction built:** the model's native
-  multilingualism stays on (a Spanish- or Tamil-speaking caller gets answered). Validated & tuned pair:
-  hi/en/hinglish. Positioning claim: "Speaks whatever the model speaks — dozens of languages out of the box;
-  validated for Hinglish; a new country = a config profile + one compiler run." One Spanish smoke-test in eval.
+- **F18 Multi-language architecture** — ~~open BCP-47-style `language_mode` in the JSON contract; pack-configured
+  country, syllabus, default language, and tested modes; no engine language allowlist; live Hindi/English,
+  Spanish/English, and French/English code-switch gates plus deterministic Spanish, Swahili, and Tamil fixtures~~ ✅.
+  Position honestly as model-language breadth with these tested modes, not proof of every language/accent.
 - **F19 Accent robustness** — inherited from platform ASR; validated with builder's own accent; hardening → roadmap.
 
 **Teaching (the authored layer: system prompt + curriculum packs — budget real writing time)**
@@ -200,46 +201,56 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   mode selection, with a server guard preventing teaching before selection and a live Realtime name+menu routing
   smoke~~ ✅. Expand the same metadata-driven menu to Math, Science, English, History, and Geography after the four
   additional reviewed packs are frozen.
-- **F23 Strict Socratic method** — never reveals answers; guides via questions; enforced by eval ("just tell me" cases).
+- **F23 Strict Socratic method** — ~~answer requests and misconceptions route to a hint, analogy, or smaller step;
+  trusted voice checks reject answer leakage and require the next Socratic question; deterministic "just tell me"
+  cases and the 24/24 independent agent gate pass~~ ✅.
 - **F24 Household experiments + anchor objects** — ~~each concept carries reviewed no-purchase anchor activities;
   a learner can name a configured object such as paper, flatbread, leaf, or balloon, its generic pack name persists
   across drops and reaches later teaching decisions, and Mission Control shows it~~ ✅. Unreviewed model nouns,
   owners, brands, locations, and unsafe manipulation are rejected from persistent anchor state.
-- **F25 Auditory mental modeling** — roti analogy and friends; analogies as the substitute for diagrams.
-- **F26/F27 Micro-lessons + verbal checks** — ~1-min units, one check question each; instant encouraging feedback.
-- **F28 Short-form structure** — design principle (evidence: Adesua drop-off — most quiz abandonment before 10% of
-  questions; long tests kill engagement).
+- **F25 Auditory mental modeling** — ~~the flagship pack supplies reviewed spoken roti, paper-strip, and number-line
+  analogies selected by diagnosis, with no screen dependency~~ ✅. Additional subject analogies remain inside F21.
+- **F26/F27 Micro-lessons + verbal checks** — ~~each generated unit is bounded to three short sentences and one
+  spoken check question, with structured diagnosis, mastery evidence, and immediate feedback~~ ✅. Actual one-minute
+  pacing still needs the real-phone timing pass.
+- **F28 Short-form structure** — ~~application-enforced three-sentence/one-question turns plus an eight-turn
+  curriculum arc prevent an unbounded quiz or lecture~~ ✅.
 - **F29→F54 Placement diagnostic** — ~~first guided call serves the pack's three warm questions before teaching;
   Realtime submits faithful answers, GPT-5.6 judges semantic evidence across languages, application code derives the
   score/level/recommendation, results and evidence survive drops, foundational learners start at an equal-shares
   concept, and the dashboard shows placement provenance~~ ✅. Offline development retains the deterministic adapter.
-- **F32-flavor Real-world grounding** — word problems set in mandis/rotis/local life (cultural grounding, free).
+- **F32-flavor Real-world grounding** — ~~the reviewed flagship pack uses original roti, sharing, and household
+  contexts without an engine-level India branch~~ ✅. Science/English/History/Geography flavor remains part of F21.
 - **F34 Radio-host turn-taking** — ~~application-enforced maximum of three short sentences and exactly one spoken
   question per active teaching turn~~ ✅; completed recap and safety-forced ending intentionally finish without a
   question while retaining one retrieval question for a future call.
-- **F35 Judgment-free tone** — infinite patience, warm, never scolds; prompt property.
-- **F36 Adaptive pacing** — repeats/rephrases on confusion; never rushes.
+- **F35 Judgment-free tone** — ~~warm, patient, non-shaming language is required in both teaching and Realtime
+  contracts and independently judged in the paid agent suite~~ ✅.
+- **F36 Adaptive pacing** — ~~confusion, silence, answer requests, and unsupported reasoning select a concrete
+  analogy, rephrase, smaller step, or reasoning check rather than advancing mastery~~ ✅.
 - **F40 Voice-native output** — ~~speakable prose only; trusted code rejects Markdown, symbolic fractions such as
   "1/4", multiple questions, and overlong output before persistence or Realtime speech~~ ✅. Curriculum copy and
   live prompts use spoken forms such as "one-fourth."
-- **G4 Lesson arc** — ~8–10 min session: greet → teach → check → recap → "call again tomorrow."
+- **G4 Lesson arc** — ~~pack-configured target turns drive explore → independent check → recap, store a future
+  retrieval question, and end with the pack's call-again invitation~~ ✅. Eight-to-ten-minute phone timing remains
+  a carrier-path measurement, not a completed claim.
 
 **Memory & learner model**
-- **F41 Named continuity + resume** — learner DB keyed phone# → named profiles; welcome-back with exact lesson state;
-  **voice-queryable history** ("what have we learned together?").
-- **G1 Shared-phone identity** — "Is this Ravi, or someone new?" — multiple named profiles per number (siblings).
-- **F47 Callback loop** — next call OPENS with retrieval practice on last session's struggle (spaced repetition
-  by phone call).
+- **F41 Named continuity + resume** — ~~HMAC-keyed phone identity plus normalized named profiles, exact paused-state
+  resume, later retrieval, durable SQLite turns, and voice-queryable per-profile history~~ ✅.
+- **G1 Shared-phone identity** — ~~multiple normalized names share one phone hash while lessons, placement,
+  Sandbox turns, usage, and history remain profile-isolated~~ ✅.
+- **F47 Callback loop** — ~~a recent redial restores the exact pending prompt; a later or post-completion return
+  opens with a pack retrieval question chosen from the prior concept and turn count~~ ✅.
 - **F48 Think-aloud diagnosis** — ~~every structured teaching turn separates learner-stated claims from tutor
   inferences, marks each supported/unsupported/unclear against the frozen curriculum, persists the trace, and shows
   it in Mission Control; the live contract forbids invented steps and language/accent/confidence proxies~~ ✅.
   Voice makes the reasoning process visible; the remaining agent suite will expand semantic trace-quality coverage.
 
 **Intelligence & integrity**
-- **F42 Hybrid routing (two-layer architecture)** — Realtime layer owns fluid speech; **GPT-5.6 teaching engine owns
-  every teaching decision as structured JSON per turn**: {learner_id, concept, learner_answer, diagnosis,
-  language_mode, next_strategy, mastery_status, mastery_evidence, next_question}. Luna/Terra converse; Sol on
-  diagnosis/compile turns. GPT-5.6 stays central regardless of realtime model availability.
+- **F42 Hybrid routing (two-layer architecture)** — ~~Realtime owns listening, speech, VAD, and tool orchestration;
+  GPT-5.6 owns every teaching, placement, Sandbox, and history decision through typed structured outputs; trusted
+  application code validates and persists the result before Realtime speaks authoritative copy~~ ✅.
 - **F37 Controlled curriculum grounding** — ~~tutor teaches ONLY from frozen verified packs; personalizes HOW,
   never invents WHAT. No live web search mid-call, ever~~ ✅.
 - **F38/F39 Curriculum Compiler** (build-time pipeline) — ~~reads official Grade 6 syllabus themes for
@@ -369,7 +380,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · ~~F13/F50 neutral preamble + engine-latency telemetry~~ ✅ *(real phone measurement remains)* · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · ~~F16 universal code-switching (live model gate)~~ ✅ · ~~F17/F31 pack-driven concept bridging + vocabulary~~ ✅ · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · ~~F52 computed rational-comparison truth~~ ✅ · ~~F40 enforced voice-math formatting~~ ✅ · ~~F34 enforced radio turn-taking~~ ✅ · F35 judgment-free tone · F36 adaptive pacing · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 persisted semantic placement + adaptive start~~ ✅ · ~~F56 uncertainty honesty~~ ✅ · ~~F48 auditable think-aloud diagnosis~~ ✅ *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
+- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · ~~F13/F50 neutral preamble + engine-latency telemetry~~ ✅ *(real phone measurement remains)* · ~~F14 drop recovery + resume machinery~~ ✅ · ~~F21-flagship fractions pack~~ ✅ · ~~F23 Socratic method~~ ✅ · ~~F16 universal code-switching (live model gate)~~ ✅ · ~~F17/F31 pack-driven concept bridging + vocabulary~~ ✅ · ~~F25 auditory analogies~~ ✅ · ~~F26/F27 micro-lessons + verbal checks~~ ✅ *(phone timing remains)* · ~~F28 short-form structure~~ ✅ · ~~F52 computed rational-comparison truth~~ ✅ · ~~F40 enforced voice-math formatting~~ ✅ · ~~F34 enforced radio turn-taking~~ ✅ · ~~F35 judgment-free tone~~ ✅ · ~~F36 adaptive pacing~~ ✅ · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 persisted semantic placement + adaptive start~~ ✅ · ~~F56 uncertainty honesty~~ ✅ · ~~F48 auditable think-aloud diagnosis~~ ✅
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
