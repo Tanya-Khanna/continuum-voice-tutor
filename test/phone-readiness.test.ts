@@ -37,6 +37,7 @@ describe("phone readiness preflight", () => {
         OPENAI_WEBHOOK_SECRET: "configured",
         NOMAD_OPENAI_WEBHOOK_PUBLIC: "true",
         NOMAD_PHONE_HASH_SECRET: "a-real-deployment-secret",
+        NOMAD_DASHBOARD_TOKEN: "judge-dashboard-token-123456789",
         TWILIO_ACCOUNT_SID: `AC${"b".repeat(32)}`,
         TWILIO_AUTH_TOKEN: "configured",
         TWILIO_PHONE_NUMBER: "+14155550100",
@@ -46,8 +47,8 @@ describe("phone readiness preflight", () => {
     );
     expect(report).toMatchObject({
       ready: true,
-      readyCount: 10,
-      totalCount: 10,
+      readyCount: 11,
+      totalCount: 11,
     });
   });
 });

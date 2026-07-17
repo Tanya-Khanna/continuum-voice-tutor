@@ -149,6 +149,15 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     </section>
   </main>
   <script>
+    const dashboardToken = (() => {
+      const fragmentToken = new URLSearchParams(window.location.hash.slice(1)).get('token');
+      if (fragmentToken) {
+        try { window.sessionStorage.setItem('nomad-dashboard-token', fragmentToken); } catch {}
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        return fragmentToken;
+      }
+      try { return window.sessionStorage.getItem('nomad-dashboard-token') ?? ''; } catch { return ''; }
+    })();
     const state = { sessions: [], selected: null, evals: null, sample: null, view: 'sessions' };
     const text = (tag, value, className) => {
       const node = document.createElement(tag);
@@ -355,7 +364,17 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     document.querySelector('#sample-tab').addEventListener('click', () => selectView('sample'));
     async function refresh() {
       try {
-        const response = await fetch('/api/dashboard/sessions', { cache: 'no-store' });
+        const response = await fetch('/api/dashboard/sessions', {
+          cache: 'no-store',
+          headers: dashboardToken ? { Authorization: 'Bearer ' + dashboardToken } : {},
+        });
+        if (response.status === 401) {
+          state.sessions = [];
+          state.selected = null;
+          document.querySelector('#sync').textContent = 'Sessions locked · add #token=…';
+          renderList(); renderWorkspace();
+          return;
+        }
         if (!response.ok) throw new Error('Dashboard request failed');
         const payload = await response.json();
         state.sessions = payload.sessions;

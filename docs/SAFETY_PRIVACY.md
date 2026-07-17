@@ -9,7 +9,7 @@ Nomad is a hackathon prototype, not an approved child deployment. Do not invite 
 3. State who operates the phone number and server, who can view the dashboard, how long records are kept, and how deletion can be requested.
 4. Use a nickname or chosen first name, never a full legal name. Do not request an address, school identifier, account credential, parent contact, or other unnecessary personal data.
 5. Test the deployment's languages and local emergency wording with native speakers. Nomad does not infer a caller's language from their country.
-6. Keep the mission-control dashboard private and restrict it to authorized adults. Anonymized references reduce exposure but do not make conversation transcripts anonymous.
+6. Keep the mission-control dashboard private and restrict it to authorized adults. Set `NOMAD_DASHBOARD_TOKEN` before any public tunnel and share it only through the documented URL fragment; the server refuses public-webhook startup without this control. Anonymized references reduce exposure but do not make conversation transcripts anonymous, and one shared judge token is not role-based institutional access control.
 7. Keep SMS recaps disabled unless the caller or responsible adult explicitly consents to lesson content appearing on that exact phone. Treat shared phones and lock-screen previews as disclosure risks; do not assume the learner is the sole recipient.
 
 ## Data currently stored

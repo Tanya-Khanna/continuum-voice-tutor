@@ -9,7 +9,7 @@ reviewed curriculum packs.
 Do not publish a phone number or record a “live call” sequence until all of these
 are true:
 
-- `npm run phone:preflight` reports 10/10.
+- `npm run phone:preflight` reports 11/11, including Mission Control access protection.
 - A real carrier call reaches Nomad through Twilio and OpenAI SIP.
 - Barge-in, unclear-audio recovery, disconnect, and redial have been heard over
   G.711—not merely unit-tested.
@@ -47,7 +47,8 @@ Optional local surfaces:
 npm start
 ```
 
-- Mission Control: `http://localhost:3000/dashboard`
+- Mission Control, local: `http://localhost:3000/dashboard`
+- Mission Control, deployed: `https://<host>/dashboard#token=<judge-token>`
 - Deterministic gate: `npm run eval` (expected: 25/25)
 - Paid agent proof: the latest complete runtime report is 24/24; do not rerun it
   casually or replace it with a targeted report.
@@ -70,10 +71,11 @@ Then try one stress test:
 - Say that the audio was unclear and verify the pending question is restored
   without advancing the lesson.
 
-Open `[PUBLIC DASHBOARD URL]` to see the anonymized session, diagnosis, mastery
-evidence, strategy, model route, usage, and eval evidence. Do not expose the local
-dashboard publicly with real learner data until authentication and a production
-retention policy exist.
+Open `[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]` to see the anonymized session,
+diagnosis, mastery evidence, strategy, model route, usage, and eval evidence. Do
+not expose the dashboard publicly with real learner data until the judge Bearer
+token is set and a production retention policy exists. Share the token in the URL
+fragment, not the query string; verify that it disappears from the address bar.
 
 ## Three-minute demo recording order
 
@@ -110,7 +112,7 @@ retention policy exist.
 - Start from a clean committed revision; save the commit hash in submission
   notes.
 - Run `npm run verify:fresh` and capture the final pass line.
-- Run `npm run phone:preflight`; capture 10/10 without displaying secret values.
+- Run `npm run phone:preflight`; capture 11/11 without displaying secret values.
 - Use a new synthetic adult demo profile, never a child’s real data.
 - Confirm SMS recaps are off unless the receiving phone explicitly consented.
 - Keep a backup local REPL take and the checked-in synthetic code-switch sample.

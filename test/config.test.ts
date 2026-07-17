@@ -19,6 +19,18 @@ describe("environment configuration", () => {
     expect(environment.NOMAD_MAX_CALLS_PER_HOUR).toBe(6);
     expect(environment.NOMAD_SMS_RECAP_ENABLED).toBe(false);
     expect(environment.NOMAD_CURRICULUM_PATHS).toBeUndefined();
+    expect(environment.NOMAD_DASHBOARD_TOKEN).toBeUndefined();
+  });
+
+  it("requires a sufficiently strong dashboard token when configured", () => {
+    expect(() =>
+      loadEnvironment({ NOMAD_DASHBOARD_TOKEN: "too-short" }),
+    ).toThrow();
+    expect(
+      loadEnvironment({
+        NOMAD_DASHBOARD_TOKEN: "judge-dashboard-token-123456789",
+      }).NOMAD_DASHBOARD_TOKEN,
+    ).toBe("judge-dashboard-token-123456789");
   });
 
   it("parses an ordered multi-pack path list and rejects conflicting config", () => {

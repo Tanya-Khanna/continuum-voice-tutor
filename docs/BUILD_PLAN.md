@@ -277,7 +277,9 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   optional voice-registered parent number (G8) remains gated on a reviewed shared-phone consent/recipient policy.
 - **F45 Mission-control dashboard** — ~~judges' window with live transcript, per-turn model routing, diagnosis JSON,
   mastery evidence, evidence-based cost/call (F43-lite), eval-results page, anonymized learner IDs (G2), and a
-  clearly labeled synthetic Spanish-English sample recording with click-to-seek synced transcript~~ ✅.
+  clearly labeled synthetic Spanish-English sample recording with click-to-seek synced transcript; optional Bearer
+  protection keeps real session data behind a judge token, passes it via a non-request URL fragment, and fails
+  public-webhook startup closed when the token is absent~~ ✅.
 - **F46 Child-safety guardrails** — ~~untrusted-input boundary, prompt-injection resistance, contact/address redaction before model + persistence, graceful off-topic/unsafe handling, repeated-abuse ending, deterministic + live evals, and documented deployment consent/retention limitations (G2)~~ ✅. *(Supervised prototype only; local emergency-language review and production retention enforcement remain pre-pilot requirements.)*
 - **G6 Abuse guard** — ~~HMAC-keyed per-caller sliding-window rate limit, concurrent-call protection, webhook replay idempotency, graceful repeated-abuse disengagement, and two jailbreak cases in the frozen eval~~ ✅.
 - **F51 Eval harness** — simulated-learner agent × evaluator agent (both GPT-5.6 — the multi-agent story). **24 cases:**
@@ -362,8 +364,9 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - Twilio: buy US number, configure SIP trunk → OpenAI Realtime SIP connector.
 - ~~Secret-safe `phone:preflight` now distinguishes local credential/config presence from three operator-verified
   external states and prints no values; `secrets:init` replaced the development phone-HMAC default locally with
-  owner-only permissions~~ ✅. Current local result: 3/10 ready; project ID, webhook creation/public signed delivery,
-  Twilio credentials/number/voice routing/trunk remain explicit external-console work.
+  owner-only permissions~~ ✅. The preflight now has 11 checks, including Mission Control access protection. The
+  current local result is 3/11; project ID, webhook creation/public signed delivery, dashboard token, and Twilio
+  credentials/number/voice routing/trunk remain explicit setup work.
 **Afternoon:**
 - The bridge: phone call → Twilio → SIP → Realtime → AI voice answers. G.711 8kHz confirmed.
 - Measure real latency (phone-to-response). Tune VAD/barge-in settings.

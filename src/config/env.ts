@@ -6,6 +6,11 @@ const optionalNonEmpty = z.preprocess(
   z.string().min(1).optional(),
 );
 
+const optionalDashboardToken = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().min(24).optional(),
+);
+
 const booleanFromEnvironment = z.preprocess((value) => {
   if (value === undefined || value === "") return false;
   if (value === "true") return true;
@@ -38,6 +43,7 @@ const EnvironmentSchema = z.object({
     .string()
     .min(1)
     .default(".data/latest-agent-eval.json"),
+  NOMAD_DASHBOARD_TOKEN: optionalDashboardToken,
   NOMAD_MAX_CALLS_PER_HOUR: z.coerce.number().int().min(1).max(100).default(6),
   OPENAI_API_KEY: optionalNonEmpty,
   OPENAI_TEXT_MODEL: z.string().min(1).default("gpt-5.6-luna"),

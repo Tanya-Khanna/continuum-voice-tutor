@@ -64,6 +64,13 @@ export function buildPhoneReadinessReport(
         "Replace NOMAD_PHONE_HASH_SECRET with a random deployment secret of at least 16 characters.",
     },
     {
+      id: "dashboard_access_token",
+      label: "Mission Control learner sessions access-protected",
+      ready: Boolean(environment.NOMAD_DASHBOARD_TOKEN),
+      nextAction:
+        "Set a random NOMAD_DASHBOARD_TOKEN of at least 24 characters before exposing the server.",
+    },
+    {
       id: "twilio_credentials",
       label: "Twilio account credentials present",
       ready: Boolean(

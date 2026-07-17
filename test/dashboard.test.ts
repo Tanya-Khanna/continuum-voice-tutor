@@ -5,8 +5,18 @@ import { LessonService } from "../src/lesson/lesson-service.js";
 import { buildDashboardSnapshot } from "../src/observability/dashboard.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 import { StoredModelUsageSchema } from "../src/domain/usage.js";
+import { DASHBOARD_HTML } from "../src/dashboard/page.js";
 
 describe("mission-control snapshot", () => {
+  it("keeps a judge token out of the request URL and sends it only as authorization", () => {
+    expect(DASHBOARD_HTML).toContain("window.location.hash.slice(1)");
+    expect(DASHBOARD_HTML).toContain("window.sessionStorage");
+    expect(DASHBOARD_HTML).toContain(
+      "Authorization: 'Bearer ' + dashboardToken",
+    );
+    expect(DASHBOARD_HTML).not.toContain("searchParams.get('token')");
+  });
+
   it("exposes teaching evidence without learner names or phone numbers", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({

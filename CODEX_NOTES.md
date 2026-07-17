@@ -413,3 +413,11 @@
 - Added `npm run seed:demo`, an explicitly synthetic, zero-credit Ravi fixture built through the real offline lesson service. It completes placement, records one canonical misconception turn, pauses on the actual next prompt, and prints the exact resume command.
 - The seed is idempotent: rerunning it does not add turns. Tests also prove that a second name on the same synthetic phone inherits no lesson state.
 - Expanded `npm run verify:fresh` to clear both single- and multi-pack curriculum overrides, seed the fixture in the secret-free archive, and prove exact resume from committed source. Local verification is 101/101 tests plus the 25/25 deterministic teaching gate.
+
+## 2026-07-17 — Access-controlled Mission Control sessions
+
+- Added optional constant-time Bearer authentication to `/api/dashboard/sessions`. Local development remains zero-config; when a token is configured, missing, malformed, repeated, or incorrect authorization fails before the learner database is opened.
+- The browser accepts a judge token only from the URL fragment, moves it to tab-scoped session storage, removes it from the address bar, and sends it in the authorization header. It never puts the token in a request query string.
+- Public-webhook server startup now fails closed without a 24-character-or-longer dashboard token, and phone preflight includes the same readiness boundary. The synthetic sample and eval scorecard remain accessible because they contain no real learner sessions.
+- This is an honest hackathon judge-access control, not role-based production authorization or an enforced retention policy.
+- HTTP smoke proof: missing and incorrect tokens returned 401, the exact token returned 200, the synthetic sample remained 200, the dashboard returned no-referrer/no-sniff headers, and public-webhook startup without a token exited before listening. Local phone readiness is now 3/11; the new access-token check is intentionally open until deployment.

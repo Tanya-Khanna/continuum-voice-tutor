@@ -28,6 +28,10 @@ import {
 } from "./telephony/realtime-sip.js";
 import { RealtimeTeachingBridge } from "./telephony/realtime-teaching-bridge.js";
 import { SAMPLE_SESSION } from "./samples/sample-session.js";
+import {
+  assertPublicDashboardProtected,
+  dashboardRequestAuthorized,
+} from "./security/dashboard-access.js";
 
 function headersFromIncoming(headers: IncomingHttpHeaders): Headers {
   const result = new Headers();
@@ -50,6 +54,12 @@ async function readBody(request: NodeJS.ReadableStream): Promise<string> {
 }
 
 const environment = loadEnvironment();
+assertPublicDashboardProtected({
+  publicWebhook: environment.NOMAD_OPENAI_WEBHOOK_PUBLIC,
+  ...(environment.NOMAD_DASHBOARD_TOKEN
+    ? { dashboardToken: environment.NOMAD_DASHBOARD_TOKEN }
+    : {}),
+});
 const twilioSmsConfig = resolveTwilioSmsConfig(environment);
 const activeCallIds = new Set<string>();
 const callAdmission = new CallAdmissionGuard({
@@ -82,6 +92,8 @@ export const server = createServer(async (request, response) => {
       response.writeHead(200, {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
       });
       response.end(DASHBOARD_HTML);
       return;
@@ -141,6 +153,25 @@ export const server = createServer(async (request, response) => {
       request.method === "GET" &&
       url.pathname === "/api/dashboard/sessions"
     ) {
+      if (
+        !dashboardRequestAuthorized({
+          ...(environment.NOMAD_DASHBOARD_TOKEN
+            ? { expectedToken: environment.NOMAD_DASHBOARD_TOKEN }
+            : {}),
+          ...(request.headers.authorization
+            ? { authorizationHeader: request.headers.authorization }
+            : {}),
+        })
+      ) {
+        response.writeHead(401, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "WWW-Authenticate": 'Bearer realm="Nomad Mission Control"',
+          "X-Content-Type-Options": "nosniff",
+        });
+        response.end(JSON.stringify({ error: "dashboard_access_required" }));
+        return;
+      }
       const repository = new SqliteLearningRepository(
         environment.NOMAD_DATABASE_PATH,
       );
@@ -155,6 +186,7 @@ export const server = createServer(async (request, response) => {
         response.writeHead(200, {
           "Content-Type": "application/json",
           "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff",
         });
         response.end(JSON.stringify(snapshot));
       } finally {
