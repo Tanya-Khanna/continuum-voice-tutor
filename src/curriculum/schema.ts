@@ -106,6 +106,19 @@ export const CurriculumPackSchema = z.object({
     recapResponseLead: z.string().min(1),
     callAgainInvitation: z.string().min(1),
   }),
+  safetyPolicy: z.object({
+    unsafeSignals: z.array(z.string().min(1)).min(1),
+    promptInjectionSignals: z.array(z.string().min(1)).min(1),
+    offTopicSignals: z.array(z.string().min(1)).min(1),
+    unsafeDiagnosis: z.string().min(1),
+    unsafeResponseLead: z.string().min(1),
+    promptInjectionDiagnosis: z.string().min(1),
+    promptInjectionResponseLead: z.string().min(1),
+    offTopicDiagnosis: z.string().min(1),
+    offTopicResponseLead: z.string().min(1),
+    gracefulEndResponse: z.string().min(1),
+    maxConsecutiveRedirects: z.number().int().min(2).max(10),
+  }),
   concepts: z.array(CurriculumConceptSchema).min(1),
 });
 

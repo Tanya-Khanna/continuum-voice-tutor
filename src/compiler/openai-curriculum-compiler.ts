@@ -19,6 +19,7 @@ Stay within the stated grade, subject, required concepts, and source themes. Nev
 Make every learner-facing string short and natural aloud, with one question at a time and no Markdown or unexplained symbolic notation.
 Keep language detection universal: languagePolicy must be model_detect_any. Tested language modes and offline hints are deployment validation data, not a closed product language list.
 Include a placement diagnostic, a curriculum-configured lesson policy, concrete analogies, retrieval questions, misconception signals, evidence rules, and honest uncertainty behavior.
+Include a child-safety policy with deployment-tested offline signals, prompt-injection resistance, benign off-topic redirects, and a graceful repeated-abuse ending. This offline signal list is a test adapter, not the live model's language boundary.
 Return only the schema-valid draft. Provenance is attached by trusted application code after generation.`;
 
 const VERIFIER_INSTRUCTIONS = `You independently verify a generated curriculum pack against its reviewed source brief.

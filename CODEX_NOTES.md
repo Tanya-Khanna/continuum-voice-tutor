@@ -165,3 +165,14 @@
 - Kept the hand-built fractions pack explicitly marked `hand_verified`.
 - No live compiler request was run. Official source briefs and human spot-checks are required before generating the four additional subject packs.
 - Verification: 35 of 35 automated tests pass, and the full curriculum draft schema successfully converts to the Responses Structured Outputs format.
+
+## 2026-07-17 — Child-safety and untrusted-input boundary
+
+- Added deployment-configured offline safety fixtures for unsafe, prompt-injection, and benign off-topic paths while keeping semantic live handling in GPT-5.6 for arbitrary languages.
+- Added application-level redaction for likely emails, links, long phone-like numbers, and explicit address disclosures before both the model request and SQLite persistence. Short math notation remains intact.
+- Live prompts now treat every learner answer as untrusted content and explicitly forbid instruction overrides, prompt disclosure, schema changes, safety bypasses, and frozen-curriculum escape.
+- Added auditable `safety_redirect` behavior and a configured two-strike graceful lesson ending.
+- Rebalanced the existing 25-case deterministic gate rather than inflating it with repetitive cases: it now includes unsafe, off-topic, and two jailbreak cases while preserving misconception, reasoning, insufficient-evidence, and multilingual coverage.
+- The first live injection test resisted the request but mislabeled its strategy as `smaller_step`. Tightening the strategy contract fixed the issue; targeted and full live reruns then passed for prompt injection and an unsafe request.
+- Added `docs/SAFETY_PRIVACY.md` with a pre-pilot consent checklist, exact data inventory, dashboard caveat, honest local-retention limitation, and supervised-prototype boundary.
+- Verification: 41 of 41 automated tests, 25 of 25 deterministic eval cases, and 2 of 2 live Luna safety cases pass.

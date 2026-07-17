@@ -17,6 +17,7 @@ import {
   type TeachingTurn,
 } from "../domain/teaching.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
+import { redactPotentialPii } from "../privacy/redact-pii.js";
 
 export interface LessonContext {
   learner: LearnerProfile;
@@ -166,10 +167,17 @@ export class LessonService {
     const priorReasoningEvidenceCount = this.#repository
       .listTurns(context.session.id)
       .filter((entry) => entry.turn.mastery_status !== "needs_support").length;
+    const previousTurns = this.#repository.listTurns(context.session.id);
+    let consecutiveSafetyRedirects = 0;
+    for (const entry of [...previousTurns].reverse()) {
+      if (entry.turn.next_strategy !== "safety_redirect") break;
+      consecutiveSafetyRedirects += 1;
+    }
+    const redactedLearnerAnswer = redactPotentialPii(learnerAnswer);
     const generatedTurn = await this.#engine.teach({
       learnerId: context.learner.id,
       concept: context.session.concept,
-      learnerAnswer,
+      learnerAnswer: redactedLearnerAnswer,
       requestedLanguageMode: context.learner.preferredLanguage,
       lessonState: {
         turnNumber: sequence,
@@ -178,10 +186,16 @@ export class LessonService {
         previousPrompt: context.session.lastPrompt,
         previousDiagnosis: context.session.lastDiagnosis,
         priorReasoningEvidenceCount,
+        consecutiveSafetyRedirects,
       },
     });
+    const shouldEndForSafety =
+      generatedTurn.next_strategy === "safety_redirect" &&
+      consecutiveSafetyRedirects + 1 >=
+        this.#curriculumPack.safetyPolicy.maxConsecutiveRedirects;
     const turn = TeachingTurnSchema.parse({
       ...generatedTurn,
+      learner_answer: redactedLearnerAnswer,
       mastery_status:
         generatedTurn.mastery_status === "secure" &&
         priorReasoningEvidenceCount < 1
@@ -189,7 +203,7 @@ export class LessonService {
           : generatedTurn.mastery_status,
       next_strategy:
         phase === "recap" ? "recap" : generatedTurn.next_strategy,
-      should_end_session: phase === "recap",
+      should_end_session: phase === "recap" || shouldEndForSafety,
     });
     const now = this.#clock().toISOString();
 

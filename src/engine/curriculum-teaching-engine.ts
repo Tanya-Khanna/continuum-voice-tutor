@@ -59,10 +59,7 @@ export class CurriculumTeachingEngine implements TeachingEngine {
     const finalize = (candidate: unknown): TeachingTurn => {
       const turn = TeachingTurnSchema.parse(candidate);
       if (request.lessonState?.phase !== "recap") {
-        return TeachingTurnSchema.parse({
-          ...turn,
-          should_end_session: false,
-        });
+        return turn;
       }
 
       const retrievalQuestion =
@@ -77,6 +74,52 @@ export class CurriculumTeachingEngine implements TeachingEngine {
         should_end_session: true,
       });
     };
+
+    const safetyTurn = (diagnosis: string, responseLead: string) => {
+      const previousRedirects =
+        request.lessonState?.consecutiveSafetyRedirects ?? 0;
+      const shouldEnd =
+        previousRedirects + 1 >=
+        this.#pack.safetyPolicy.maxConsecutiveRedirects;
+      const returnQuestion =
+        request.lessonState?.previousPrompt ?? scaffold.entryQuestion;
+      return finalize({
+        ...base,
+        diagnosis,
+        next_strategy: "safety_redirect",
+        mastery_status: "needs_support",
+        mastery_evidence:
+          "The response did not provide evidence toward the learning objective.",
+        next_question: returnQuestion,
+        spoken_response: shouldEnd
+          ? this.#pack.safetyPolicy.gracefulEndResponse
+          : `${responseLead} ${returnQuestion}`,
+        should_end_session: shouldEnd,
+      });
+    };
+
+    if (
+      includesAny(normalized, this.#pack.safetyPolicy.promptInjectionSignals)
+    ) {
+      return safetyTurn(
+        this.#pack.safetyPolicy.promptInjectionDiagnosis,
+        this.#pack.safetyPolicy.promptInjectionResponseLead,
+      );
+    }
+
+    if (includesAny(normalized, this.#pack.safetyPolicy.unsafeSignals)) {
+      return safetyTurn(
+        this.#pack.safetyPolicy.unsafeDiagnosis,
+        this.#pack.safetyPolicy.unsafeResponseLead,
+      );
+    }
+
+    if (includesAny(normalized, this.#pack.safetyPolicy.offTopicSignals)) {
+      return safetyTurn(
+        this.#pack.safetyPolicy.offTopicDiagnosis,
+        this.#pack.safetyPolicy.offTopicResponseLead,
+      );
+    }
 
     if (!answer) {
       return finalize({

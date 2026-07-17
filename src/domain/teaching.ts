@@ -42,6 +42,7 @@ export const TeachingLessonStateSchema = z.object({
   previousPrompt: z.string().min(1),
   previousDiagnosis: z.string(),
   priorReasoningEvidenceCount: z.number().int().nonnegative(),
+  consecutiveSafetyRedirects: z.number().int().nonnegative(),
 });
 
 export const TeachingRequestSchema = z.object({

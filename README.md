@@ -78,6 +78,12 @@ This is currently a local judge-demo surface, not an authenticated production da
 
 Incoming-call admission is conservative by default: signed webhook retries are idempotent, one caller cannot occupy two simultaneous lessons, and a caller is limited to six call starts per sliding hour. Change `NOMAD_MAX_CALLS_PER_HOUR` only with an explicit deployment policy. Rejected calls are declined before a Realtime session or learner database connection is allocated.
 
+## Safety and privacy
+
+Learner speech is untrusted input: prompt-injection attempts cannot change the schema or frozen curriculum, unsafe requests are redirected, benign off-topic turns return to the pending question, and repeated unsafe turns end gracefully. Likely contact and address disclosures are redacted before the model call and database write.
+
+This remains a supervised prototype—not an approved child deployment. The required consent flow, actual data inventory, dashboard warning, current retention limitation, and pre-pilot checklist are documented in [`docs/SAFETY_PRIVACY.md`](docs/SAFETY_PRIVACY.md).
+
 ## Configuration
 
 Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requires no credentials. Local learner state is stored in `.data/nomad.db`, which is ignored by Git. Change `NOMAD_PHONE_HASH_SECRET` before any real deployment; it keys the one-way caller identifiers. Development defaults to `gpt-realtime-2.1-mini`; switch to the full Realtime model only for planned quality checks and the final demo.
