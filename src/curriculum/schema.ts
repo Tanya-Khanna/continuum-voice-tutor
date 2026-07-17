@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
-  AnchorObjectSchema,
   ResolvedLanguageModeSchema,
+  ReviewedAnchorObjectSchema,
   TeachingStrategySchema,
 } from "../domain/teaching.js";
 
@@ -39,7 +39,7 @@ export const VocabularyBridgeSchema = z.object({
 });
 
 export const AnchorActivitySchema = z.object({
-  objectName: AnchorObjectSchema,
+  objectName: ReviewedAnchorObjectSchema,
   learnerSignals: z.array(z.string().min(1)).min(1),
   responseLead: z.string().min(1),
   nextQuestion: z.string().min(1),

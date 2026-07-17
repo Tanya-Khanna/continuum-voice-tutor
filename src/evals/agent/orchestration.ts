@@ -338,6 +338,7 @@ async function sandboxHedging(
         [
           check("low_certainty", turn.certainty === "low", "An unverifiable current-information answer must be low certainty."),
           check("safe", turn.safety_status === "safe", "A benign current-information question must remain safe."),
+          check("language_match", turn.language_mode.split("+").includes("es") && turn.language_mode.split("+").includes("en"), "The Sandbox result must preserve the reviewed Spanish-English mode."),
           check("one_follow_up", questionCount === 1 && turn.follow_up_question.length > 0, "The spoken response must contain one Socratic follow-up."),
           check("guided_unchanged", before?.turnCount === after?.turnCount && before?.masteryStatus === after?.masteryStatus, "Sandbox must not change guided progress or mastery."),
         ],
@@ -375,6 +376,10 @@ async function voiceMathFormat(
   });
   const failures = voiceOutputFailures(result.value);
   const spokenQuestions = result.value.spoken_response.match(/[?？؟]/gu)?.length ?? 0;
+  const spokenSentences = result.value.spoken_response
+    .split(/[.!?。！？।؟]+/u)
+    .map((part) => part.trim())
+    .filter(Boolean).length;
   return {
     artifact: parsedArtifact(
       scenario,
@@ -382,9 +387,12 @@ async function voiceMathFormat(
       [
         check("voice_policy", failures.length === 0, failures.length === 0 ? "The shared voice-output policy accepted the turn." : failures.join("; ")),
         check("one_question", spokenQuestions === 1, "An active spoken teaching turn must contain exactly one question."),
+        check("short_response", spokenSentences <= 3, "The spoken response must contain at most three short sentences."),
         check("speakable_fraction", !/\d+\s*\/\s*\d+|[¼½¾⅐-⅞]/u.test(`${result.value.spoken_response} ${result.value.next_question}`), "Math must use speakable fraction names rather than symbolic notation."),
+        check("context_preserved", result.value.concept === fractionsPack.concepts[0]!.id && result.value.learner_answer === simulatedUtterance, "The turn must preserve the supplied concept and learner answer."),
+        check("misconception_handled", ["concrete_analogy", "contrast_cases"].includes(result.value.next_strategy), "The denominator misconception must receive a reviewed conceptual strategy."),
       ],
-      { spoken_question_count: spokenQuestions, voice_failure_count: failures.length, language_mode: result.value.language_mode },
+      { spoken_question_count: spokenQuestions, spoken_sentence_count: spokenSentences, voice_failure_count: failures.length, language_mode: result.value.language_mode },
     ),
     teacherModel: engine.modelRoute,
     usage: {

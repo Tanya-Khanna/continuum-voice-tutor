@@ -39,11 +39,12 @@ export const AnchorObjectSchema = z
   .string()
   .trim()
   .min(1)
-  .max(80)
-  .regex(
-    /^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} '\-]{0,79}$/u,
-    "Anchor objects must be short noun phrases without contact or address punctuation.",
-  );
+  .max(80);
+
+export const ReviewedAnchorObjectSchema = AnchorObjectSchema.regex(
+  /^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} '\-]{0,79}$/u,
+  "Anchor objects must be short noun phrases without contact or address punctuation.",
+);
 
 export const TeachingLessonStateSchema = z.object({
   turnNumber: z.number().int().positive(),

@@ -272,8 +272,9 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   placement, callback retrieval, menu routing, Sandbox hedging, and voice formatting. GPT-5.6 supplies the synthetic
   learner and independent evaluator; applicable cases call the production teaching engine. Trusted structural checks,
   model routes/tokens, backward-compatible reports, Git-ignored persistence, and Mission Control rendering are wired;
-  one Spanish-English semantic case and one reconnect orchestration case pass live~~ ✅. The paid full 24-case run is
-  still open; Mission Control labels targeted results separately, so do not present a one-case pass as 24/24.
+  one Spanish-English semantic case and one reconnect orchestration case pass live~~ ✅. A complete paid run now
+  records **23/24**: all trusted checks and all ten orchestration cases pass; one Hindi smaller-step turn remains open
+  for idiomatic phrasing. Targeted reports are stored separately and cannot overwrite this complete scorecard.
 
 ### 4.2 STRETCH — day 4 only, strict order, never at stability's expense
 1. **F4 WhatsApp voice notes** — same brain, async channel; zero latency pressure = demo insurance; Twilio WhatsApp API.

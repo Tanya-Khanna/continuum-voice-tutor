@@ -62,7 +62,9 @@ The full 24-case agent harness is deliberately separate and paid. Fourteen seman
 npm run eval:agents -- --confirm-spend --case agent-spanish-english-switch
 ```
 
-Omit `--case` only when intentionally running all 24 scenarios. Each case makes two live GPT-5.6 requests; semantic teaching, placement, Sandbox, and voice-format cases add one production-engine request. The latest validated report is written under `.data`, stays out of Git, and appears below the deterministic gate in Mission Control. Mission Control distinguishes a targeted passing run from a complete 24-case result. A reconnect orchestration smoke passes with all four trusted continuity checks; the paid full-suite run remains intentionally open.
+Omit `--case` only when intentionally running all 24 scenarios. Each case makes two live GPT-5.6 requests; semantic teaching, placement, Sandbox, and voice-format cases add one production-engine request, with one bounded retry when a teaching result fails the trusted voice policy. The latest complete report is written under `.data`, stays out of Git, and appears below the deterministic gate in Mission Control. Targeted runs use a separate `.targeted` report and cannot overwrite the full-suite evidence.
+
+The latest complete paid run is **23/24**. All trusted structural checks and all ten orchestration paths passed; the remaining failure is a Hindi-only confusion turn whose smaller-step question was judged grammatically awkward. This is shown as a failure rather than hidden behind a targeted passing rerun.
 
 With an API key configured, this low-cost command verifies live Realtime name capture and guided-subject/Sandbox menu routing using text only:
 

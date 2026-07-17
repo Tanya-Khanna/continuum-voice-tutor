@@ -354,3 +354,13 @@
 - Added a provider-neutral delivery contract: warm, calm, patient, unhurried, clear pauses, and never theatrical, patronizing, or sleepy. Authoritative tool words remain unchanged.
 - Nomad remains the disclosed product/tutor persona rather than imitating a real person. Perceived pace, voice fit, and accent behavior remain real-phone listening tasks after the Twilio/SIP leg is available.
 - Verification: exact accept-payload assertions, lower/upper speed bounds, invalid-speed rejection, warm-delivery prompt assertion, and strict TypeScript pass.
+
+## 2026-07-17 — Full paid agent-suite reliability pass
+
+- The first complete run exposed a provider-incompatible Unicode-property regex in the teaching Structured Outputs schema. Split model-facing anchor shape validation from the stricter reviewed-pack name validator; exact pack-name filtering remains the persistence boundary, so multilingual reviewed names stay safe without emitting unsupported JSON Schema regex.
+- Added typed `execution_error` case results so one fail-closed teacher or adapter error cannot abort the scorecard. Mission Control renders the stage and error, and historical semantic reports remain compatible.
+- Added one bounded production teacher retry using exact trusted voice-policy feedback. The retry preserves the strict guard and aggregates both attempts' token usage instead of hiding the extra cost.
+- Removed pending-lesson bait from orchestration simulators, aligned semantic eval requests with the already-detected learner language mode used by the phone path, matched code-switch tags by base language, and constrained the orchestration evaluator to reviewed focus rather than invented requirements.
+- Targeted runs now write a separate `.targeted` artifact and cannot overwrite the complete report shown in Mission Control.
+- Final complete result: 23 of 24 pass with 77,773 input and 13,173 output text tokens. All ten orchestration cases and every trusted structural check pass. The sole open case is Hindi-only confusion: correct diagnosis, language, smaller-step strategy, and safety, but an independently judged awkward Hindi question. Added a universal idiomatic-language instruction; a future complete run must prove it before claiming 24/24.
+- Verification: 87 of 87 automated tests, 25 of 25 deterministic teaching cases, multiple targeted paid regressions, complete paid report persistence, and strict TypeScript pass.

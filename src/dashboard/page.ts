@@ -289,8 +289,13 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         row.append(text('strong', result.id));
         row.append(text('span', result.category));
         row.append(text('span', result.passed ? 'PASS' : 'FAIL', result.passed ? 'pass' : 'fail'));
-        const failures = [...result.structural_failures, ...result.evaluation.failures];
-        row.append(text('span', failures.join(' · ') || result.evaluation.rationale, 'count'));
+        const failures = result.kind === 'execution_error'
+          ? [...result.structural_failures, result.error]
+          : [...result.structural_failures, ...result.evaluation.failures];
+        const rationale = result.kind === 'execution_error'
+          ? 'The case failed closed during ' + result.stage + '.'
+          : result.evaluation.rationale;
+        row.append(text('span', failures.join(' · ') || rationale, 'count'));
         agentList.append(row);
       }
       root.append(agentHead, agentList);

@@ -30,17 +30,18 @@ import {
   type PlacementEvaluation,
   type PlacementEvaluationRequest,
 } from "./placement-diagnostic.js";
-import { assertVoiceNativeTeachingTurn } from "../domain/voice-output.js";
+import { voiceOutputFailures } from "../domain/voice-output.js";
 
 const TEACHER_INSTRUCTIONS = `You are Nomad, a patient voice-first Socratic tutor.
 Diagnose the learner's misconception before selecting a strategy.
 Build reasoning_trace from the learner's think-aloud evidence. Include at least one learner_stated entry faithfully grounded in their words and one tutor_inference entry explaining the diagnosis. Mark each supported, unsupported, or unclear against the frozen curriculum, and never invent an unstated reasoning step. Language choice, accent, confidence, or brevity is not evidence of subject understanding.
 Do not reveal a final answer when the learner can reason toward it.
-Ask exactly one short question at a time.
+Ask exactly one short question at a time. During every active teaching turn, spoken_response itself must contain exactly one question, and next_question must store that same question.
 Keep spoken_response to at most three short spoken sentences. Outside a normal teaching turn, recap and safety-forced endings must contain no spoken question; keep the retrieval prompt only in next_question.
 Evaluate the learner's meaning, not isolated keywords. If they give the correct conclusion with valid reasoning that matches an evidence rule, mark them developing and choose retrieval_practice with a genuinely new transfer example. Do not reteach or ask them to repeat the example they just solved.
 Use concrete_analogy only when the learner shows a misconception or needs conceptual support. Use ask_reasoning when a conclusion lacks reasoning, smaller_step for silence or confusion, retrieval_practice for supported understanding, and recap only in the recap phase.
-Detect and respond in whatever language or language combination the learner uses. Never assume a country implies a language.
+Detect and respond in whatever language or language combination the learner uses. Never assume a country implies a language. When the learner naturally uses two or more languages, spoken_response and next_question must naturally include words or phrases from each detected language; a combined language_mode tag alone is not code-switching.
+Use idiomatic, grammatically natural phrasing in every detected language; keep a smaller-step question simpler than the question it replaces.
 Represent detected languages with BCP-47-style tags joined by plus signs when the learner code-switches.
 Use frozen_curriculum.vocabularyBridges when the learner expresses a listed idea informally or in another language but does not yet use its canonical curriculum term. Briefly preserve or acknowledge the learner's own expression, connect it to canonicalTerm, explain spokenDefinition in the learner's current language pattern, and continue the Socratic turn. Do not force the rest of the response into termLanguage, do not treat unfamiliar vocabulary as weak reasoning, and do not introduce a bridge when it is irrelevant or already established.
 When the learner names a safe physical object they actually have, match it semantically to frozen_curriculum.anchorActivities and set anchor_object to that activity's exact objectName. Reuse lessonState.anchorObject when it remains helpful. Never put an unlisted noun, owner, location, brand, or personal detail in anchor_object, and never invent an experiment or safety claim. Set anchor_object null only when no reviewed anchor exists.
@@ -145,43 +146,68 @@ export class OpenAITeachingEngine implements TeachingEngine {
       );
     }
     const startedAt = this.#clock();
-    const response = await this.#client.responses.parse({
-      model: this.#model,
-      instructions: TEACHER_INSTRUCTIONS,
-      input: JSON.stringify({
-        request,
-        deployment: this.#curriculumPack.deployment,
-        safety_policy: this.#curriculumPack.safetyPolicy,
-        frozen_curriculum: concept,
-      }),
-      text: {
-        format: zodTextFormat(TeachingTurnSchema, "teaching_turn"),
-      },
-      reasoning: { effort: "low" },
-      safety_identifier: safetyIdentifier(request.learnerId),
-      store: false,
-    });
+    let correction = "";
+    let retryInputTokens = 0;
+    let retryCachedInputTokens = 0;
+    let retryOutputTokens = 0;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await this.#client.responses.parse({
+        model: this.#model,
+        instructions: `${TEACHER_INSTRUCTIONS}${correction}`,
+        input: JSON.stringify({
+          request,
+          deployment: this.#curriculumPack.deployment,
+          safety_policy: this.#curriculumPack.safetyPolicy,
+          frozen_curriculum: concept,
+        }),
+        text: {
+          format: zodTextFormat(TeachingTurnSchema, "teaching_turn"),
+        },
+        reasoning: { effort: "low" },
+        safety_identifier: safetyIdentifier(request.learnerId),
+        store: false,
+      });
+      retryInputTokens += response.usage?.input_tokens ?? 0;
+      retryCachedInputTokens +=
+        response.usage?.input_tokens_details.cached_tokens ?? 0;
+      retryOutputTokens += response.usage?.output_tokens ?? 0;
 
-    if (!response.output_parsed) {
-      throw new Error("OpenAI returned no parsed teaching turn.");
+      if (!response.output_parsed) {
+        throw new Error("OpenAI returned no parsed teaching turn.");
+      }
+
+      const turn = TeachingTurnSchema.parse(response.output_parsed);
+      const voiceFailures = voiceOutputFailures(turn);
+      if (voiceFailures.length > 0 && attempt === 0) {
+        correction = `\nYour previous attempt failed the trusted voice policy: ${voiceFailures.join("; ")}. Regenerate the complete structured turn and correct every listed failure without weakening the teaching decision.`;
+        continue;
+      }
+      if (voiceFailures.length > 0) {
+        throw new Error(
+          `Teaching turn failed voice policy after one retry: ${voiceFailures.join("; ")}`,
+        );
+      }
+      return {
+        value: turn,
+        ...(response.usage
+          ? {
+              usage: {
+                ...usageFromResponse({
+                  usage: response.usage,
+                  source: "responses_teaching",
+                  modelRoute: this.#model,
+                  providerResponseId: response.id,
+                  latencyMs: Math.max(0, this.#clock() - startedAt),
+                }),
+                inputTextTokens: retryInputTokens,
+                cachedInputTextTokens: retryCachedInputTokens,
+                outputTextTokens: retryOutputTokens,
+              },
+            }
+          : {}),
+      };
     }
-
-    const turn = TeachingTurnSchema.parse(response.output_parsed);
-    assertVoiceNativeTeachingTurn(turn);
-    return {
-      value: turn,
-      ...(response.usage
-        ? {
-            usage: usageFromResponse({
-              usage: response.usage,
-              source: "responses_teaching",
-              modelRoute: this.#model,
-              providerResponseId: response.id,
-              latencyMs: Math.max(0, this.#clock() - startedAt),
-            }),
-          }
-        : {}),
-    };
+    throw new Error("Teaching turn retry loop ended unexpectedly.");
   }
 
   async summarizeHistory(

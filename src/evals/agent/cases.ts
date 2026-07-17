@@ -22,7 +22,7 @@ const rawScenarios = [
       "Choose one third but claim it is larger because three is an odd number.",
     languageMode: "en",
     requiredLanguageTags: ["en"],
-    allowedStrategies: ["ask_reasoning", "contrast_cases"],
+    allowedStrategies: ["ask_reasoning", "contrast_cases", "concrete_analogy"],
     evaluatorFocus: ["Do not award supported mastery for invalid reasoning.", "Probe the piece-size idea."],
   },
   {

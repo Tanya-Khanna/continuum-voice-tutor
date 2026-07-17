@@ -109,17 +109,20 @@ export const OrchestrationEvaluatorOutputSchema = z.object({
   failures: z.array(z.string().min(1)),
 });
 
-const CommonResultSchema = z.object({
+const ResultMetadataSchema = z.object({
   id: z.string().min(1),
   category: AgentEvalCategorySchema,
   passed: z.boolean(),
   simulator_model: z.string().min(1),
   teacher_model: z.string().min(1),
   evaluator_model: z.string().min(1),
-  simulated_learner: SimulatedLearnerOutputSchema,
   structural_failures: z.array(z.string()),
   input_tokens: z.number().int().nonnegative(),
   output_tokens: z.number().int().nonnegative(),
+});
+
+const CommonResultSchema = ResultMetadataSchema.extend({
+  simulated_learner: SimulatedLearnerOutputSchema,
 });
 
 export const SemanticAgentEvalCaseResultSchema = CommonResultSchema.extend({
@@ -135,9 +138,17 @@ export const OrchestrationAgentEvalCaseResultSchema =
     evaluation: OrchestrationEvaluatorOutputSchema,
   });
 
+export const ExecutionErrorAgentEvalCaseResultSchema =
+  ResultMetadataSchema.extend({
+    kind: z.literal("execution_error"),
+    stage: z.enum(["simulator", "teacher", "adapter", "evaluator"]),
+    error: z.string().min(1).max(1_000),
+  });
+
 export const AgentEvalCaseResultSchema = z.discriminatedUnion("kind", [
   SemanticAgentEvalCaseResultSchema,
   OrchestrationAgentEvalCaseResultSchema,
+  ExecutionErrorAgentEvalCaseResultSchema,
 ]);
 
 const AgentEvalReportBaseSchema = z.object({
