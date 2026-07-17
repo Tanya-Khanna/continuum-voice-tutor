@@ -230,7 +230,7 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   **eval-results page**, sample Hinglish session recording, anonymized learner IDs (G2).
 - **F46 Child-safety guardrails** — content boundaries, zero PII collection, graceful off-topic/unsafe handling;
   verified by eval; README documents deployment consent flow + retention (G2).
-- **G6 Abuse guard** — per-number rate limiting + graceful disengage; jailbreak cases in eval.
+- **G6 Abuse guard** — ~~HMAC-keyed per-caller sliding-window rate limit, concurrent-call protection, and webhook replay idempotency before resource allocation~~ ✅; graceful in-conversation disengage and jailbreak cases in eval remain open.
 - **F51 Eval harness** — simulated-learner agent × evaluator agent (both GPT-5.6 — the multi-agent story). **24 cases:**
   correct+correct-reasoning · correct+wrong-reasoning · larger-denominator misconception · Hindi-only · English-only ·
   mid-sentence switch · silence/unclear · repeat-request · disconnect · reconnect-resume · "just tell me"×2 ·

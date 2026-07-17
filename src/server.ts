@@ -3,14 +3,17 @@ import OpenAI from "openai";
 import { loadCurriculumPack } from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
+import { hashPhoneNumber } from "./domain/identity.js";
 import { buildDashboardSnapshot } from "./observability/dashboard.js";
 import { SqliteLearningRepository } from "./persistence/sqlite-learning-repository.js";
 import { createLessonRuntime } from "./runtime/lesson-runtime.js";
+import { CallAdmissionGuard } from "./telephony/call-admission.js";
 import {
   RealtimeIncomingCallSchema,
   acceptRealtimeCall,
   buildRealtimeAcceptPayload,
   callerNumberFromIncomingCall,
+  rejectRealtimeCall,
 } from "./telephony/realtime-sip.js";
 import { RealtimeTeachingBridge } from "./telephony/realtime-teaching-bridge.js";
 
@@ -36,6 +39,9 @@ async function readBody(request: NodeJS.ReadableStream): Promise<string> {
 
 const environment = loadEnvironment();
 const activeCallIds = new Set<string>();
+const callAdmission = new CallAdmissionGuard({
+  maxCallsPerWindow: environment.NOMAD_MAX_CALLS_PER_HOUR,
+});
 
 export const server = createServer(async (request, response) => {
   try {
@@ -112,48 +118,71 @@ export const server = createServer(async (request, response) => {
       if (event.type === "realtime.call.incoming") {
         const incomingCall = RealtimeIncomingCallSchema.parse(event);
         const callId = incomingCall.data.call_id;
-        if (!activeCallIds.has(callId)) {
-          activeCallIds.add(callId);
-          try {
-            const callerNumber = callerNumberFromIncomingCall(incomingCall);
-            await acceptRealtimeCall({
-              apiKey,
-              callId,
-              payload: buildRealtimeAcceptPayload(
-                environment.OPENAI_REALTIME_MODEL,
-                environment.OPENAI_REALTIME_VOICE,
-              ),
-            });
+        if (activeCallIds.has(callId)) {
+          response.writeHead(200, { "Content-Type": "application/json" });
+          response.end(JSON.stringify({ received: true, duplicate: true }));
+          return;
+        }
+        const callerNumber = callerNumberFromIncomingCall(incomingCall);
+        const callerKey = hashPhoneNumber(
+          callerNumber,
+          environment.NOMAD_PHONE_HASH_SECRET,
+        );
+        const admission = callAdmission.begin(incomingCall.id, callerKey);
+        if (admission === "duplicate_webhook") {
+          response.writeHead(200, { "Content-Type": "application/json" });
+          response.end(JSON.stringify({ received: true, duplicate: true }));
+          return;
+        }
+        if (admission !== "allowed") {
+          await rejectRealtimeCall({ apiKey, callId, statusCode: 486 });
+          response.writeHead(200, { "Content-Type": "application/json" });
+          response.end(
+            JSON.stringify({ received: true, rejected: admission }),
+          );
+          return;
+        }
+        activeCallIds.add(callId);
+        try {
+          await acceptRealtimeCall({
+            apiKey,
+            callId,
+            payload: buildRealtimeAcceptPayload(
+              environment.OPENAI_REALTIME_MODEL,
+              environment.OPENAI_REALTIME_VOICE,
+            ),
+          });
 
-            const runtime = createLessonRuntime(environment);
-            const bridge = new RealtimeTeachingBridge({
-              apiKey,
-              callId,
-              callerNumber,
-              lessonService: runtime.lessonService,
-              onError: (bridgeError) =>
-                console.error(`Realtime call ${callId}:`, bridgeError.message),
+          const runtime = createLessonRuntime(environment);
+          const bridge = new RealtimeTeachingBridge({
+            apiKey,
+            callId,
+            callerNumber,
+            lessonService: runtime.lessonService,
+            onError: (bridgeError) =>
+              console.error(`Realtime call ${callId}:`, bridgeError.message),
+          });
+          void bridge
+            .run()
+            .catch((bridgeError: unknown) => {
+              const message =
+                bridgeError instanceof Error
+                  ? bridgeError.message
+                  : "Unknown bridge failure";
+              console.error(
+                `Realtime call ${callId} ended with an error:`,
+                message,
+              );
+            })
+            .finally(() => {
+              runtime.close();
+              activeCallIds.delete(callId);
+              callAdmission.end(callerKey);
             });
-            void bridge
-              .run()
-              .catch((bridgeError: unknown) => {
-                const message =
-                  bridgeError instanceof Error
-                    ? bridgeError.message
-                    : "Unknown bridge failure";
-                console.error(
-                  `Realtime call ${callId} ended with an error:`,
-                  message,
-                );
-              })
-              .finally(() => {
-                runtime.close();
-                activeCallIds.delete(callId);
-              });
-          } catch (error) {
-            activeCallIds.delete(callId);
-            throw error;
-          }
+        } catch (error) {
+          activeCallIds.delete(callId);
+          callAdmission.end(callerKey);
+          throw error;
         }
       }
 

@@ -66,6 +66,8 @@ Start the server and open `http://localhost:3000/dashboard` to inspect recent te
 
 This is currently a local judge-demo surface, not an authenticated production dashboard. Do not expose it through a public tunnel with real learner data until the consent, retention, and access-control work in the plan is complete.
 
+Incoming-call admission is conservative by default: signed webhook retries are idempotent, one caller cannot occupy two simultaneous lessons, and a caller is limited to six call starts per sliding hour. Change `NOMAD_MAX_CALLS_PER_HOUR` only with an explicit deployment policy. Rejected calls are declined before a Realtime session or learner database connection is allocated.
+
 ## Configuration
 
 Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requires no credentials. Local learner state is stored in `.data/nomad.db`, which is ignored by Git. Change `NOMAD_PHONE_HASH_SECRET` before any real deployment; it keys the one-way caller identifiers. Development defaults to `gpt-realtime-2.1-mini`; switch to the full Realtime model only for planned quality checks and the final demo.

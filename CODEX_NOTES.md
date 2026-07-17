@@ -135,3 +135,12 @@
 - Kept this local-only for now. It must not be exposed with real learner data until the planned consent, retention, and access-control work lands.
 - Verified the complete page and API against a temporary offline lesson database. The response contained one anonymized session with the expected diagnosis strategy and route.
 - Verification: 27 of 27 automated tests and the 25-case offline teaching gate pass.
+
+## 2026-07-17 — Call admission and webhook reliability
+
+- Added signed-webhook replay idempotency so OpenAI delivery retries cannot accept or allocate the same call twice.
+- Added one-active-call-per-caller protection using the existing HMAC caller identity; a second simultaneous call is rejected before model or database resources are opened.
+- Added a configurable sliding-window limit, defaulting to six call starts per caller per hour.
+- Added the documented SIP reject boundary with status 486 for concurrent or over-limit calls.
+- Bounded and time-pruned the in-memory webhook and caller admission maps to avoid turning the guard itself into an unbounded memory surface.
+- Verification: 31 of 31 automated tests pass, including replay, concurrency, rate-window expiry, and SIP rejection coverage.

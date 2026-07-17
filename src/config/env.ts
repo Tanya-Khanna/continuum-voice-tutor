@@ -15,6 +15,7 @@ const EnvironmentSchema = z.object({
     .min(16)
     .default("local-development-change-me"),
   NOMAD_CURRICULUM_PATH: optionalNonEmpty,
+  NOMAD_MAX_CALLS_PER_HOUR: z.coerce.number().int().min(1).max(100).default(6),
   OPENAI_API_KEY: optionalNonEmpty,
   OPENAI_TEXT_MODEL: z.string().min(1).default("gpt-5.6-luna"),
   OPENAI_REALTIME_MODEL: z

@@ -4,6 +4,7 @@ import {
   buildRealtimeAcceptPayload,
   buildSipTarget,
   callerNumberFromIncomingCall,
+  rejectRealtimeCall,
 } from "../src/telephony/realtime-sip.js";
 
 describe("Realtime SIP boundary", () => {
@@ -29,6 +30,7 @@ describe("Realtime SIP boundary", () => {
   it("extracts the caller identity from the documented SIP From header", () => {
     expect(
       callerNumberFromIncomingCall({
+        id: "evt_123",
         type: "realtime.call.incoming",
         data: {
           call_id: "rtc_123",
@@ -38,6 +40,27 @@ describe("Realtime SIP boundary", () => {
         },
       }),
     ).toBe("+919999900001");
+  });
+
+  it("rejects a call through the documented endpoint", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(null, { status: 200 }),
+    );
+
+    await rejectRealtimeCall({
+      apiKey: "test-key",
+      callId: "call_busy",
+      statusCode: 486,
+      fetchImplementation,
+    });
+
+    expect(fetchImplementation).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/realtime/calls/call_busy/reject",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ status_code: 486 }),
+      }),
+    );
   });
 
   it("accepts a call through the documented endpoint without real network use", async () => {

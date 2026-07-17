@@ -10,6 +10,7 @@ describe("environment configuration", () => {
       "gpt-realtime-2.1-mini",
     );
     expect(environment.OPENAI_REALTIME_VOICE).toBe("marin");
+    expect(environment.NOMAD_MAX_CALLS_PER_HOUR).toBe(6);
   });
 
   it("prevents accidental live mode without a key", () => {

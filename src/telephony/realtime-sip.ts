@@ -6,6 +6,7 @@ const SipHeaderSchema = z.object({
 });
 
 export const RealtimeIncomingCallSchema = z.object({
+  id: z.string().min(1),
   type: z.literal("realtime.call.incoming"),
   data: z
     .object({
@@ -147,6 +148,33 @@ export async function acceptRealtimeCall(options: {
     const detail = await response.text();
     throw new Error(
       `Realtime call acceptance failed with ${response.status}: ${detail}`,
+    );
+  }
+}
+
+export async function rejectRealtimeCall(options: {
+  apiKey: string;
+  callId: string;
+  statusCode?: number;
+  fetchImplementation?: typeof fetch;
+}): Promise<void> {
+  const fetchImplementation = options.fetchImplementation ?? fetch;
+  const response = await fetchImplementation(
+    `https://api.openai.com/v1/realtime/calls/${encodeURIComponent(options.callId)}/reject`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${options.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status_code: options.statusCode ?? 486 }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Realtime call rejection failed with ${response.status}: ${detail}`,
     );
   }
 }
