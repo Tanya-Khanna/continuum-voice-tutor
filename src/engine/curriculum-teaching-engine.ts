@@ -49,9 +49,30 @@ export class CurriculumTeachingEngine implements TeachingEngine {
       language_mode: language,
       should_end_session: false,
     } as const;
+    const finalize = (candidate: unknown): TeachingTurn => {
+      const turn = TeachingTurnSchema.parse(candidate);
+      if (request.lessonState?.phase !== "recap") {
+        return TeachingTurnSchema.parse({
+          ...turn,
+          should_end_session: false,
+        });
+      }
+
+      const retrievalQuestion =
+        concept.retrievalQuestions[
+          request.lessonState.turnNumber % concept.retrievalQuestions.length
+        ] ?? concept.retrievalQuestions[0]!;
+      return TeachingTurnSchema.parse({
+        ...turn,
+        next_strategy: "recap",
+        next_question: retrievalQuestion,
+        spoken_response: `${this.#pack.lessonPolicy.recapResponseLead} ${this.#pack.lessonPolicy.callAgainInvitation}`,
+        should_end_session: true,
+      });
+    };
 
     if (!answer) {
-      return TeachingTurnSchema.parse({
+      return finalize({
         ...base,
         diagnosis: "No reasoning evidence yet; the learner may need a smaller entry step.",
         next_strategy: "smaller_step",
@@ -63,7 +84,7 @@ export class CurriculumTeachingEngine implements TeachingEngine {
     }
 
     if (includesAny(normalized, scaffold.answerRequestSignals)) {
-      return TeachingTurnSchema.parse({
+      return finalize({
         ...base,
         diagnosis: scaffold.answerRequestDiagnosis,
         next_strategy: "ask_reasoning",
@@ -78,7 +99,7 @@ export class CurriculumTeachingEngine implements TeachingEngine {
       includesAny(normalized, candidate.signals),
     );
     if (misconception) {
-      return TeachingTurnSchema.parse({
+      return finalize({
         ...base,
         diagnosis: misconception.diagnosis,
         next_strategy: misconception.strategy,
@@ -95,7 +116,7 @@ export class CurriculumTeachingEngine implements TeachingEngine {
         includesAny(normalized, rule.reasoningSignals),
     );
     if (evidenceRule) {
-      return TeachingTurnSchema.parse({
+      return finalize({
         ...base,
         diagnosis: evidenceRule.diagnosis,
         next_strategy: "retrieval_practice",
@@ -106,7 +127,7 @@ export class CurriculumTeachingEngine implements TeachingEngine {
       });
     }
 
-    return TeachingTurnSchema.parse({
+    return finalize({
       ...base,
       diagnosis: scaffold.fallbackDiagnosis,
       next_strategy: "ask_reasoning",

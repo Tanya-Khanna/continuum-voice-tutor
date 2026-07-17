@@ -107,3 +107,13 @@
 - Complete Twilio number purchase and SIP trunk setup, then place the first real call.
 - Confirm phone audio format, choose the final voice, measure latency, and tune VAD/barge-in.
 - Run the live mid-call disconnect/resume gate over the phone.
+
+## 2026-07-17 — Lesson arc and callback retrieval
+
+- Added a curriculum-configured lesson policy instead of hardcoding timing or subject behavior in the service.
+- The first deployment now uses an eight-turn arc with explicit explore, independent-check, and recap phases.
+- The live GPT-5.6 request now receives the current phase, turn count, previous prompt and diagnosis, and prior reasoning-evidence count.
+- Enforced the two-evidence mastery rule in server code: a model cannot mark a learner secure from the first correct explanation.
+- Preserved two distinct continuity behaviors: an immediate redial within fifteen minutes resumes the exact interrupted question, while a later return opens with a retrieval question.
+- Completed lessons now create a new session on the next call and begin with retrieval practice instead of silently restarting the entry question.
+- Verification: 26 of 26 automated tests and the 25-case offline teaching gate pass.

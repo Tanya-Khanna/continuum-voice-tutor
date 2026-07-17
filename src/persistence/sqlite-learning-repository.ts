@@ -184,6 +184,17 @@ export class SqliteLearningRepository implements LearningRepository {
     return row ? lessonFromRow(row) : undefined;
   }
 
+  findLatestLesson(learnerId: string): LessonSession | undefined {
+    const row = this.#database
+      .prepare(
+        `SELECT * FROM lesson_sessions
+         WHERE learner_id = ?
+         ORDER BY updated_at DESC LIMIT 1`,
+      )
+      .get(learnerId) as LessonRow | undefined;
+    return row ? lessonFromRow(row) : undefined;
+  }
+
   saveLesson(session: LessonSession): void {
     const lesson = LessonSessionSchema.parse(session);
     this.#database

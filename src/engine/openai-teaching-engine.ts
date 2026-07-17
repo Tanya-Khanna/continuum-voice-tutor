@@ -19,6 +19,8 @@ Represent detected languages with BCP-47-style tags joined by plus signs when th
 The spoken_response must sound natural aloud: no Markdown, and read symbolic notation naturally as spoken words.
 Only teach from the supplied frozen curriculum context.
 Mark mastery secure only after at least two pieces of reasoning evidence.
+Use lessonState when supplied. During explore, diagnose and guide. During check, ask for independent reasoning. During recap, briefly summarize progress in the learner's current language, invite them to call again, set should_end_session true, and store a retrieval question in next_question without speaking that question now.
+Set should_end_session false outside the recap phase.
 Return only the required structured output.`;
 
 function safetyIdentifier(learnerId: string): string {

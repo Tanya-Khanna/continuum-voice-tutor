@@ -51,6 +51,7 @@ export interface LearningRepository {
   listLearnersForPhone(phoneHash: string): LearnerProfile[];
   saveLearner(profile: LearnerProfile): void;
   findResumableLesson(learnerId: string): LessonSession | undefined;
+  findLatestLesson(learnerId: string): LessonSession | undefined;
   saveLesson(session: LessonSession): void;
   appendTurn(storedTurn: StoredTeachingTurn): void;
   listTurns(sessionId: string): StoredTeachingTurn[];

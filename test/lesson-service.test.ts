@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { hashPhoneNumber } from "../src/domain/identity.js";
 import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js";
+import type { TeachingEngine } from "../src/engine/teaching-engine.js";
 import { LessonService } from "../src/lesson/lesson-service.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 
@@ -125,6 +126,125 @@ describe("LessonService", () => {
     expect(repository.findLearner(context.learner.id)?.preferredLanguage).toBe(
       "hi-Latn+en",
     );
+    repository.close();
+  });
+
+  it("switches from exact drop recovery to retrieval practice after the configured window", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    let now = new Date("2026-07-17T12:00:00.000Z");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      makeId: sequentialIds(),
+      clock: () => now,
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    let context = service.beginOrResume({
+      phoneNumber: "+91 99999 44444",
+      learnerName: "Ravi",
+    });
+    context = (
+      await service.respond(
+        context,
+        "One fourth is bigger because four is bigger than three.",
+      )
+    ).context;
+    const interruptedQuestion = context.session.lastPrompt;
+    service.pause(context);
+
+    now = new Date("2026-07-17T12:16:00.000Z");
+    const returned = service.beginOrResume({
+      phoneNumber: "+91 99999 44444",
+      learnerName: "ravi",
+    });
+
+    expect(returned.greeting).toContain("warm up");
+    expect(returned.greeting).not.toContain(interruptedQuestion);
+    expect(fractionsPack.concepts[0]!.retrievalQuestions).toContain(
+      returned.session.lastPrompt,
+    );
+    repository.close();
+  });
+
+  it("runs the configured lesson arc, recaps, and starts the next call with retrieval", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      makeId: sequentialIds(),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    let context = service.beginOrResume({
+      phoneNumber: "+91 99999 55555",
+      learnerName: "Asha",
+    });
+
+    for (let turnNumber = 1; turnNumber <= 8; turnNumber += 1) {
+      const result = await service.respond(
+        context,
+        "One third, because fewer pieces means each is a bigger piece.",
+      );
+      context = result.context;
+      expect(result.turn.should_end_session).toBe(turnNumber === 8);
+      if (turnNumber === 8) {
+        expect(result.turn.next_strategy).toBe("recap");
+        expect(result.turn.spoken_response).toContain("Nice work today");
+      }
+    }
+
+    expect(context.session.status).toBe("completed");
+    const completedSessionId = context.session.id;
+    const nextCall = service.beginOrResume({
+      phoneNumber: "+91 99999 55555",
+      learnerName: "asha",
+    });
+    expect(nextCall.resumed).toBe(true);
+    expect(nextCall.session.id).not.toBe(completedSessionId);
+    expect(nextCall.greeting).toContain("warm up");
+    repository.close();
+  });
+
+  it("downgrades an unsupported first secure claim from an engine", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const overconfidentEngine: TeachingEngine = {
+      async teach(request) {
+        return {
+          learner_id: request.learnerId,
+          concept: request.concept,
+          learner_answer: request.learnerAnswer,
+          diagnosis: "The learner supplied one correct explanation.",
+          language_mode: "en",
+          next_strategy: "retrieval_practice",
+          mastery_status: "secure",
+          mastery_evidence: "One explanation was observed.",
+          next_question: "Can you apply the idea to a new example?",
+          spoken_response:
+            "Good reasoning. Can you apply the idea to a new example?",
+          should_end_session: false,
+        };
+      },
+    };
+    const service = new LessonService({
+      repository,
+      engine: overconfidentEngine,
+      makeId: sequentialIds(),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const context = service.beginOrResume({
+      phoneNumber: "+91 99999 66666",
+      learnerName: "Amani",
+    });
+
+    const first = await service.respond(context, "My first explanation.");
+    expect(first.turn.mastery_status).toBe("developing");
+    const second = await service.respond(
+      first.context,
+      "Here is independent reasoning.",
+    );
+    expect(second.turn.mastery_status).toBe("secure");
     repository.close();
   });
 });

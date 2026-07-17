@@ -33,11 +33,23 @@ export const TeachingStrategySchema = z.enum([
   "uncertainty",
 ]);
 
+export const LessonPhaseSchema = z.enum(["explore", "check", "recap"]);
+
+export const TeachingLessonStateSchema = z.object({
+  turnNumber: z.number().int().positive(),
+  targetTurns: z.number().int().positive(),
+  phase: LessonPhaseSchema,
+  previousPrompt: z.string().min(1),
+  previousDiagnosis: z.string(),
+  priorReasoningEvidenceCount: z.number().int().nonnegative(),
+});
+
 export const TeachingRequestSchema = z.object({
   learnerId: z.string().min(1),
   concept: z.string().min(1),
   learnerAnswer: z.string().max(2_000),
   requestedLanguageMode: LanguageModeSchema.default("auto"),
+  lessonState: TeachingLessonStateSchema.optional(),
 });
 
 export const TeachingTurnSchema = z.object({
@@ -55,5 +67,6 @@ export const TeachingTurnSchema = z.object({
 });
 
 export type LanguageMode = z.infer<typeof LanguageModeSchema>;
+export type LessonPhase = z.infer<typeof LessonPhaseSchema>;
 export type TeachingRequest = z.infer<typeof TeachingRequestSchema>;
 export type TeachingTurn = z.infer<typeof TeachingTurnSchema>;

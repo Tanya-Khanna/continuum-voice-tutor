@@ -325,7 +325,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · F13/F50 preambles + latency choreography · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · F16 code-switching · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · G4 lesson arc · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
+- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · F13/F50 preambles + latency choreography · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · F16 code-switching · F17/F31 concept bridging + vocabulary · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · F52 computed math truth · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 placement diagnostic v0~~ ✅ · F56 uncertainty honesty · F48 think-aloud diagnosis *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
@@ -333,7 +333,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
 **Afternoon:**
 - Five-subject voice onboarding + flavored-sandbox fallbacks (experiments/anchor objects · conversation · time-machine choices · look-around prompts).
-- Callback loop (retrieval practice on return) · voice-queryable history · shared-phone profiles polished.
+- ~~Callback loop (exact recent-drop recovery, later retrieval practice, and post-completion retrieval)~~ ✅ · voice-queryable history · shared-phone profiles polished.
 - **Eval harness**: simulated-learner × evaluator agents; ~~all 25 cases (§4.1) in text mode; iterate prompts until green~~ ✅ *(deterministic offline gate; agent-based judge pass still open)*. 2–3 live smoke calls only.
 **Evening:**
 - Dashboard skeleton (transcript, diagnosis JSON, mastery, cost/call).

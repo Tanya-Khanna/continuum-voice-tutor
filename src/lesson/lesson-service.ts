@@ -9,9 +9,11 @@ import {
   type LearningRepository,
   type LessonSession,
 } from "../domain/learner.js";
-import type {
-  LanguageMode,
-  TeachingTurn,
+import {
+  TeachingTurnSchema,
+  type LanguageMode,
+  type LessonPhase,
+  type TeachingTurn,
 } from "../domain/teaching.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
 
@@ -37,6 +39,7 @@ export class LessonService {
   readonly #clock: () => Date;
   readonly #makeId: () => string;
   readonly #phoneHashSecret: string;
+  readonly #curriculumPack: CurriculumPack;
   readonly #startingConcept: CurriculumPack["concepts"][number];
 
   constructor(options: LessonServiceOptions) {
@@ -45,6 +48,7 @@ export class LessonService {
     this.#clock = options.clock ?? (() => new Date());
     this.#makeId = options.makeId ?? randomUUID;
     this.#phoneHashSecret = options.phoneHashSecret;
+    this.#curriculumPack = options.curriculumPack;
     const startingConcept = options.curriculumPack.concepts[0];
     if (!startingConcept) throw new Error("The curriculum pack has no concepts.");
     this.#startingConcept = startingConcept;
@@ -55,7 +59,8 @@ export class LessonService {
     learnerName: string;
     preferredLanguage?: Exclude<LanguageMode, "auto">;
   }): LessonContext {
-    const now = this.#clock().toISOString();
+    const nowDate = this.#clock();
+    const now = nowDate.toISOString();
     const phoneHash = hashPhoneNumber(
       options.phoneNumber,
       this.#phoneHashSecret,
@@ -84,9 +89,20 @@ export class LessonService {
 
     const existingLesson = this.#repository.findResumableLesson(learner.id);
     if (existingLesson) {
+      const concept = this.#concept(existingLesson.concept);
+      const elapsedMinutes =
+        (nowDate.getTime() - new Date(existingLesson.updatedAt).getTime()) /
+        60_000;
+      const isRecentDrop =
+        elapsedMinutes <=
+        this.#curriculumPack.lessonPolicy.recentDropRecoveryMinutes;
+      const prompt = isRecentDrop
+        ? existingLesson.lastPrompt
+        : this.#retrievalQuestion(concept, existingLesson.turnCount);
       const resumedLesson = LessonSessionSchema.parse({
         ...existingLesson,
         status: "active",
+        lastPrompt: prompt,
         updatedAt: now,
       });
       this.#repository.saveLesson(resumedLesson);
@@ -94,17 +110,27 @@ export class LessonService {
         learner,
         session: resumedLesson,
         resumed: true,
-        greeting: `Welcome back, ${learner.name}. Last time we were working on ${resumedLesson.concept.replaceAll("_", " ")}. ${resumedLesson.lastPrompt}`,
+        greeting: `${isRecentDrop ? this.#curriculumPack.lessonPolicy.recentResumeLead : this.#curriculumPack.lessonPolicy.returnRetrievalLead} ${prompt}`,
       };
     }
+
+    const latestLesson = existingLearner
+      ? this.#repository.findLatestLesson(learner.id)
+      : undefined;
+    const concept = latestLesson
+      ? this.#concept(latestLesson.concept)
+      : this.#startingConcept;
+    const firstPrompt = latestLesson
+      ? this.#retrievalQuestion(concept, latestLesson.turnCount)
+      : concept.teachingScaffold.entryQuestion;
 
     const session = LessonSessionSchema.parse({
       id: this.#makeId(),
       learnerId: learner.id,
-      concept: learner.currentConcept,
+      concept: concept.id,
       status: "active",
       turnCount: 0,
-      lastPrompt: this.#startingConcept.teachingScaffold.entryQuestion,
+      lastPrompt: firstPrompt,
       lastDiagnosis: "No evidence yet.",
       lastStrategy: "ask_reasoning",
       masteryStatus: learner.lastMastery,
@@ -117,8 +143,10 @@ export class LessonService {
     return {
       learner,
       session,
-      resumed: false,
-      greeting: `Hello, ${learner.name}. ${this.#startingConcept.teachingScaffold.entryQuestion}`,
+      resumed: Boolean(latestLesson),
+      greeting: latestLesson
+        ? `${this.#curriculumPack.lessonPolicy.returnRetrievalLead} ${firstPrompt}`
+        : `Hello, ${learner.name}. ${firstPrompt}`,
     };
   }
 
@@ -126,14 +154,43 @@ export class LessonService {
     context: LessonContext,
     learnerAnswer: string,
   ): Promise<{ context: LessonContext; turn: TeachingTurn }> {
-    const turn = await this.#engine.teach({
+    const sequence = context.session.turnCount + 1;
+    const targetTurns = this.#curriculumPack.lessonPolicy.targetTurns;
+    const phase: LessonPhase =
+      sequence >= targetTurns
+        ? "recap"
+        : sequence === targetTurns - 1
+          ? "check"
+          : "explore";
+    const priorReasoningEvidenceCount = this.#repository
+      .listTurns(context.session.id)
+      .filter((entry) => entry.turn.mastery_status !== "needs_support").length;
+    const generatedTurn = await this.#engine.teach({
       learnerId: context.learner.id,
       concept: context.session.concept,
       learnerAnswer,
       requestedLanguageMode: context.learner.preferredLanguage,
+      lessonState: {
+        turnNumber: sequence,
+        targetTurns,
+        phase,
+        previousPrompt: context.session.lastPrompt,
+        previousDiagnosis: context.session.lastDiagnosis,
+        priorReasoningEvidenceCount,
+      },
+    });
+    const turn = TeachingTurnSchema.parse({
+      ...generatedTurn,
+      mastery_status:
+        generatedTurn.mastery_status === "secure" &&
+        priorReasoningEvidenceCount < 1
+          ? "developing"
+          : generatedTurn.mastery_status,
+      next_strategy:
+        phase === "recap" ? "recap" : generatedTurn.next_strategy,
+      should_end_session: phase === "recap",
     });
     const now = this.#clock().toISOString();
-    const sequence = context.session.turnCount + 1;
 
     const nextSession = LessonSessionSchema.parse({
       ...context.session,
@@ -186,5 +243,28 @@ export class LessonService {
     });
     this.#repository.saveLesson(pausedSession);
     return { ...context, session: pausedSession };
+  }
+
+  #concept(conceptId: string): CurriculumPack["concepts"][number] {
+    const concept = this.#curriculumPack.concepts.find(
+      (candidate) => candidate.id === conceptId,
+    );
+    if (!concept) {
+      throw new Error(
+        `Concept ${conceptId} is not present in curriculum pack ${this.#curriculumPack.id}.`,
+      );
+    }
+    return concept;
+  }
+
+  #retrievalQuestion(
+    concept: CurriculumPack["concepts"][number],
+    completedTurns: number,
+  ): string {
+    return (
+      concept.retrievalQuestions[
+        completedTurns % concept.retrievalQuestions.length
+      ] ?? concept.retrievalQuestions[0]!
+    );
   }
 }

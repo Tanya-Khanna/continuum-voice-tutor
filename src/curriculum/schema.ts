@@ -87,6 +87,14 @@ export const CurriculumPackSchema = z.object({
       grade_ready: z.string().min(1),
     }),
   }),
+  lessonPolicy: z.object({
+    targetTurns: z.number().int().min(3).max(20),
+    recentDropRecoveryMinutes: z.number().int().positive().max(1_440),
+    recentResumeLead: z.string().min(1),
+    returnRetrievalLead: z.string().min(1),
+    recapResponseLead: z.string().min(1),
+    callAgainInvitation: z.string().min(1),
+  }),
   concepts: z.array(CurriculumConceptSchema).min(1),
 });
 

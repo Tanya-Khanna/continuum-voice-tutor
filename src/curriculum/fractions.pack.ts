@@ -93,6 +93,18 @@ export const fractionsPack = CurriculumPackSchema.parse({
       grade_ready: "comparing_unit_fractions",
     },
   },
+  lessonPolicy: {
+    targetTurns: 8,
+    recentDropRecoveryMinutes: 15,
+    recentResumeLead:
+      "Welcome back. We can continue exactly where the call stopped.",
+    returnRetrievalLead:
+      "Welcome back. Let us warm up with one question from last time.",
+    recapResponseLead:
+      "Nice work today. You kept explaining your thinking and testing your ideas.",
+    callAgainInvitation:
+      "Call again when you are ready for the next step.",
+  },
   concepts: [
     {
       id: "comparing_unit_fractions",
