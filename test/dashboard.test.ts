@@ -24,6 +24,14 @@ describe("mission-control snapshot", () => {
     expect(DASHBOARD_HTML).toContain("if (failures.length > 0)");
   });
 
+  it("humanizes learner-state enums while preserving audit fields", () => {
+    expect(DASHBOARD_HTML).toContain("const humanize = (value)");
+    expect(DASHBOARD_HTML).toContain("humanize(session.mastery_status)");
+    expect(DASHBOARD_HTML).toContain("humanize(latest.next_strategy)");
+    expect(DASHBOARD_HTML).toContain("latest?.model_route ?? 'pending'");
+    expect(DASHBOARD_HTML).toContain("latest?.language_mode ?? 'pending'");
+  });
+
   it("exposes teaching evidence without learner names or phone numbers", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({

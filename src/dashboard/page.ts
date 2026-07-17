@@ -64,7 +64,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .hero-copy p { margin: 0; color: var(--muted); }
     .metric { background: var(--panel-2); border: 1px solid var(--line); border-radius: 13px; padding: 13px; }
     .metric span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
-    .metric strong { display: block; margin-top: 8px; font-size: 17px; color: var(--lime); overflow-wrap: anywhere; }
+    .metric strong { display: block; margin-top: 8px; font-size: 17px; color: var(--lime); overflow-wrap: break-word; }
     .detail-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(270px, .75fr); border-top: 1px solid var(--line); }
     .transcript { min-height: 510px; border-right: 1px solid var(--line); padding: 22px; }
     .section-label { color: var(--muted); text-transform: uppercase; letter-spacing: .13em; font-size: 11px; margin-bottom: 18px; }
@@ -168,6 +168,9 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       node.textContent = value ?? '';
       return node;
     };
+    const humanize = (value) => String(value)
+      .replaceAll('_', ' ')
+      .replace(/\b\w/g, (character) => character.toUpperCase());
     const relativeTime = (iso) => {
       const seconds = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
       const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
@@ -190,7 +193,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         button.setAttribute('aria-current', String(session.session_id === state.selected));
         const top = text('div', '', 'session-top');
         top.append(text('span', session.learner_ref, 'session-title'));
-        top.append(text('span', session.status, 'badge'));
+        top.append(text('span', humanize(session.status), 'badge'));
         const meta = text('div', '', 'meta-row');
         meta.append(text('span', session.subject + ' · ' + session.concept_title));
         meta.append(text('span', relativeTime(session.updated_at)));
@@ -215,9 +218,9 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       const copy = text('div', '', 'hero-copy');
       copy.append(text('div', session.learner_ref, 'eyebrow'));
       copy.append(text('h2', session.subject + ' · ' + session.concept_title));
-      copy.append(text('p', 'Anonymized teaching trace · ' + session.status));
+      copy.append(text('p', 'Anonymized teaching trace · ' + humanize(session.status)));
       hero.append(copy);
-      for (const [label, value] of [['Interactions', session.turns.length], ['Mastery', session.mastery_status], ['Language', latest?.language_mode ?? 'pending']]) {
+      for (const [label, value] of [['Interactions', session.turns.length], ['Mastery', humanize(session.mastery_status)], ['Language', latest?.language_mode ?? 'pending']]) {
         const metric = text('div', '', 'metric'); metric.append(text('span', label)); metric.append(text('strong', String(value))); hero.append(metric);
       }
       const details = text('div', '', 'detail-grid');
@@ -238,9 +241,9 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         : 'No guided think-aloud trace for this interaction.';
       addCard(analysis, 'Reasoning trace', reasoning);
       addCard(analysis, 'Latest mode', latest?.mode === 'curious_sandbox' ? 'Curious Sandbox · mastery not assessed' : 'Guided curriculum');
-      addCard(analysis, 'Placement', session.placement.level === 'unplaced' ? 'Pending' : session.placement.level.replaceAll('_', ' ') + ' · ' + session.placement.score + '/' + session.placement.total);
+      addCard(analysis, 'Placement', session.placement.level === 'unplaced' ? 'Pending' : humanize(session.placement.level) + ' · ' + session.placement.score + '/' + session.placement.total);
       addCard(analysis, 'Mastery evidence', latest?.mastery_evidence ?? session.mastery_evidence);
-      addCard(analysis, 'Next strategy', latest?.next_strategy ?? 'awaiting first answer');
+      addCard(analysis, 'Next strategy', latest?.next_strategy ? humanize(latest.next_strategy) : 'Awaiting first answer');
       addCard(analysis, 'Model route', latest?.model_route ?? 'pending', 'route');
       const usage = session.usage;
       const cost = usage.estimated_cost_usd === null
