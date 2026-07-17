@@ -64,6 +64,7 @@ try {
     "TWILIO_AUTH_TOKEN",
     "TWILIO_PHONE_NUMBER",
     "NOMAD_CURRICULUM_PATH",
+    "NOMAD_CURRICULUM_PATHS",
   ]) {
     delete cleanEnvironment[name];
   }
@@ -75,6 +76,7 @@ try {
   run("npm", ["ci"], { environment: cleanEnvironment });
   run("npm", ["run", "check"], { environment: cleanEnvironment });
   run("npm", ["run", "eval"], { environment: cleanEnvironment });
+  run("npm", ["run", "seed:demo"], { environment: cleanEnvironment });
   run(
     "npm",
     [
@@ -82,20 +84,22 @@ try {
       "chat",
       "--",
       "--name",
-      "Fresh Clone Learner",
+      "Ravi",
       "--phone",
-      "+910000000099",
+      "+910000000042",
       "--language",
       "en",
+      "--subject",
+      "Math",
     ],
     {
       environment: cleanEnvironment,
-      input: "One fourth is bigger because four is bigger than three.\nexit\n",
+      input: "exit\n",
     },
   );
 
   console.log(
-    "\nFresh-clone gate passed: lockfile install, tests, deterministic eval, and offline lesson all succeeded without local secrets or state.",
+    "\nFresh-clone gate passed: lockfile install, tests, deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
   );
 } finally {
   rmSync(freshRoot, { recursive: true, force: true });

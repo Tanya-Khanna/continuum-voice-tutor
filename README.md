@@ -57,13 +57,21 @@ Try: `One fourth is bigger because four is bigger than three.`
 
 Type `exit` to simulate a dropped call. Run the same command again and Nomad resumes the saved question. The phone number is hashed before storage, and multiple names can safely share it.
 
+For a judge-ready paused flagship Math lesson without typing the setup turn, seed the clearly synthetic Ravi fixture and run the printed resume command:
+
+```bash
+npm run seed:demo
+```
+
+The command always uses the offline engine, even if live mode is configured, so it cannot spend API credit. It creates one placed, one-turn lesson in the normal local database, pauses on the real next prompt, and is idempotent: rerunning it does not add turns. A different name on the same synthetic phone still has no lesson, exercising the shared-phone boundary.
+
 Run the placement diagnostic:
 
 ```bash
 npm run diagnostic
 ```
 
-The CLI command is the zero-credit deterministic adapter. In a live call, a first-time guided learner hears the same pack-defined questions before teaching. GPT-5.6 judges meaning across languages, while application code derives the score, placement level, and valid recommended concept. The result, score, and per-question evidence persist on the learner profile.
+The CLI command is the zero-credit deterministic adapter. In a live call, a first-time guided learner hears the same pack-defined questions before teaching. GPT-5.6 judges meaning across languages, while application code derives the score, placement level, and valid recommended concept. The result, score, and per-question evidence persist on that subject's lesson session; learner-level fields mirror only the latest result for backward compatibility.
 
 ## Verify the build
 
@@ -78,7 +86,7 @@ Before shipping, run the reproducible clean-room gate:
 npm run verify:fresh
 ```
 
-It exports committed `HEAD` into a temporary directory, confirms `.env`, `.data`, and `node_modules` are absent, installs exactly from the lockfile, runs the TypeScript/tests and deterministic eval gates, and completes one offline lesson. OpenAI/Twilio credentials and local curriculum overrides are removed from the child environment; the temporary copy is deleted afterward.
+It exports committed `HEAD` into a temporary directory, confirms `.env`, `.data`, and `node_modules` are absent, installs exactly from the lockfile, runs the TypeScript/tests and deterministic eval gates, seeds the synthetic paused lesson, and proves exact offline resume. OpenAI/Twilio credentials and both single- and multi-pack local curriculum overrides are removed from the child environment; the temporary copy is deleted afterward.
 
 `npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 

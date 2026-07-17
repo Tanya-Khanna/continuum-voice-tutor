@@ -407,3 +407,9 @@
 - Migrated curriculum pack ID and placement evidence onto lesson sessions. Placement, retrieval history, active/paused state, and exact resume are now subject-specific; learner-level placement fields remain only as a backward-compatible latest-result mirror.
 - Catalog routing is shared by the server runtime, Realtime bridge, dashboard, REPL, and diagnostic. Mission Control shows subject/pack, and `/health` exposes only safe subject labels.
 - Added two-subject adversarial coverage for missing selection, case-insensitive routing, independent Math/Science placement, cross-subject history isolation, subject switching, legacy default-pack adoption, environment loading, and dashboard metadata. The fixture is not shipped as reviewed Science content.
+
+## 2026-07-17 — Reproducible paused-lesson judge fixture
+
+- Added `npm run seed:demo`, an explicitly synthetic, zero-credit Ravi fixture built through the real offline lesson service. It completes placement, records one canonical misconception turn, pauses on the actual next prompt, and prints the exact resume command.
+- The seed is idempotent: rerunning it does not add turns. Tests also prove that a second name on the same synthetic phone inherits no lesson state.
+- Expanded `npm run verify:fresh` to clear both single- and multi-pack curriculum overrides, seed the fixture in the secret-free archive, and prove exact resume from committed source. Local verification is 101/101 tests plus the 25/25 deterministic teaching gate.
