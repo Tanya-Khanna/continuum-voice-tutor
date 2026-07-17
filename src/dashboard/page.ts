@@ -270,12 +270,18 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       const agentHead = text('div', '', 'eval-section');
       agentHead.append(text('div', 'GPT-5.6 simulated learner + evaluator', 'eyebrow'));
       if (!agent) {
-        agentHead.append(text('h2', 'Semantic pilot has not been run.'));
+        agentHead.append(text('h2', 'Agent evaluation has not been run.'));
         agentHead.append(text('p', 'Opt-in only: npm run eval:agents -- --confirm-spend --case <id>', 'count'));
         root.append(agentHead);
         return;
       }
-      agentHead.append(text('h2', agent.passed === agent.total ? 'Semantic pilot is green.' : 'Semantic pilot needs attention.'));
+      const fullAgentRun = agent.total === 24;
+      const agentGreen = agent.passed === agent.total;
+      agentHead.append(text('h2', fullAgentRun && agentGreen
+        ? 'Full 24-case agent suite is green.'
+        : agentGreen
+          ? 'Targeted agent run passed; full suite not yet run.'
+          : 'Agent evaluation needs attention.'));
       agentHead.append(text('p', agent.passed + '/' + agent.total + ' passed · ' + (agent.input_tokens + agent.output_tokens) + ' recorded text tokens · ' + new Date(agent.generated_at).toLocaleString(), 'count'));
       const agentList = text('div', '', 'eval-list');
       for (const result of agent.results) {

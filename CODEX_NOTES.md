@@ -329,3 +329,12 @@
 - Curriculum compiler instructions require no-purchase, low-risk household activities and exclude ingestion, heat, electricity, sharp tools, chemicals, and unsupervised-risk manipulation.
 - Mission Control now displays the current shared physical anchor alongside diagnosis and reasoning evidence.
 - Verification: 83 of 83 automated tests, including drop/resume continuity, PII-before-anchor handling, unreviewed-output rejection, legacy database migration, 25 of 25 deterministic evals, Structured Outputs conversion, and strict TypeScript pass.
+
+## 2026-07-17 — Complete 24-case agent-evaluation contract
+
+- Expanded the spend-gated manifest from ten to exactly 24 unique scenarios: fourteen semantic teaching/safety/language cases and ten orchestration cases covering disconnect persistence, exact reconnect, two shared-phone identity paths, multilingual placement, callback retrieval, two menu routes, Sandbox hedging, and voice-math formatting.
+- Added a discriminated, backward-compatible report format. Historical semantic reports without a result `kind` still parse; new orchestration results carry only synthetic summaries, bounded observations, and explicit trusted checks.
+- State and identity adapters exercise the real LessonService and in-memory SQLite persistence with zero teacher-model spend. Placement, Sandbox, and voice-format adapters use the configured production TeachingEngine so their model-dependent contracts are evaluated rather than mocked during a paid run.
+- Every orchestration case still uses GPT-5.6 as a synthetic learner and independent evaluator. Trusted application assertions remain authoritative: a model evaluator cannot turn a failed state, isolation, routing, safety, or voice check into a pass.
+- Mission Control now distinguishes a complete 24-case green report from a passing targeted run, avoiding a misleading 24/24 claim.
+- Verification: 84 of 84 automated tests, all ten orchestration adapters in the zero-credit controlled-engine gate, 25 of 25 deterministic teaching cases, spend-refusal CLI smoke, and a one-of-one paid reconnect run. The reconnect run passed all four trusted checks with 659 input and 179 output text tokens; the paid full 24-case execution remains open.

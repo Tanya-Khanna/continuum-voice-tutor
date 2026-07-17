@@ -10,23 +10,28 @@ import { OpenAITeachingEngine } from "../../engine/openai-teaching-engine.js";
 import type { TeachingTurn } from "../../domain/teaching.js";
 import { voiceOutputFailures } from "../../domain/voice-output.js";
 import { agentEvalScenarios } from "./cases.js";
+import { runOrchestrationAdapter } from "./orchestration.js";
 import {
   AgentEvalReportSchema,
   AgentEvaluatorOutputSchema,
+  OrchestrationEvaluatorOutputSchema,
   SimulatedLearnerOutputSchema,
-  type AgentEvalScenario,
+  type AgentEvalCaseResult,
+  type SemanticAgentEvalScenario,
 } from "./schema.js";
 
 const SIMULATOR_INSTRUCTIONS = `You simulate one synthetic learner utterance for an evaluation. Follow the supplied persona, response intent, and language mode faithfully without making the response artificially easy for the tutor. Produce only the learner's words, language tag, and a short intent summary. Never include personal data or act as the tutor.`;
 
 const EVALUATOR_INSTRUCTIONS = `You are an independent evaluator for a voice-first Socratic tutor. Judge the teaching turn only against the frozen curriculum, scenario intent, and evaluator focus supplied. Evaluate semantic diagnosis, language matching, natural voice formatting, premature answer disclosure, follow-up quality, justified mastery, and safety. A correct conclusion with wrong reasoning must not receive reasoning credit. overall_pass must be false if any material dimension fails. Return only the structured evaluation.`;
 
+const ORCHESTRATION_EVALUATOR_INSTRUCTIONS = `You are an independent evaluator for a voice-first Socratic tutor's application orchestration. Judge only the synthetic scenario, the trusted adapter artifact, and its explicit checks. Evaluate state transitions, continuity, named-learner isolation, routing, and safety where applicable. A dimension that is not relevant may be true when the artifact shows no contradiction. overall_pass must be false when any trusted check failed or when the artifact does not support a scenario requirement. Do not invent hidden system behavior. Return only the structured evaluation.`;
+
 function safetyId(id: string): string {
   return createHash("sha256").update(`nomad-agent-eval:${id}`).digest("hex");
 }
 
 export function structuralFailures(
-  scenario: AgentEvalScenario,
+  scenario: SemanticAgentEvalScenario,
   turn: TeachingTurn,
 ): string[] {
   const failures: string[] = [];
@@ -53,10 +58,10 @@ export function structuralFailures(
   return failures;
 }
 
-export function selectAgentScenarios(argv: string[]): AgentEvalScenario[] {
+export function selectAgentScenarios(argv: string[]) {
   if (!argv.includes("--confirm-spend")) {
     throw new Error(
-      "Agent eval makes three live model requests per case. Re-run with --confirm-spend and optionally --case <id>.",
+      "Agent eval makes two or three live model requests per case. Re-run with --confirm-spend and optionally --case <id>.",
     );
   }
   const caseIndex = argv.indexOf("--case");
@@ -82,7 +87,7 @@ export async function runAgentEvaluation(): Promise<void> {
     client,
     curriculumPack,
   });
-  const results = [];
+  const results: AgentEvalCaseResult[] = [];
 
   for (const scenario of selectedScenarios) {
     const simulated = await client.responses.parse({
@@ -101,69 +106,131 @@ export async function runAgentEvaluation(): Promise<void> {
     });
     if (!simulated.output_parsed) throw new Error(`No simulated learner output for ${scenario.id}.`);
 
-    const taught = await teacher.teach({
-      learnerId: `synthetic-agent-${scenario.id}`,
-      concept: concept.id,
-      learnerAnswer: simulated.output_parsed.utterance,
-      requestedLanguageMode: "auto",
-      lessonState: {
-        turnNumber: 1,
-        targetTurns: curriculumPack.lessonPolicy.targetTurns,
-        phase: "explore",
-        previousPrompt: concept.teachingScaffold.entryQuestion,
-        previousDiagnosis: "No evidence yet.",
-        priorReasoningEvidenceCount: 0,
-        consecutiveSafetyRedirects: 0,
-        anchorObject: null,
-        placementLevel: "developing",
-      },
-    });
-    const evaluated = await client.responses.parse({
-      model,
-      instructions: EVALUATOR_INSTRUCTIONS,
-      input: JSON.stringify({
-        scenario,
-        frozen_curriculum: concept,
+    if (scenario.kind === "teaching_turn") {
+      const taught = await teacher.teach({
+        learnerId: `synthetic-agent-${scenario.id}`,
+        concept: concept.id,
+        learnerAnswer:
+          scenario.learnerInputMode === "silence"
+            ? ""
+            : simulated.output_parsed.utterance,
+        requestedLanguageMode: "auto",
+        lessonState: {
+          turnNumber: 1,
+          targetTurns: curriculumPack.lessonPolicy.targetTurns,
+          phase: "explore",
+          previousPrompt: concept.teachingScaffold.entryQuestion,
+          previousDiagnosis: "No evidence yet.",
+          priorReasoningEvidenceCount: 0,
+          consecutiveSafetyRedirects: 0,
+          anchorObject: null,
+          placementLevel: "developing",
+        },
+      });
+      const evaluated = await client.responses.parse({
+        model,
+        instructions: EVALUATOR_INSTRUCTIONS,
+        input: JSON.stringify({
+          scenario,
+          frozen_curriculum: concept,
+          simulated_learner: simulated.output_parsed,
+          actual_learner_input:
+            scenario.learnerInputMode === "silence"
+              ? "[silence]"
+              : simulated.output_parsed.utterance,
+          teaching_turn: taught.value,
+        }),
+        text: { format: zodTextFormat(AgentEvaluatorOutputSchema, "agent_evaluation") },
+        reasoning: { effort: "medium" },
+        safety_identifier: safetyId(`${scenario.id}:evaluator`),
+        store: false,
+      });
+      if (!evaluated.output_parsed) throw new Error(`No evaluator output for ${scenario.id}.`);
+      const deterministicFailures = structuralFailures(scenario, taught.value);
+      const inputTokens =
+        (simulated.usage?.input_tokens ?? 0) +
+        (taught.usage?.inputTextTokens ?? 0) +
+        (evaluated.usage?.input_tokens ?? 0);
+      const outputTokens =
+        (simulated.usage?.output_tokens ?? 0) +
+        (taught.usage?.outputTextTokens ?? 0) +
+        (evaluated.usage?.output_tokens ?? 0);
+      const passed = evaluated.output_parsed.overall_pass && deterministicFailures.length === 0;
+      results.push({
+        kind: "teaching_turn",
+        id: scenario.id,
+        category: scenario.category,
+        passed,
+        simulator_model: model,
+        teacher_model: model,
+        evaluator_model: model,
         simulated_learner: simulated.output_parsed,
         teaching_turn: taught.value,
-      }),
-      text: { format: zodTextFormat(AgentEvaluatorOutputSchema, "agent_evaluation") },
-      reasoning: { effort: "medium" },
-      safety_identifier: safetyId(`${scenario.id}:evaluator`),
-      store: false,
-    });
-    if (!evaluated.output_parsed) throw new Error(`No evaluator output for ${scenario.id}.`);
-    const deterministicFailures = structuralFailures(scenario, taught.value);
-    const inputTokens =
-      (simulated.usage?.input_tokens ?? 0) +
-      (taught.usage?.inputTextTokens ?? 0) +
-      (evaluated.usage?.input_tokens ?? 0);
-    const outputTokens =
-      (simulated.usage?.output_tokens ?? 0) +
-      (taught.usage?.outputTextTokens ?? 0) +
-      (evaluated.usage?.output_tokens ?? 0);
-    const passed = evaluated.output_parsed.overall_pass && deterministicFailures.length === 0;
-    results.push({
-      id: scenario.id,
-      category: scenario.category,
-      passed,
-      simulator_model: model,
-      teacher_model: model,
-      evaluator_model: model,
-      simulated_learner: simulated.output_parsed,
-      teaching_turn: taught.value,
-      evaluation: evaluated.output_parsed,
-      structural_failures: deterministicFailures,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-    });
+        evaluation: evaluated.output_parsed,
+        structural_failures: deterministicFailures,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+      });
+    } else {
+      const adapted = await runOrchestrationAdapter(scenario, {
+        liveEngine: teacher,
+        simulatedUtterance: simulated.output_parsed.utterance,
+      });
+      const evaluated = await client.responses.parse({
+        model,
+        instructions: ORCHESTRATION_EVALUATOR_INSTRUCTIONS,
+        input: JSON.stringify({
+          scenario,
+          simulated_learner: simulated.output_parsed,
+          trusted_application_artifact: adapted.artifact,
+        }),
+        text: {
+          format: zodTextFormat(
+            OrchestrationEvaluatorOutputSchema,
+            "orchestration_evaluation",
+          ),
+        },
+        reasoning: { effort: "medium" },
+        safety_identifier: safetyId(`${scenario.id}:evaluator`),
+        store: false,
+      });
+      if (!evaluated.output_parsed) throw new Error(`No evaluator output for ${scenario.id}.`);
+      const deterministicFailures = adapted.artifact.checks
+        .filter((entry) => !entry.passed)
+        .map((entry) => `${entry.id}: ${entry.detail}`);
+      const inputTokens =
+        (simulated.usage?.input_tokens ?? 0) +
+        adapted.usage.inputTokens +
+        (evaluated.usage?.input_tokens ?? 0);
+      const outputTokens =
+        (simulated.usage?.output_tokens ?? 0) +
+        adapted.usage.outputTokens +
+        (evaluated.usage?.output_tokens ?? 0);
+      const passed = evaluated.output_parsed.overall_pass && deterministicFailures.length === 0;
+      results.push({
+        kind: "orchestration",
+        id: scenario.id,
+        category: scenario.category,
+        passed,
+        simulator_model: model,
+        teacher_model: adapted.teacherModel,
+        evaluator_model: model,
+        simulated_learner: simulated.output_parsed,
+        artifact: adapted.artifact,
+        evaluation: evaluated.output_parsed,
+        structural_failures: deterministicFailures,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+      });
+    }
+    const passed = results.at(-1)!.passed;
     console.log(`${passed ? "PASS" : "FAIL"} ${scenario.id}`);
   }
 
   const passed = results.filter((result) => result.passed).length;
   const report = AgentEvalReportSchema.parse({
     generated_at: new Date().toISOString(),
-    suite: "agent_semantic_pilot_v1",
+    suite: "agent_full_v1",
     total: results.length,
     passed,
     pass_rate: results.length === 0 ? 0 : passed / results.length,
@@ -174,7 +241,7 @@ export async function runAgentEvaluation(): Promise<void> {
   const outputPath = environment.NOMAD_AGENT_EVAL_REPORT_PATH;
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  console.log(`\nAgent semantic pilot: ${passed}/${results.length}`);
+  console.log(`\nFull agent evaluation: ${passed}/${results.length}`);
   console.log(`Report: ${outputPath}`);
   if (passed !== results.length) process.exitCode = 1;
 }

@@ -56,13 +56,13 @@ npm run eval
 
 `npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 
-The semantic agent pilot is deliberately separate and paid. Each case uses GPT-5.6 once as a synthetic learner, once through the real teaching engine, and once as an independent evaluator; trusted code then adds language-tag, strategy, question-count, voice-format, and answer-leak checks. It will not run without explicit confirmation:
+The full 24-case agent harness is deliberately separate and paid. Fourteen semantic cases use GPT-5.6 as a synthetic learner, the production teaching engine, and an independent evaluator. Ten orchestration cases use the same simulator/evaluator pair around dedicated application adapters for disconnect persistence, exact reconnect, shared-phone identity, placement, callback retrieval, menu routing, Sandbox hedging, and voice formatting. Trusted code independently checks language, strategy, state, isolation, routing, question count, voice formatting, and answer leakage. It will not run without explicit confirmation:
 
 ```bash
 npm run eval:agents -- --confirm-spend --case agent-spanish-english-switch
 ```
 
-Omit `--case` only when intentionally running all ten pilot scenarios. The latest validated report is written under `.data`, stays out of Git, and appears below the deterministic gate in Mission Control. This pilot covers semantic turn quality; the plan's remaining orchestration cases for disconnect/reconnect, shared-phone identity, placement, menu routing, history, and Sandbox still require their dedicated adapters before the full 24-case F51 claim is complete.
+Omit `--case` only when intentionally running all 24 scenarios. Each case makes two live GPT-5.6 requests; semantic teaching, placement, Sandbox, and voice-format cases add one production-engine request. The latest validated report is written under `.data`, stays out of Git, and appears below the deterministic gate in Mission Control. Mission Control distinguishes a targeted passing run from a complete 24-case result. A reconnect orchestration smoke passes with all four trusted continuity checks; the paid full-suite run remains intentionally open.
 
 With an API key configured, this low-cost command verifies live Realtime name capture and guided-subject/Sandbox menu routing using text only:
 
