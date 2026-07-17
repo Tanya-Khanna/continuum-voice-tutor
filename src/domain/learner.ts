@@ -39,6 +39,7 @@ export const StoredTeachingTurnSchema = z.object({
   sessionId: z.string().min(1),
   sequence: z.number().int().positive(),
   turn: TeachingTurnSchema,
+  modelRoute: z.string().min(1),
   createdAt: z.string().datetime(),
 });
 
@@ -52,6 +53,8 @@ export interface LearningRepository {
   saveLearner(profile: LearnerProfile): void;
   findResumableLesson(learnerId: string): LessonSession | undefined;
   findLatestLesson(learnerId: string): LessonSession | undefined;
+  findLesson(id: string): LessonSession | undefined;
+  listRecentLessons(limit: number): LessonSession[];
   saveLesson(session: LessonSession): void;
   appendTurn(storedTurn: StoredTeachingTurn): void;
   listTurns(sessionId: string): StoredTeachingTurn[];

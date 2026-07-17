@@ -217,6 +217,7 @@ export class LessonService {
         sessionId: nextSession.id,
         sequence,
         turn,
+        modelRoute: this.#engine.modelRoute,
         createdAt: now,
       }),
     );

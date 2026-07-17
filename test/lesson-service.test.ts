@@ -209,6 +209,7 @@ describe("LessonService", () => {
   it("downgrades an unsupported first secure claim from an engine", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const overconfidentEngine: TeachingEngine = {
+      modelRoute: "test-overconfident",
       async teach(request) {
         return {
           learner_id: request.learnerId,

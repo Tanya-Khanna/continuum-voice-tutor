@@ -125,3 +125,13 @@
 - The first run scored 2/3. Luna correctly detected Spanish/English and correctly diagnosed supported reasoning, but chose `concrete_analogy` and repeated the solved example instead of moving to retrieval practice.
 - Tightened the live prompt to evaluate meaning before isolated keywords, define the strategy taxonomy, and require a new transfer example after supported reasoning.
 - The targeted Spanish/English rerun passed, followed by a full 3/3 regression pass. This is live evidence for arbitrary-language/code-switching architecture, not a claim that every language and accent has been field-validated.
+
+## 2026-07-17 — Mission-control dashboard skeleton
+
+- Added an auto-refreshing local dashboard at `/dashboard` with a JSON data surface at `/api/dashboard/sessions`.
+- The dashboard shows recent sessions, learner/Nomad transcript pairs, diagnosis, mastery evidence, next strategy, language mode, and the actual model route recorded for each turn.
+- Added a SQLite migration for per-turn model-route provenance; existing databases receive `unknown` for historical rows without losing data.
+- Learners are represented by a one-way short reference derived from the internal learner ID. The dashboard snapshot excludes names, raw caller numbers, and phone hashes.
+- Kept this local-only for now. It must not be exposed with real learner data until the planned consent, retention, and access-control work lands.
+- Verified the complete page and API against a temporary offline lesson database. The response contained one anonymized session with the expected diagnosis strategy and route.
+- Verification: 27 of 27 automated tests and the 25-case offline teaching gate pass.

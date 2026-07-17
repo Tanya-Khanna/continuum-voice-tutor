@@ -336,10 +336,10 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Callback loop (exact recent-drop recovery, later retrieval practice, and post-completion retrieval)~~ ✅ · voice-queryable history · shared-phone profiles polished.
 - **Eval harness**: simulated-learner × evaluator agents; ~~all 25 cases (§4.1) in text mode; iterate prompts until green~~ ✅ *(deterministic offline gate; agent-based judge pass still open)*. 2–3 live smoke calls only.
 **Evening:**
-- Dashboard skeleton (transcript, diagnosis JSON, mastery, cost/call).
+- ~~Dashboard skeleton (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, and per-turn model route)~~ ✅ *(cost/call remains open until usage accounting lands)*.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
-- **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · dashboard skeleton live.**
-- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · F20 sandbox mode · F21-full five subjects + flavored fallbacks · F22 voice-menu onboarding · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · F47 callback loop · F41-query voice-queryable history · F18 language_mode config + Spanish smoke test · F51 eval harness (25 cases) · §7.5 REPL (`make chat`) · F45-skeleton dashboard · F15-persona NAME decided (+ product name)
+- **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
+- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · F20 sandbox mode · F21-full five subjects + flavored fallbacks · F22 voice-menu onboarding · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · F41-query voice-queryable history · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**

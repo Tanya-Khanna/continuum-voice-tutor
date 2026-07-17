@@ -60,6 +60,12 @@ Realtime asks the learner's name and calls `start_lesson`. Every later learner a
 
 The lesson arc is deployment-configured. The first pack uses eight teaching turns with explicit explore, independent-check, and recap phases. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. The server also prevents any model from marking mastery secure until it has observed at least two reasoning turns.
 
+## Mission control
+
+Start the server and open `http://localhost:3000/dashboard` to inspect recent teaching sessions. The page refreshes automatically and shows the anonymized learner reference, transcript, diagnosis, mastery evidence, strategy, language mode, and actual model route stored for every turn. Names, caller numbers, and phone hashes are deliberately excluded from the dashboard API.
+
+This is currently a local judge-demo surface, not an authenticated production dashboard. Do not expose it through a public tunnel with real learner data until the consent, retention, and access-control work in the plan is complete.
+
 ## Configuration
 
 Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requires no credentials. Local learner state is stored in `.data/nomad.db`, which is ignored by Git. Change `NOMAD_PHONE_HASH_SECRET` before any real deployment; it keys the one-way caller identifiers. Development defaults to `gpt-realtime-2.1-mini`; switch to the full Realtime model only for planned quality checks and the final demo.

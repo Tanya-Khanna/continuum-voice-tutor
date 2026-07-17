@@ -8,6 +8,7 @@ import { CurriculumTeachingEngine } from "./curriculum-teaching-engine.js";
 import type { TeachingEngine } from "./teaching-engine.js";
 
 export class OfflineTeachingEngine implements TeachingEngine {
+  readonly modelRoute = "offline";
   readonly #engine: CurriculumTeachingEngine;
 
   constructor(

@@ -1,6 +1,10 @@
 import { createServer, type IncomingHttpHeaders } from "node:http";
 import OpenAI from "openai";
+import { loadCurriculumPack } from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
+import { DASHBOARD_HTML } from "./dashboard/page.js";
+import { buildDashboardSnapshot } from "./observability/dashboard.js";
+import { SqliteLearningRepository } from "./persistence/sqlite-learning-repository.js";
 import { createLessonRuntime } from "./runtime/lesson-runtime.js";
 import {
   RealtimeIncomingCallSchema,
@@ -35,7 +39,9 @@ const activeCallIds = new Set<string>();
 
 export const server = createServer(async (request, response) => {
   try {
-    if (request.method === "GET" && request.url === "/health") {
+    const url = new URL(request.url ?? "/", "http://localhost");
+
+    if (request.method === "GET" && url.pathname === "/health") {
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(
         JSON.stringify({
@@ -49,7 +55,45 @@ export const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/webhooks/openai") {
+    if (request.method === "GET" && url.pathname === "/dashboard") {
+      response.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      response.end(DASHBOARD_HTML);
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/dashboard/sessions"
+    ) {
+      const repository = new SqliteLearningRepository(
+        environment.NOMAD_DATABASE_PATH,
+      );
+      try {
+        const snapshot = buildDashboardSnapshot({
+          repository,
+          curriculumPack: loadCurriculumPack(
+            environment.NOMAD_CURRICULUM_PATH,
+          ),
+          limit: Number(url.searchParams.get("limit") ?? 20),
+        });
+        response.writeHead(200, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        });
+        response.end(JSON.stringify(snapshot));
+      } finally {
+        repository.close();
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/webhooks/openai"
+    ) {
       const apiKey = requireOpenAIKey(environment);
       if (!environment.OPENAI_WEBHOOK_SECRET) {
         throw new Error("OPENAI_WEBHOOK_SECRET is required for the webhook.");

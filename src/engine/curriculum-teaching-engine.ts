@@ -13,6 +13,7 @@ function includesAny(answer: string, signals: string[]): boolean {
 }
 
 export class CurriculumTeachingEngine implements TeachingEngine {
+  readonly modelRoute = "offline";
   readonly #pack: CurriculumPack;
   readonly #languageDetector: LanguageDetector;
 

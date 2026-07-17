@@ -43,6 +43,7 @@ interface TurnRow {
   session_id: string;
   sequence: number;
   turn_json: string;
+  model_route: string;
   created_at: string;
 }
 
@@ -128,10 +129,19 @@ export class SqliteLearningRepository implements LearningRepository {
         session_id TEXT NOT NULL REFERENCES lesson_sessions(id),
         sequence INTEGER NOT NULL,
         turn_json TEXT NOT NULL,
+        model_route TEXT NOT NULL DEFAULT 'unknown',
         created_at TEXT NOT NULL,
         UNIQUE(session_id, sequence)
       );
     `);
+    const turnColumns = this.#database.pragma(
+      "table_info(teaching_turns)",
+    ) as { name: string }[];
+    if (!turnColumns.some((column) => column.name === "model_route")) {
+      this.#database.exec(
+        "ALTER TABLE teaching_turns ADD COLUMN model_route TEXT NOT NULL DEFAULT 'unknown'",
+      );
+    }
   }
 
   findLearner(id: string): LearnerProfile | undefined {
@@ -195,6 +205,23 @@ export class SqliteLearningRepository implements LearningRepository {
     return row ? lessonFromRow(row) : undefined;
   }
 
+  findLesson(id: string): LessonSession | undefined {
+    const row = this.#database
+      .prepare("SELECT * FROM lesson_sessions WHERE id = ?")
+      .get(id) as LessonRow | undefined;
+    return row ? lessonFromRow(row) : undefined;
+  }
+
+  listRecentLessons(limit: number): LessonSession[] {
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+    const rows = this.#database
+      .prepare(
+        "SELECT * FROM lesson_sessions ORDER BY updated_at DESC LIMIT ?",
+      )
+      .all(safeLimit) as LessonRow[];
+    return rows.map(lessonFromRow);
+  }
+
   saveLesson(session: LessonSession): void {
     const lesson = LessonSessionSchema.parse(session);
     this.#database
@@ -226,14 +253,15 @@ export class SqliteLearningRepository implements LearningRepository {
     this.#database
       .prepare(
         `INSERT INTO teaching_turns (
-          id, session_id, sequence, turn_json, created_at
-        ) VALUES (?, ?, ?, ?, ?)`,
+          id, session_id, sequence, turn_json, model_route, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .run(
         entry.id,
         entry.sessionId,
         entry.sequence,
         JSON.stringify(entry.turn),
+        entry.modelRoute,
         entry.createdAt,
       );
   }
@@ -250,6 +278,7 @@ export class SqliteLearningRepository implements LearningRepository {
         sessionId: row.session_id,
         sequence: row.sequence,
         turn: JSON.parse(row.turn_json) as unknown,
+        modelRoute: row.model_route,
         createdAt: row.created_at,
       }),
     );

@@ -41,6 +41,10 @@ export class OpenAITeachingEngine implements TeachingEngine {
   readonly #model: string;
   readonly #curriculumPack: CurriculumPack;
 
+  get modelRoute(): string {
+    return this.#model;
+  }
+
   constructor(options: OpenAITeachingEngineOptions) {
     this.#client = options.client ?? new OpenAI({ apiKey: options.apiKey });
     this.#model = options.model ?? "gpt-5.6-luna";
