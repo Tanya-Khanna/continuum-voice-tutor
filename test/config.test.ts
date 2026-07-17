@@ -12,6 +12,9 @@ describe("environment configuration", () => {
       "gpt-realtime-2.1-mini",
     );
     expect(environment.OPENAI_REALTIME_VOICE).toBe("marin");
+    expect(environment.NOMAD_VAD_THRESHOLD).toBe(0.5);
+    expect(environment.NOMAD_VAD_PREFIX_PADDING_MS).toBe(300);
+    expect(environment.NOMAD_VAD_SILENCE_MS).toBe(650);
     expect(environment.NOMAD_MAX_CALLS_PER_HOUR).toBe(6);
     expect(environment.NOMAD_SMS_RECAP_ENABLED).toBe(false);
   });
@@ -30,5 +33,21 @@ describe("environment configuration", () => {
   it("prevents accidental live mode without a key", () => {
     const environment = loadEnvironment({ TEACHING_ENGINE: "openai" });
     expect(() => requireOpenAIKey(environment)).toThrow(/offline/);
+  });
+
+  it("bounds phone VAD configuration", () => {
+    expect(() => loadEnvironment({ NOMAD_VAD_THRESHOLD: "1.1" })).toThrow();
+    expect(() => loadEnvironment({ NOMAD_VAD_SILENCE_MS: "100" })).toThrow();
+    expect(
+      loadEnvironment({
+        NOMAD_VAD_THRESHOLD: "0.65",
+        NOMAD_VAD_PREFIX_PADDING_MS: "400",
+        NOMAD_VAD_SILENCE_MS: "800",
+      }),
+    ).toMatchObject({
+      NOMAD_VAD_THRESHOLD: 0.65,
+      NOMAD_VAD_PREFIX_PADDING_MS: 400,
+      NOMAD_VAD_SILENCE_MS: 800,
+    });
   });
 });

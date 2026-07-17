@@ -155,7 +155,10 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - **F9 G.711 μ-law 8kHz** — configure the SIP path for real telephone codec (not browser audio).
 - **F10 Realtime streaming pipeline** — Twilio number → SIP trunk → OpenAI Realtime voice layer
   (fallback: Twilio Media Streams ↔ own WebSocket server). THE critical path.
-- **F12 VAD + barge-in** — Realtime API server VAD; caller can interrupt mid-sentence; configure + test.
+- **F12 VAD + barge-in** — ~~Realtime call acceptance explicitly configures bounded server-VAD threshold, prefix
+  padding, and silence duration with automatic response creation and `interrupt_response: true`; payload and env
+  guards are tested~~ ✅. The provisional 0.5 / 300 ms / 650 ms policy still needs real-phone missed-speech,
+  pause-cutoff, and interruption tuning after the Twilio/SIP leg exists.
 - **F13/F50 Preambles + latency choreography** — ~~Realtime gives a sub-six-word language-matched neutral
   acknowledgment before the teaching tool call while GPT-5.6 remains the sole source of correctness, hints,
   explanation, and questions; GPT-5.6 request latency is measured and stored per interaction~~ ✅. Real phone

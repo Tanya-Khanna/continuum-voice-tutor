@@ -18,7 +18,19 @@ describe("Realtime SIP boundary", () => {
     expect(buildRealtimeAcceptPayload()).toMatchObject({
       type: "realtime",
       model: "gpt-realtime-2.1-mini",
-      audio: { output: { voice: "marin" } },
+      audio: {
+        input: {
+          turn_detection: {
+            type: "server_vad",
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 650,
+            create_response: true,
+            interrupt_response: true,
+          },
+        },
+        output: { voice: "marin" },
+      },
       tool_choice: "auto",
     });
     expect(buildRealtimeAcceptPayload().tools.map((tool) => tool.name)).toEqual([
@@ -38,6 +50,26 @@ describe("Realtime SIP boundary", () => {
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "explicit choice",
     );
+  });
+
+  it("keeps barge-in enabled when tuning server VAD", () => {
+    expect(
+      buildRealtimeAcceptPayload("gpt-realtime-2.1-mini", "marin", {
+        type: "server_vad",
+        threshold: 0.65,
+        prefix_padding_ms: 450,
+        silence_duration_ms: 900,
+        create_response: true,
+        interrupt_response: true,
+      }).audio.input.turn_detection,
+    ).toEqual({
+      type: "server_vad",
+      threshold: 0.65,
+      prefix_padding_ms: 450,
+      silence_duration_ms: 900,
+      create_response: true,
+      interrupt_response: true,
+    });
   });
 
   it("extracts the caller identity from the documented SIP From header", () => {

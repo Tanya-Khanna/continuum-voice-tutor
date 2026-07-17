@@ -143,11 +143,27 @@ const RealtimeToolSchema = z.object({
   parameters: z.record(z.string(), z.unknown()),
 });
 
+export const RealtimeTurnDetectionSchema = z.object({
+  type: z.literal("server_vad"),
+  threshold: z.number().min(0).max(1),
+  prefix_padding_ms: z.number().int().min(0).max(1_000),
+  silence_duration_ms: z.number().int().min(200).max(2_000),
+  create_response: z.literal(true),
+  interrupt_response: z.literal(true),
+});
+
+export type RealtimeTurnDetection = z.infer<
+  typeof RealtimeTurnDetectionSchema
+>;
+
 export const RealtimeAcceptPayloadSchema = z.object({
   type: z.literal("realtime"),
   model: z.string().min(1),
   instructions: z.string().min(1),
   audio: z.object({
+    input: z.object({
+      turn_detection: RealtimeTurnDetectionSchema,
+    }),
     output: z.object({
       voice: z.string().min(1),
     }),
@@ -194,11 +210,22 @@ export function callerNumberFromIncomingCall(unparsedEvent: unknown): string {
 export function buildRealtimeAcceptPayload(
   model = "gpt-realtime-2.1-mini",
   voice = "marin",
+  turnDetection: RealtimeTurnDetection = {
+    type: "server_vad",
+    threshold: 0.5,
+    prefix_padding_ms: 300,
+    silence_duration_ms: 650,
+    create_response: true,
+    interrupt_response: true,
+  },
 ): RealtimeAcceptPayload {
   return RealtimeAcceptPayloadSchema.parse({
     type: "realtime",
     model,
-    audio: { output: { voice } },
+    audio: {
+      input: { turn_detection: turnDetection },
+      output: { voice },
+    },
     instructions: REALTIME_CONVERSATION_INSTRUCTIONS,
     tools: REALTIME_TEACHING_TOOLS,
     tool_choice: "auto",

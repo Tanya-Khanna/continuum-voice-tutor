@@ -36,6 +36,19 @@ const EnvironmentSchema = z.object({
     .min(1)
     .default("gpt-realtime-2.1-mini"),
   OPENAI_REALTIME_VOICE: z.string().min(1).default("marin"),
+  NOMAD_VAD_THRESHOLD: z.coerce.number().min(0).max(1).default(0.5),
+  NOMAD_VAD_PREFIX_PADDING_MS: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(1_000)
+    .default(300),
+  NOMAD_VAD_SILENCE_MS: z.coerce
+    .number()
+    .int()
+    .min(200)
+    .max(2_000)
+    .default(650),
   OPENAI_SPEECH_MODEL: z.string().min(1).default("tts-1-hd"),
   OPENAI_WEBHOOK_SECRET: optionalNonEmpty,
   OPENAI_PROJECT_ID: optionalNonEmpty,

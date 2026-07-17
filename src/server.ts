@@ -230,6 +230,15 @@ export const server = createServer(async (request, response) => {
             payload: buildRealtimeAcceptPayload(
               environment.OPENAI_REALTIME_MODEL,
               environment.OPENAI_REALTIME_VOICE,
+              {
+                type: "server_vad",
+                threshold: environment.NOMAD_VAD_THRESHOLD,
+                prefix_padding_ms:
+                  environment.NOMAD_VAD_PREFIX_PADDING_MS,
+                silence_duration_ms: environment.NOMAD_VAD_SILENCE_MS,
+                create_response: true,
+                interrupt_response: true,
+              },
             ),
           });
 

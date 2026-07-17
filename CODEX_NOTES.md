@@ -296,3 +296,13 @@
 - The first run of the new guard caught genuine four-sentence composition in the frozen pack. Vocabulary bridge leads, the successful-reasoning lead, the silence lead, unsafe guidance, and a two-question retrieval prompt were tightened instead of weakening the validator.
 - Curriculum compiler and verifier instructions now account for the composed response, not just each string in isolation.
 - Verification: 76 of 76 automated tests and 25 of 25 deterministic evals pass with the guard enabled; strict TypeScript and diff checks pass.
+
+## 2026-07-17 — Explicit Realtime VAD and barge-in policy
+
+- Verified the current OpenAI Realtime server-VAD contract from official API documentation: threshold, prefix padding, silence duration, automatic response creation, and response interruption are input-audio turn-detection fields.
+- Added server VAD to the actual SIP call-accept payload instead of relying on undocumented defaults. `interrupt_response` is always true so detected learner speech cancels an ongoing default-conversation response.
+- Added bounded deployment settings for threshold, prefix padding, and silence duration. Invalid values fail at startup rather than reaching a paid call.
+- Chose provisional development values of 0.5 threshold, 300 ms prefix audio, and 650 ms silence. The slightly patient silence window is an explicit hypothesis for child think-aloud speech, not field evidence.
+- Did not set an idle timeout: an automatic timeout response could bypass the current lesson-tool rhythm, and silence handling is already explicit in the teaching flow.
+- Real G.711 phone audio, noisy-line activation, cut-off pauses, mouth-to-ear latency, and physical barge-in remain blocked on the Twilio number and SIP trunk.
+- Verification: 78 of 78 automated tests, exact accept-payload assertions, invalid-env rejection, and strict TypeScript pass.
