@@ -98,6 +98,13 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .sample-line.active { border-color: var(--lime); background: var(--panel-2); box-shadow: inset 3px 0 var(--lime); }
     .sample-speaker { color: var(--blue); text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
     .sample-line[data-speaker="nomad"] .sample-speaker { color: var(--lime); }
+    .release-view { margin-top: 18px; }
+    .release-hero { padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, minmax(135px, .35fr)); gap: 14px; }
+    .release-note { color: var(--muted); margin: 12px 0 0; }
+    .release-list { border-top: 1px solid var(--line); }
+    .release-check { display: grid; grid-template-columns: 80px minmax(220px, .75fr) minmax(260px, 1.25fr); gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); align-items: start; }
+    .release-check > * { min-width: 0; overflow-wrap: anywhere; }
+    .guide-link { color: var(--blue); }
     [hidden] { display: none !important; }
     @media (max-width: 900px) {
       .shell { padding: 18px; }
@@ -116,6 +123,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       .eval-hero { grid-template-columns: 1fr; }
       .eval-row { grid-template-columns: 1fr; }
       .sample-hero, .sample-line { grid-template-columns: 1fr; }
+      .release-hero, .release-check { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -132,6 +140,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
           <button class="tab" id="sessions-tab" type="button" aria-selected="true">Sessions</button>
           <button class="tab" id="evals-tab" type="button" aria-selected="false">Eval gate</button>
           <button class="tab" id="sample-tab" type="button" aria-selected="false">Sample</button>
+          <button class="tab" id="release-tab" type="button" aria-selected="false">Release</button>
         </nav>
       </div>
     </header>
@@ -150,6 +159,9 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     <section class="panel sample-view" id="sample-view" hidden>
       <div class="empty">Loading the sample exhibit…</div>
     </section>
+    <section class="panel release-view" id="release-view" hidden>
+      <div class="empty">Loading the secret-safe release checklist…</div>
+    </section>
   </main>
   <script>
     const dashboardToken = (() => {
@@ -161,7 +173,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       }
       try { return window.sessionStorage.getItem('nomad-dashboard-token') ?? ''; } catch { return ''; }
     })();
-    const state = { sessions: [], selected: null, evals: null, sample: null, view: 'sessions' };
+    const state = { sessions: [], selected: null, evals: null, sample: null, readiness: null, readinessLocked: false, view: 'sessions' };
     const text = (tag, value, className) => {
       const node = document.createElement(tag);
       if (className) node.className = className;
@@ -362,20 +374,76 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       });
       root.append(hero, transcript);
     }
+    function renderReadiness() {
+      const root = document.querySelector('#release-view');
+      const report = state.readiness;
+      root.replaceChildren();
+      if (state.readinessLocked) {
+        root.append(text('div', 'Release checklist locked · add #token=…', 'empty'));
+        return;
+      }
+      if (!report) {
+        root.append(text('div', 'Loading the secret-safe release checklist…', 'empty'));
+        return;
+      }
+      const hero = text('div', '', 'release-hero');
+      const copy = text('div', '', 'hero-copy');
+      copy.append(text('div', 'Phone / deployment gate', 'eyebrow'));
+      copy.append(text('h2', report.ready
+        ? 'Configuration is 11/11.'
+        : report.smokeTestReady
+          ? 'One controlled smoke call is allowed.'
+          : 'External setup is still open.'));
+      copy.append(text('p', report.ready
+        ? 'Continue with measured carrier behavior before publishing the number.'
+        : report.smokeTestReady
+          ? 'Signed delivery is the sole open check. Keep the number private.'
+          : 'Complete only the open actions below; no credential values are displayed.'));
+      const guide = text('a', 'Open the setup guide', 'guide-link');
+      guide.href = 'https://github.com/Tanya-Khanna/nomad-ai/blob/main/' + report.guidePath;
+      guide.target = '_blank';
+      guide.rel = 'noreferrer';
+      copy.append(text('p', '', 'release-note'));
+      copy.lastChild.append(guide);
+      hero.append(copy);
+      for (const [label, value] of [
+        ['Configuration', report.readyCount + '/' + report.totalCount],
+        ['First smoke', report.smokeTestReady ? 'Allowed' : 'Blocked'],
+        ['Public number', 'Still gated'],
+      ]) {
+        const metric = text('div', '', 'metric');
+        metric.append(text('span', label));
+        metric.append(text('strong', value));
+        hero.append(metric);
+      }
+      const list = text('div', '', 'release-list');
+      for (const check of report.checks) {
+        const row = text('div', '', 'release-check');
+        row.append(text('strong', check.ready ? 'PASS' : 'OPEN', check.ready ? 'pass' : 'fail'));
+        row.append(text('span', check.label));
+        row.append(text('span', check.ready ? 'Verified without displaying its value.' : check.nextAction, 'count'));
+        list.append(row);
+      }
+      root.append(hero, list);
+    }
     function selectView(view) {
       state.view = view;
       document.querySelector('#sessions-view').hidden = view !== 'sessions';
       document.querySelector('#evals-view').hidden = view !== 'evals';
       document.querySelector('#sample-view').hidden = view !== 'sample';
+      document.querySelector('#release-view').hidden = view !== 'release';
       document.querySelector('#sessions-tab').setAttribute('aria-selected', String(view === 'sessions'));
       document.querySelector('#evals-tab').setAttribute('aria-selected', String(view === 'evals'));
       document.querySelector('#sample-tab').setAttribute('aria-selected', String(view === 'sample'));
+      document.querySelector('#release-tab').setAttribute('aria-selected', String(view === 'release'));
       if (view === 'evals') renderEvals();
       if (view === 'sample') renderSample();
+      if (view === 'release') renderReadiness();
     }
     document.querySelector('#sessions-tab').addEventListener('click', () => selectView('sessions'));
     document.querySelector('#evals-tab').addEventListener('click', () => selectView('evals'));
     document.querySelector('#sample-tab').addEventListener('click', () => selectView('sample'));
+    document.querySelector('#release-tab').addEventListener('click', () => selectView('release'));
     async function refresh() {
       try {
         const response = await fetch('/api/dashboard/sessions', {
@@ -417,7 +485,21 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         state.sample = null;
       }
     }
-    refresh(); refreshEvals(); refreshSample(); setInterval(refresh, 3000);
+    async function refreshReadiness() {
+      try {
+        const response = await fetch('/api/dashboard/readiness', {
+          cache: 'no-store',
+          headers: dashboardToken ? { Authorization: 'Bearer ' + dashboardToken } : {},
+        });
+        state.readinessLocked = response.status === 401;
+        state.readiness = response.ok ? await response.json() : null;
+        if (!response.ok && response.status !== 401) throw new Error('Readiness request failed');
+        if (state.view === 'release') renderReadiness();
+      } catch (error) {
+        state.readiness = null;
+      }
+    }
+    refresh(); refreshEvals(); refreshSample(); refreshReadiness(); setInterval(refresh, 3000);
   </script>
 </body>
 </html>`;

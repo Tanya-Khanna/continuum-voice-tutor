@@ -140,9 +140,24 @@ try {
 
   await expectStatus(`${baseUrl}/dashboard`, 200);
   await expectStatus(`${baseUrl}/api/dashboard/sessions`, 401);
+  await expectStatus(`${baseUrl}/api/dashboard/readiness`, 401);
   await expectStatus(`${baseUrl}/api/dashboard/sessions`, 200, {
     headers: { Authorization: `Bearer ${dashboardToken}` },
   });
+  const readiness = await expectStatus(
+    `${baseUrl}/api/dashboard/readiness`,
+    200,
+    { headers: { Authorization: `Bearer ${dashboardToken}` } },
+  );
+  const serializedReadiness = JSON.stringify(await readiness.json());
+  for (const sensitiveValue of [
+    dashboardToken,
+    "production-smoke-only-secret",
+  ]) {
+    if (serializedReadiness.includes(sensitiveValue)) {
+      throw new Error("Production readiness endpoint exposed a configured value.");
+    }
+  }
   const audio = await expectStatus(
     `${baseUrl}/assets/sample-universal-code-switch.mp3`,
     206,
@@ -156,7 +171,7 @@ try {
   }
 
   console.log(
-    "Production smoke passed: compiled Node server, health, dashboard auth, SQLite access, and ranged sample audio are deployable without local secrets.",
+    "Production smoke passed: compiled Node server, health, dashboard auth, release readiness, SQLite access, and ranged sample audio are deployable without local secrets.",
   );
 } finally {
   if (productionServer) await stopServer(productionServer);

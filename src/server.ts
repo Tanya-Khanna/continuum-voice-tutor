@@ -19,6 +19,7 @@ import { buildDashboardSnapshot } from "./observability/dashboard.js";
 import { SqliteLearningRepository } from "./persistence/sqlite-learning-repository.js";
 import { createLessonRuntime } from "./runtime/lesson-runtime.js";
 import { CallAdmissionGuard } from "./telephony/call-admission.js";
+import { buildPhoneReadinessReport } from "./telephony/readiness.js";
 import {
   RealtimeIncomingCallSchema,
   acceptRealtimeCall,
@@ -146,6 +147,38 @@ export const server = createServer(async (request, response) => {
         "Cache-Control": "no-store",
       });
       response.end(JSON.stringify(SAMPLE_SESSION));
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/dashboard/readiness"
+    ) {
+      if (
+        !dashboardRequestAuthorized({
+          ...(environment.NOMAD_DASHBOARD_TOKEN
+            ? { expectedToken: environment.NOMAD_DASHBOARD_TOKEN }
+            : {}),
+          ...(request.headers.authorization
+            ? { authorizationHeader: request.headers.authorization }
+            : {}),
+        })
+      ) {
+        response.writeHead(401, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "WWW-Authenticate": 'Bearer realm="Nomad Mission Control"',
+          "X-Content-Type-Options": "nosniff",
+        });
+        response.end(JSON.stringify({ error: "dashboard_access_required" }));
+        return;
+      }
+      response.writeHead(200, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      response.end(JSON.stringify(buildPhoneReadinessReport(environment)));
       return;
     }
 

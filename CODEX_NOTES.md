@@ -474,3 +474,11 @@
 - The clean-clone gate now runs that compiled-server smoke before tests and deterministic evaluation. `HOST` is explicit and defaults to `0.0.0.0` for container platforms.
 - Added `docs/DEPLOYMENT.md` covering stable HTTPS, provider secret injection, a single persistent SQLite disk, single-instance operation, dashboard access checks, and the boundary between reachability and signed-webhook attestation.
 - Verification: the production smoke, strict TypeScript, and 112/112 automated tests pass locally. Docker itself is not installed in this workspace, so the image definition is source-reviewed but still needs one build on the selected deployment host.
+
+## 2026-07-17 — Browser-visible release readiness
+
+- Added a Mission Control Release tab backed by the same typed 11-check preflight report as the CLI. It distinguishes blocked setup, the one-call 10/11 exception, and 11/11 configuration while always showing the public number as separately gated.
+- Protected `/api/dashboard/readiness` with the same constant-time Bearer boundary as learner sessions. The response contains only booleans, labels, next actions, counts, and a fixed guide path; the compiled production smoke verifies configured dashboard and phone-HMAC values never appear.
+- The browser UI links directly to the checked-in phone setup guide and gives every open check a concrete next action, so setup can be driven from Mission Control without pasting credentials into terminal output or screenshots.
+- Browser verification passed at the normal desktop viewport and at 390 by 844: all 11 checks rendered, the active tab and guide were accessible, no horizontal overflow occurred, and the browser console had no warnings or errors.
+- Verification: compiled production smoke, strict TypeScript, 113/113 automated tests, and browser inspection pass. The current local real-account state remains 4/11; this view does not infer or change external console state.

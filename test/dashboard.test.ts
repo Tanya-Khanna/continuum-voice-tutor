@@ -32,6 +32,14 @@ describe("mission-control snapshot", () => {
     expect(DASHBOARD_HTML).toContain("latest?.language_mode ?? 'pending'");
   });
 
+  it("renders a secret-safe browser release checklist behind dashboard auth", () => {
+    expect(DASHBOARD_HTML).toContain("/api/dashboard/readiness");
+    expect(DASHBOARD_HTML).toContain("report.readyCount + '/' + report.totalCount");
+    expect(DASHBOARD_HTML).toContain("One controlled smoke call is allowed.");
+    expect(DASHBOARD_HTML).toContain("no credential values are displayed");
+    expect(DASHBOARD_HTML).toContain("Public number', 'Still gated");
+  });
+
   it("exposes teaching evidence without learner names or phone numbers", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({
