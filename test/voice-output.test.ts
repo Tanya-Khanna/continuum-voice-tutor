@@ -9,6 +9,7 @@ const baseTurn: TeachingTurn = {
   learner_id: "voice-test",
   concept: "comparing_unit_fractions",
   learner_answer: "One third because the pieces are bigger.",
+  anchor_object: null,
   diagnosis: "The learner used valid piece-size reasoning.",
   reasoning_trace: [
     {

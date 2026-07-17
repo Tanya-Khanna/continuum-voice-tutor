@@ -196,8 +196,10 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   smoke~~ ✅. Expand the same metadata-driven menu to Math, Science, English, History, and Geography after the four
   additional reviewed packs are frozen.
 - **F23 Strict Socratic method** — never reveals answers; guides via questions; enforced by eval ("just tell me" cases).
-- **F24 Household experiments + anchor objects** — "fold a paper in half… again — how many parts?"; child names a
-  physical object ("I'm holding a leaf") kept as persistent shared lesson context.
+- **F24 Household experiments + anchor objects** — ~~each concept carries reviewed no-purchase anchor activities;
+  a learner can name a configured object such as paper, flatbread, leaf, or balloon, its generic pack name persists
+  across drops and reaches later teaching decisions, and Mission Control shows it~~ ✅. Unreviewed model nouns,
+  owners, brands, locations, and unsafe manipulation are rejected from persistent anchor state.
 - **F25 Auditory mental modeling** — roti analogy and friends; analogies as the substitute for diagrams.
 - **F26/F27 Micro-lessons + verbal checks** — ~1-min units, one check question each; instant encouraging feedback.
 - **F28 Short-form structure** — design principle (evidence: Adesua drop-off — most quiz abandonment before 10% of
@@ -369,7 +371,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Dashboard skeleton plus deterministic eval-results view and evidence-based per-call token/cost accounting (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, per-turn model route, raw Responses/Realtime usage, and exact-model dated rates)~~ ✅.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
-- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
+- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**

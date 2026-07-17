@@ -319,6 +319,7 @@ describe("LessonService", () => {
           learner_id: request.learnerId,
           concept: request.concept,
           learner_answer: request.learnerAnswer,
+          anchor_object: "private person",
           diagnosis: "The learner supplied one correct explanation.",
           reasoning_trace: [
             {
@@ -393,6 +394,7 @@ describe("LessonService", () => {
 
     const first = await service.respond(context, "My first explanation.");
     expect(first.turn.mastery_status).toBe("developing");
+    expect(first.turn.anchor_object).toBeNull();
     const second = await service.respond(
       first.context,
       "Here is independent reasoning.",
@@ -430,6 +432,38 @@ describe("LessonService", () => {
 
     expect(raviHistory.spoken_response).toContain("Comparing unit fractions");
     expect(ashaHistory.spoken_response).toContain("not recorded");
+    repository.close();
+  });
+
+  it("persists a learner-named physical anchor across a dropped call", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const phoneNumber = "+91 99999 77777";
+    let context = service.beginOrResume({
+      phoneNumber,
+      learnerName: "Leela",
+    });
+
+    const anchored = await service.respond(context, "I am holding a leaf.");
+    expect(anchored.turn).toMatchObject({
+      anchor_object: "leaf",
+      next_strategy: "concrete_analogy",
+    });
+    expect(anchored.turn.spoken_response).toContain("your leaf");
+    expect(anchored.context.session.anchorObject).toBe("leaf");
+    service.pause(anchored.context);
+
+    context = service.beginOrResume({ phoneNumber, learnerName: "leela" });
+    expect(context.resumed).toBe(true);
+    expect(context.session.anchorObject).toBe("leaf");
+    const continued = await service.respond(context, "I am not sure yet.");
+    expect(continued.turn.anchor_object).toBe("leaf");
+    expect(continued.context.session.anchorObject).toBe("leaf");
     repository.close();
   });
 

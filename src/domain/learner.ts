@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  AnchorObjectSchema,
   MasteryStatusSchema,
   ResolvedLanguageModeSchema,
   TeachingStrategySchema,
@@ -38,6 +39,7 @@ export const LessonSessionSchema = z.object({
   lastStrategy: TeachingStrategySchema,
   masteryStatus: MasteryStatusSchema,
   masteryEvidence: z.string(),
+  anchorObject: AnchorObjectSchema.nullable().default(null),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

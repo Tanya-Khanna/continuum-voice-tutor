@@ -38,6 +38,7 @@ for (const testCase of selectedCases) {
       previousDiagnosis: "No evidence yet.",
       priorReasoningEvidenceCount: 0,
       consecutiveSafetyRedirects: 0,
+      anchorObject: null,
       placementLevel: "developing",
     },
   });

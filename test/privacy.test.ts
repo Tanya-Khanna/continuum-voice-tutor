@@ -31,11 +31,13 @@ describe("learner-answer privacy", () => {
     });
     const result = await service.respond(
       context,
-      "My email is learner@example.com and one third has fewer pieces.",
+      "I am holding a leaf. My email is learner@example.com, and I live at 10 Main Street.",
     );
 
     expect(result.turn.learner_answer).toContain("[email redacted]");
     expect(result.turn.learner_answer).not.toContain("learner@example.com");
+    expect(result.turn.learner_answer).not.toContain("10 Main Street");
+    expect(result.turn.anchor_object).toBe("leaf");
     expect(
       repository.listTurns(result.context.session.id)[0]?.turn.learner_answer,
     ).not.toContain("learner@example.com");

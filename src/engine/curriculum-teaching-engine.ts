@@ -52,6 +52,11 @@ export class CurriculumTeachingEngine {
     const vocabularyBridge = concept.vocabularyBridges.find((bridge) =>
       includesAny(normalized, bridge.informalSignals),
     );
+    const anchorActivity = concept.anchorActivities.find((activity) =>
+      includesAny(normalized, activity.learnerSignals),
+    );
+    const anchorObject =
+      anchorActivity?.objectName ?? request.lessonState?.anchorObject ?? null;
     const composeTeachingResponse = (
       responseLead: string,
       nextQuestion: string,
@@ -63,6 +68,7 @@ export class CurriculumTeachingEngine {
       learner_id: request.learnerId,
       concept: request.concept,
       learner_answer: answer,
+      anchor_object: anchorObject,
       reasoning_trace: [
         {
           source: "learner_stated" as const,
@@ -188,6 +194,32 @@ export class CurriculumTeachingEngine {
         mastery_evidence: scaffold.answerRequestEvidence,
         next_question: scaffold.answerRequestQuestion,
         spoken_response: `${scaffold.answerRequestResponseLead} ${scaffold.answerRequestQuestion}`,
+      });
+    }
+
+    if (anchorActivity) {
+      const diagnosis = `The learner offered ${anchorActivity.objectName} as a concrete shared lesson object.`;
+      return finalize({
+        ...base,
+        diagnosis,
+        reasoning_trace: [
+          {
+            source: "learner_stated",
+            claim: answer,
+            status: "supported",
+          },
+          {
+            source: "tutor_inference",
+            claim: diagnosis,
+            status: "supported",
+          },
+        ],
+        next_strategy: "concrete_analogy",
+        mastery_status: "needs_support",
+        mastery_evidence:
+          "The learner identified a physical anchor, but has not yet supplied concept reasoning.",
+        next_question: anchorActivity.nextQuestion,
+        spoken_response: `${anchorActivity.responseLead} ${anchorActivity.nextQuestion}`,
       });
     }
 

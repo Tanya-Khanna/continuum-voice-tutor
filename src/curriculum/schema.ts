@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  AnchorObjectSchema,
   ResolvedLanguageModeSchema,
   TeachingStrategySchema,
 } from "../domain/teaching.js";
@@ -35,6 +36,13 @@ export const VocabularyBridgeSchema = z.object({
   spokenDefinition: z.string().min(1),
   informalSignals: z.array(z.string().min(1)).min(1),
   offlineBridgeLead: z.string().min(1),
+});
+
+export const AnchorActivitySchema = z.object({
+  objectName: AnchorObjectSchema,
+  learnerSignals: z.array(z.string().min(1)).min(1),
+  responseLead: z.string().min(1),
+  nextQuestion: z.string().min(1),
 });
 
 export const RationalNumberSchema = z.object({
@@ -80,6 +88,7 @@ export const CurriculumConceptSchema = z.object({
     .default([]),
   misconceptions: z.array(MisconceptionSchema),
   concreteAnalogies: z.array(z.string().min(1)).min(1),
+  anchorActivities: z.array(AnchorActivitySchema).min(1),
   retrievalQuestions: z.array(z.string().min(1)).min(1),
   teachingScaffold: z.object({
     entryQuestion: z.string().min(1),

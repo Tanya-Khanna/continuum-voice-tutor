@@ -8,6 +8,7 @@ const DashboardTurnSchema = z.object({
   sequence: z.number().int().positive(),
   mode: z.enum(["guided", "curious_sandbox"]),
   learner_answer: z.string(),
+  anchor_object: z.string().nullable(),
   spoken_response: z.string(),
   diagnosis: z.string(),
   reasoning_trace: z.array(
@@ -36,6 +37,7 @@ const DashboardSessionSchema = z.object({
   mastery_status: z.string(),
   mastery_evidence: z.string(),
   last_diagnosis: z.string(),
+  anchor_object: z.string().nullable(),
   updated_at: z.string().datetime(),
   placement: z.object({
     level: z.string(),
@@ -121,6 +123,7 @@ export function buildDashboardSnapshot(options: {
       const guidedTurns = options.repository.listTurns(session.id).map((entry) => ({
         mode: "guided" as const,
         learner_answer: entry.turn.learner_answer,
+        anchor_object: entry.turn.anchor_object,
         spoken_response: entry.turn.spoken_response,
         diagnosis: entry.turn.diagnosis,
         reasoning_trace: entry.turn.reasoning_trace,
@@ -136,6 +139,7 @@ export function buildDashboardSnapshot(options: {
         .map((entry) => ({
           mode: "curious_sandbox" as const,
           learner_answer: entry.turn.learner_question,
+          anchor_object: null,
           spoken_response: entry.turn.spoken_response,
           diagnosis: `Curious Sandbox response with ${entry.turn.certainty} certainty.`,
           reasoning_trace: [],
@@ -162,6 +166,7 @@ export function buildDashboardSnapshot(options: {
         mastery_status: session.masteryStatus,
         mastery_evidence: session.masteryEvidence,
         last_diagnosis: session.lastDiagnosis,
+        anchor_object: session.anchorObject,
         updated_at: session.updatedAt,
         placement: {
           level: learner.placementLevel,

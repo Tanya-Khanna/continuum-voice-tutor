@@ -46,6 +46,7 @@ interface LessonRow {
   last_strategy: string;
   mastery_status: string;
   mastery_evidence: string;
+  anchor_object: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +114,7 @@ function lessonFromRow(row: LessonRow): LessonSession {
     lastStrategy: row.last_strategy,
     masteryStatus: row.mastery_status,
     masteryEvidence: row.mastery_evidence,
+    anchorObject: row.anchor_object,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });
@@ -162,6 +164,7 @@ export class SqliteLearningRepository implements LearningRepository {
         last_strategy TEXT NOT NULL,
         mastery_status TEXT NOT NULL,
         mastery_evidence TEXT NOT NULL,
+        anchor_object TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -217,6 +220,14 @@ export class SqliteLearningRepository implements LearningRepository {
     if (!turnColumns.some((column) => column.name === "model_route")) {
       this.#database.exec(
         "ALTER TABLE teaching_turns ADD COLUMN model_route TEXT NOT NULL DEFAULT 'unknown'",
+      );
+    }
+    const lessonColumns = this.#database.pragma(
+      "table_info(lesson_sessions)",
+    ) as { name: string }[];
+    if (!lessonColumns.some((column) => column.name === "anchor_object")) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN anchor_object TEXT",
       );
     }
     const learnerColumns = this.#database.pragma(
@@ -342,11 +353,11 @@ export class SqliteLearningRepository implements LearningRepository {
         `INSERT INTO lesson_sessions (
           id, learner_id, concept, status, turn_count, last_prompt,
           last_diagnosis, last_strategy, mastery_status, mastery_evidence,
-          created_at, updated_at
+          anchor_object, created_at, updated_at
         ) VALUES (
           @id, @learnerId, @concept, @status, @turnCount, @lastPrompt,
           @lastDiagnosis, @lastStrategy, @masteryStatus, @masteryEvidence,
-          @createdAt, @updatedAt
+          @anchorObject, @createdAt, @updatedAt
         )
         ON CONFLICT(id) DO UPDATE SET
           status = excluded.status,
@@ -356,6 +367,7 @@ export class SqliteLearningRepository implements LearningRepository {
           last_strategy = excluded.last_strategy,
           mastery_status = excluded.mastery_status,
           mastery_evidence = excluded.mastery_evidence,
+          anchor_object = excluded.anchor_object,
           updated_at = excluded.updated_at`,
       )
       .run(lesson);

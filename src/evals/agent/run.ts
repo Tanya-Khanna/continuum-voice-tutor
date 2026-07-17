@@ -114,6 +114,7 @@ export async function runAgentEvaluation(): Promise<void> {
         previousDiagnosis: "No evidence yet.",
         priorReasoningEvidenceCount: 0,
         consecutiveSafetyRedirects: 0,
+        anchorObject: null,
         placementLevel: "developing",
       },
     });

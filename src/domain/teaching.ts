@@ -35,6 +35,16 @@ export const TeachingStrategySchema = z.enum([
 
 export const LessonPhaseSchema = z.enum(["explore", "check", "recap"]);
 
+export const AnchorObjectSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(80)
+  .regex(
+    /^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} '\-]{0,79}$/u,
+    "Anchor objects must be short noun phrases without contact or address punctuation.",
+  );
+
 export const TeachingLessonStateSchema = z.object({
   turnNumber: z.number().int().positive(),
   targetTurns: z.number().int().positive(),
@@ -43,6 +53,7 @@ export const TeachingLessonStateSchema = z.object({
   previousDiagnosis: z.string(),
   priorReasoningEvidenceCount: z.number().int().nonnegative(),
   consecutiveSafetyRedirects: z.number().int().nonnegative(),
+  anchorObject: AnchorObjectSchema.nullable(),
   placementLevel: z
     .enum(["unplaced", "foundational", "developing", "grade_ready"])
     .default("unplaced"),
@@ -66,6 +77,7 @@ export const TeachingTurnSchema = z.object({
   learner_id: z.string().min(1),
   concept: z.string().min(1),
   learner_answer: z.string(),
+  anchor_object: AnchorObjectSchema.nullable(),
   diagnosis: z.string().min(1),
   reasoning_trace: z.array(ReasoningTraceEntrySchema).min(1).max(6),
   language_mode: ResolvedLanguageModeSchema,
@@ -78,22 +90,28 @@ export const TeachingTurnSchema = z.object({
 });
 
 export const PersistedTeachingTurnSchema = z.preprocess((value) => {
-  if (!value || typeof value !== "object" || "reasoning_trace" in value) {
+  if (!value || typeof value !== "object") {
     return value;
   }
   const historical = value as Record<string, unknown>;
   return {
     ...historical,
-    reasoning_trace: [
-      {
-        source: "tutor_inference",
-        claim:
-          typeof historical.diagnosis === "string" && historical.diagnosis
-            ? historical.diagnosis
-            : "Historical turn recorded before structured reasoning traces.",
-        status: "unclear",
-      },
-    ],
+    ...("anchor_object" in historical ? {} : { anchor_object: null }),
+    ...(historical.reasoning_trace
+      ? {}
+      : {
+          reasoning_trace: [
+            {
+              source: "tutor_inference",
+              claim:
+                typeof historical.diagnosis === "string" &&
+                historical.diagnosis
+                  ? historical.diagnosis
+                  : "Historical turn recorded before structured reasoning traces.",
+              status: "unclear",
+            },
+          ],
+        }),
   };
 }, TeachingTurnSchema);
 

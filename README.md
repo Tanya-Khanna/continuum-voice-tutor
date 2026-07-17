@@ -10,6 +10,8 @@ The teaching engine contains no subject, country, grade, or language list. A dep
 
 Academic vocabulary is pack-driven too. Every concept declares reviewed canonical terms, the language each term belongs to, a short spoken meaning, and informal learner expressions used only by the offline test adapter. In live teaching, GPT-5.6 can preserve a learner's own phrase, connect it briefly to the reviewed curriculum term, and continue in the learner's current language pattern. The engine contains no Hindi-to-English—or any other fixed language-pair—bridge.
 
+Physical anchor activities are also curriculum data rather than engine branches. A learner can say they are holding a reviewed household object such as paper, a flatbread, a leaf, or—in another subject pack—a balloon. Nomad stores only the pack's generic `objectName`, carries it through a dropped call, and supplies it to the next teaching decision. The model cannot persist an unreviewed noun, owner, brand, location, or personal detail; physical manipulation must use the pack's reviewed safe prompt.
+
 Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to change the deployment without changing teaching-engine code. Leaving it blank loads the built-in India fractions demo pack.
 
 The offline language detector is deliberately a configurable test adapter; it does not claim to translate arbitrary languages. In live mode, the model detects and responds in the learner's actual language while remaining grounded in the selected pack.
@@ -21,6 +23,8 @@ The offline language detector is deliberately a configurable test adapter; it do
 The command writes nothing unless the generated pack passes the full schema and the verifier reports no errors. Output is create-only, carries trusted provenance attached by application code, and is never fetched or changed during a live lesson. Do not run this command on an unreviewed source brief merely to produce more subjects quickly.
 
 Source briefs may provide `requiredVocabulary`. Trusted application code checks concept ID, canonical term, term language, and reviewed spoken meaning exactly after compilation and before verification; a model cannot silently replace a required curriculum term with a plausible alternative.
+
+Every compiled concept must also include at least one no-purchase household anchor activity with a generic object name, offline recognition fixtures, one response lead, and one Socratic question. Compiler instructions exclude ingestion, heat, electricity, sharp tools, chemicals, and other unsupervised-risk activities.
 
 Numerical fraction claims use a bounded, machine-checkable rational-comparison contract. The application verifies them by integer cross-multiplication when a pack is compiled or loaded; a false declared comparison is rejected before teaching. This currently covers rational comparisons and should be extended explicitly when reviewed packs introduce other operation types.
 

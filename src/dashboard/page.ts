@@ -220,6 +220,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       }
       const analysis = text('aside', '', 'analysis'); analysis.append(text('div', 'Teaching intelligence', 'section-label'));
       addCard(analysis, 'Latest diagnosis', latest?.diagnosis ?? session.last_diagnosis);
+      addCard(analysis, 'Shared physical anchor', latest?.anchor_object ?? session.anchor_object ?? 'None named yet');
       const reasoning = latest?.reasoning_trace?.length
         ? latest.reasoning_trace.map((entry) => entry.source.replace('_', ' ') + ' · ' + entry.status + ': ' + entry.claim).join(' | ')
         : 'No guided think-aloud trace for this interaction.';

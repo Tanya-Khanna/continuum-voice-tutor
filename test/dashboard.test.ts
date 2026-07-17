@@ -52,6 +52,7 @@ describe("mission-control snapshot", () => {
     expect(snapshot.sessions[0]).toMatchObject({
       learner_ref: expect.stringMatching(/^learner_[a-f0-9]{10}$/u),
       turn_count: 1,
+      anchor_object: null,
       placement: {
         level: "unplaced",
         score: 0,
@@ -72,6 +73,7 @@ describe("mission-control snapshot", () => {
         expect.objectContaining({
           model_route: "offline",
           next_strategy: "concrete_analogy",
+          anchor_object: null,
           reasoning_trace: expect.arrayContaining([
             expect.objectContaining({
               source: "learner_stated",

@@ -220,6 +220,30 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "Share one same-sized roti equally among three people, then another same-sized roti among four people.",
         "Fold two equal sheets of paper into three and four equal parts and compare one part from each.",
       ],
+      anchorActivities: [
+        {
+          objectName: "paper",
+          learnerSignals: ["holding paper", "have paper", "sheet of paper"],
+          responseLead: "Great; we can use your paper as our shared object.",
+          nextQuestion:
+            "If you fold equal sheets into three and four equal parts, which sheet gives the larger single part?",
+        },
+        {
+          objectName: "flatbread",
+          learnerSignals: ["holding roti", "have a roti", "flatbread"],
+          responseLead: "Great; we can use your flatbread as our shared object.",
+          nextQuestion:
+            "If equal flatbreads are shared among three and four people, who receives the larger single share?",
+        },
+        {
+          objectName: "leaf",
+          learnerSignals: ["holding a leaf", "have a leaf", "patta"],
+          responseLead:
+            "We can keep your leaf as our shared object without tearing it.",
+          nextQuestion:
+            "If you imagine equal leaves divided into three and four equal areas, which single area would be larger?",
+        },
+      ],
       retrievalQuestions: [
         "Why is one third the bigger share when two same-sized rotis are split into thirds and fourths?",
         "As the number of equal pieces increases, what happens to each piece?",
@@ -327,6 +351,23 @@ export const fractionsPack = CurriculumPackSchema.parse({
       concreteAnalogies: [
         "Fold one sheet so both edges meet, then compare the two parts.",
         "Share one same-sized flatbread equally between two people.",
+      ],
+      anchorActivities: [
+        {
+          objectName: "paper",
+          learnerSignals: ["holding paper", "have paper", "sheet of paper"],
+          responseLead: "Great; we can use your paper as our shared object.",
+          nextQuestion:
+            "How could you fold it so the two resulting shares have exactly the same size?",
+        },
+        {
+          objectName: "leaf",
+          learnerSignals: ["holding a leaf", "have a leaf", "patta"],
+          responseLead:
+            "We can keep your leaf as our shared object without tearing it.",
+          nextQuestion:
+            "If you imagine a line dividing it into two equal areas, what would make both shares fair?",
+        },
       ],
       retrievalQuestions: [
         "What must be true before two pieces can be called halves?",

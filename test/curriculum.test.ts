@@ -101,6 +101,7 @@ describe("frozen fractions curriculum", () => {
         status: "unclear",
       },
     ]);
+    expect(historical.anchor_object).toBeNull();
   });
 
   it("keeps the auditable live teaching contract compatible with Structured Outputs", () => {

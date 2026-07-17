@@ -56,6 +56,15 @@ const sciencePack = CurriculumPackSchema.parse({
         },
       ],
       concreteAnalogies: ["Compare an inflated balloon with an empty balloon."],
+      anchorActivities: [
+        {
+          objectName: "balloon",
+          learnerSignals: ["holding a balloon", "have a balloon"],
+          responseLead: "Great; we can use your balloon as our shared object.",
+          nextQuestion:
+            "What changes when you inflate it that could show air occupies space?",
+        },
+      ],
       retrievalQuestions: ["How could a balance show that air has mass?"],
       teachingScaffold: {
         ...baseConcept.teachingScaffold,

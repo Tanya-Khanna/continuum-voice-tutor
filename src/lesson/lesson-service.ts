@@ -205,10 +205,19 @@ export class LessonService {
         previousDiagnosis: context.session.lastDiagnosis,
         priorReasoningEvidenceCount,
         consecutiveSafetyRedirects,
+        anchorObject: context.session.anchorObject,
         placementLevel: context.learner.placementLevel,
       },
     });
     const generatedTurn = generated.value;
+    const anchorObject = generatedTurn.anchor_object;
+    const acceptedAnchorObject = anchorObject
+      ? this.#concept(context.session.concept).anchorActivities.some(
+          (activity) => activity.objectName === anchorObject,
+        )
+        ? anchorObject
+        : context.session.anchorObject
+      : context.session.anchorObject;
     const shouldEndForSafety =
       generatedTurn.next_strategy === "safety_redirect" &&
       consecutiveSafetyRedirects + 1 >=
@@ -216,6 +225,7 @@ export class LessonService {
     const turn = TeachingTurnSchema.parse({
       ...generatedTurn,
       learner_answer: redactedLearnerAnswer,
+      anchor_object: acceptedAnchorObject,
       mastery_status:
         generatedTurn.mastery_status === "secure" &&
         priorReasoningEvidenceCount < 1
@@ -237,6 +247,7 @@ export class LessonService {
       lastStrategy: turn.next_strategy,
       masteryStatus: turn.mastery_status,
       masteryEvidence: turn.mastery_evidence,
+      anchorObject: turn.anchor_object,
       updatedAt: now,
     });
     const nextLearner = LearnerProfileSchema.parse({

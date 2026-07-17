@@ -17,6 +17,7 @@ Nomad is a hackathon prototype, not an approved child deployment. Do not invite 
 - A keyed HMAC of the caller number. The raw caller number is not written to SQLite.
 - The learner's chosen name or nickname so multiple learners can share a phone.
 - Curriculum concept, session status, diagnoses, mastery evidence, language mode, model route, learner answers, and Nomad's spoken responses.
+- At most one pack-reviewed generic physical anchor name per guided session, such as `paper` or `leaf`. Unreviewed model output, owners, brands, and locations are not accepted into this field.
 - Likely email addresses, links, long phone-like numbers, and explicit address phrases are redacted before model processing and persistence. Pattern redaction is defense in depth, not a guarantee that every possible identifier will be recognized.
 
 OpenAI Responses requests use `store: false` and a one-way safety identifier. The local SQLite database remains on the operator's machine. The application does not send live lesson content to web search.

@@ -317,3 +317,15 @@
 - The remaining seven checks require external state: OpenAI project ID, webhook/signing secret, public signed delivery, Twilio credentials, a purchased/assigned number, verified inbound voice, and the Twilio-to-OpenAI SIP trunk.
 - Corrected the README's previously too-narrow claim that only a Twilio number/trunk blocked the real call.
 - Verification: 81 of 81 automated tests, secret-initializer idempotency and permissions, live local preflight without value exposure, and strict TypeScript pass.
+
+## 2026-07-17 — Persistent, pack-reviewed physical anchors
+
+- Added curriculum-level anchor activities with a canonical generic object name, offline learner expressions, a safe response lead, and one concept-grounded Socratic question.
+- The flagship fractions pack supports paper, flatbread, and leaf anchors; the independent Science fixture uses a balloon, proving the engine contains no Math-object branch.
+- A learner saying “I am holding a leaf” now produces `anchor_object: leaf`, follows the reviewed leaf prompt, stores the anchor on the lesson session, and carries it through pause/redial into subsequent teaching requests.
+- Live GPT-5.6 receives the current anchor but may only return an exact object name from the active concept's reviewed activities. Application code independently discards unreviewed model nouns rather than exposing them in persistence or Mission Control.
+- Learner input remains PII-redacted before anchor matching. Persistent state contains only a short generic pack name—never the owner's words, brand, location, or arbitrary object description.
+- Added a backward-compatible SQLite `anchor_object` migration and compatibility defaults for historical turn JSON and saved agent reports.
+- Curriculum compiler instructions require no-purchase, low-risk household activities and exclude ingestion, heat, electricity, sharp tools, chemicals, and unsupervised-risk manipulation.
+- Mission Control now displays the current shared physical anchor alongside diagnosis and reasoning evidence.
+- Verification: 83 of 83 automated tests, including drop/resume continuity, PII-before-anchor handling, unreviewed-output rejection, legacy database migration, 25 of 25 deterministic evals, Structured Outputs conversion, and strict TypeScript pass.
