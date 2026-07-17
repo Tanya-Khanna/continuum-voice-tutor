@@ -17,6 +17,13 @@ import {
   type SandboxRequest,
   type SandboxTurn,
 } from "../domain/sandbox.js";
+import {
+  PlacementEvaluationRequestSchema,
+  PlacementEvaluationSchema,
+  evaluatePlacementEvidence,
+  type PlacementEvaluation,
+  type PlacementEvaluationRequest,
+} from "./placement-diagnostic.js";
 
 export class OfflineTeachingEngine implements TeachingEngine {
   readonly modelRoute = "offline";
@@ -81,6 +88,17 @@ export class OfflineTeachingEngine implements TeachingEngine {
         follow_up_question: followUpQuestion,
         should_end_session: false,
       }),
+    };
+  }
+
+  async evaluatePlacement(
+    unparsedRequest: PlacementEvaluationRequest,
+  ): Promise<ModelResult<PlacementEvaluation>> {
+    const request = PlacementEvaluationRequestSchema.parse(unparsedRequest);
+    return {
+      value: PlacementEvaluationSchema.parse(
+        evaluatePlacementEvidence(this.#pack, request.answers),
+      ),
     };
   }
 }

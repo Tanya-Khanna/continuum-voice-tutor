@@ -15,6 +15,12 @@ export const LearnerProfileSchema = z.object({
   preferredLanguage: ResolvedLanguageModeSchema,
   currentConcept: z.string().min(1),
   lastMastery: MasteryStatusSchema,
+  placementLevel: z
+    .enum(["unplaced", "foundational", "developing", "grade_ready"])
+    .default("unplaced"),
+  placementScore: z.number().int().nonnegative().default(0),
+  placementTotal: z.number().int().nonnegative().default(0),
+  placementEvidence: z.array(z.string()).default([]),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

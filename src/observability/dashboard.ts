@@ -30,6 +30,12 @@ const DashboardSessionSchema = z.object({
   mastery_evidence: z.string(),
   last_diagnosis: z.string(),
   updated_at: z.string().datetime(),
+  placement: z.object({
+    level: z.string(),
+    score: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    evidence: z.array(z.string()),
+  }),
   usage: z.object({
     request_count: z.number().int().nonnegative(),
     input_text_tokens: z.number().int().nonnegative(),
@@ -73,6 +79,10 @@ export function buildDashboardSnapshot(options: {
   const sessions = options.repository
     .listRecentLessons(options.limit ?? 20)
     .map((session) => {
+      const learner = options.repository.findLearner(session.learnerId);
+      if (!learner) {
+        throw new Error(`Learner ${session.learnerId} is missing.`);
+      }
       const usageRecords = options.repository.listUsage(session.id);
       const estimates = usageRecords.map(estimateUsageCost);
       const unpricedModels = [
@@ -144,6 +154,12 @@ export function buildDashboardSnapshot(options: {
         mastery_evidence: session.masteryEvidence,
         last_diagnosis: session.lastDiagnosis,
         updated_at: session.updatedAt,
+        placement: {
+          level: learner.placementLevel,
+          score: learner.placementScore,
+          total: learner.placementTotal,
+          evidence: learner.placementEvidence,
+        },
         usage: {
           request_count: usageRecords.length,
           input_text_tokens: inputTextTokens,

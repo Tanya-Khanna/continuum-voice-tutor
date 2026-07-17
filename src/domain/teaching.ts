@@ -43,6 +43,9 @@ export const TeachingLessonStateSchema = z.object({
   previousDiagnosis: z.string(),
   priorReasoningEvidenceCount: z.number().int().nonnegative(),
   consecutiveSafetyRedirects: z.number().int().nonnegative(),
+  placementLevel: z
+    .enum(["unplaced", "foundational", "developing", "grade_ready"])
+    .default("unplaced"),
 });
 
 export const TeachingRequestSchema = z.object({

@@ -23,6 +23,11 @@ import {
   type TeachingTurn,
 } from "../domain/teaching.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
+import {
+  placementResultFromEvaluation,
+  type PlacementAnswer,
+  type PlacementResult,
+} from "../engine/placement-diagnostic.js";
 import { redactPotentialPii } from "../privacy/redact-pii.js";
 
 export interface LessonContext {
@@ -91,6 +96,10 @@ export class LessonService {
         preferredLanguage: options.preferredLanguage ?? "und",
         currentConcept: this.#startingConcept.id,
         lastMastery: "needs_support",
+        placementLevel: "unplaced",
+        placementScore: 0,
+        placementTotal: 0,
+        placementEvidence: [],
         createdAt: now,
         updatedAt: now,
       });
@@ -195,6 +204,7 @@ export class LessonService {
         previousDiagnosis: context.session.lastDiagnosis,
         priorReasoningEvidenceCount,
         consecutiveSafetyRedirects,
+        placementLevel: context.learner.placementLevel,
       },
     });
     const generatedTurn = generated.value;
@@ -273,6 +283,79 @@ export class LessonService {
     return mode === "guided"
       ? context.greeting
       : "Curious Sandbox is open. What are you curious about?";
+  }
+
+  requiresPlacement(context: LessonContext): boolean {
+    return context.learner.placementLevel === "unplaced";
+  }
+
+  placementQuestions(): { id: string; prompt: string }[] {
+    return this.#curriculumPack.placementDiagnostic.questions.map(
+      ({ id, prompt }) => ({ id, prompt }),
+    );
+  }
+
+  async completePlacement(
+    context: LessonContext,
+    answers: PlacementAnswer[],
+  ): Promise<{
+    context: LessonContext;
+    result: PlacementResult;
+    spokenResponse: string;
+  }> {
+    const redactedAnswers = answers.map((answer) => ({
+      ...answer,
+      answer: redactPotentialPii(answer.answer),
+    }));
+    const evaluation = await this.#engine.evaluatePlacement({
+      learnerId: context.learner.id,
+      answers: redactedAnswers,
+    });
+    const result = placementResultFromEvaluation(
+      this.#curriculumPack,
+      evaluation.value,
+    );
+    const concept = this.#curriculumPack.concepts.find(
+      (candidate) => candidate.id === result.recommendedConcept,
+    );
+    if (!concept) {
+      throw new Error(
+        `Placement recommendation ${result.recommendedConcept} is not a curriculum concept.`,
+      );
+    }
+    const now = this.#clock().toISOString();
+    const nextLearner = LearnerProfileSchema.parse({
+      ...context.learner,
+      currentConcept: concept.id,
+      placementLevel: result.level,
+      placementScore: result.score,
+      placementTotal: result.total,
+      placementEvidence: result.evidence,
+      updatedAt: now,
+    });
+    const nextSession = LessonSessionSchema.parse({
+      ...context.session,
+      concept:
+        context.session.turnCount === 0 ? concept.id : context.session.concept,
+      lastPrompt:
+        context.session.turnCount === 0
+          ? concept.teachingScaffold.entryQuestion
+          : context.session.lastPrompt,
+      updatedAt: now,
+    });
+    this.#repository.saveLearner(nextLearner);
+    this.#repository.saveLesson(nextSession);
+    const nextContext = {
+      ...context,
+      learner: nextLearner,
+      session: nextSession,
+    };
+    if (evaluation.usage) this.recordModelUsage(nextContext, evaluation.usage);
+    return {
+      context: nextContext,
+      result,
+      spokenResponse: `Thanks. We will begin with ${concept.title}. ${nextSession.lastPrompt}`,
+    };
   }
 
   pause(context: LessonContext): LessonContext {

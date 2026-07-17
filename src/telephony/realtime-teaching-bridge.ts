@@ -24,6 +24,17 @@ const LearningModeArgumentsSchema = z.object({
   mode: z.enum(["guided", "curious_sandbox"]),
 });
 
+const CompletePlacementArgumentsSchema = z.object({
+  answers: z
+    .array(
+      z.object({
+        question_id: z.string().min(1),
+        answer: z.string().max(2_000),
+      }),
+    )
+    .min(1),
+});
+
 const FunctionCallItemSchema = z.object({
   type: z.literal("function_call"),
   name: z.string().min(1),
@@ -81,6 +92,9 @@ interface LessonOrchestrator {
   exploreSandbox: LessonService["exploreSandbox"];
   learningMenu: LessonService["learningMenu"];
   modeGreeting: LessonService["modeGreeting"];
+  requiresPlacement: LessonService["requiresPlacement"];
+  placementQuestions: LessonService["placementQuestions"];
+  completePlacement: LessonService["completePlacement"];
 }
 
 export function usageFromRealtimeEvent(
@@ -282,13 +296,57 @@ export class RealtimeTeachingController {
           };
         } else {
           this.#learningMode = args.mode;
+          const placementRequired =
+            args.mode === "guided" &&
+            this.#lessonService.requiresPlacement(this.#context);
+          const placementQuestions = placementRequired
+            ? this.#lessonService.placementQuestions()
+            : [];
+          output = placementRequired
+            ? {
+                ok: true,
+                mode: args.mode,
+                placement_required: true,
+                placement_questions: placementQuestions,
+                spoken_response: placementQuestions[0]!.prompt,
+              }
+            : {
+                ok: true,
+                mode: args.mode,
+                placement_required: false,
+                spoken_response: this.#lessonService.modeGreeting(
+                  this.#context,
+                  args.mode,
+                ),
+              };
+          speechPolicy = "localize_onboarding";
+        }
+      } else if (call.name === "complete_placement") {
+        const args = CompletePlacementArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        if (!this.#context || this.#learningMode !== "guided") {
+          output = {
+            ok: false,
+            spoken_response:
+              "Please choose guided learning before the placement questions.",
+          };
+        } else {
+          const completed = await this.#lessonService.completePlacement(
+            this.#context,
+            args.answers.map((answer) => ({
+              questionId: answer.question_id,
+              answer: answer.answer,
+            })),
+          );
+          this.#context = completed.context;
           output = {
             ok: true,
-            mode: args.mode,
-            spoken_response: this.#lessonService.modeGreeting(
-              this.#context,
-              args.mode,
-            ),
+            placement_required: false,
+            placement_level: completed.result.level,
+            placement_score: completed.result.score,
+            placement_total: completed.result.total,
+            spoken_response: completed.spokenResponse,
           };
           speechPolicy = "localize_onboarding";
         }
@@ -302,7 +360,10 @@ export class RealtimeTeachingController {
             spoken_response:
               "Before we begin, what name would you like me to use?",
           };
-        } else if (this.#learningMode !== "guided") {
+        } else if (
+          this.#learningMode !== "guided" ||
+          this.#lessonService.requiresPlacement(this.#context)
+        ) {
           output = {
             ok: false,
             spoken_response: this.#lessonService.learningMenu(this.#context),

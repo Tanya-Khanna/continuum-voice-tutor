@@ -27,6 +27,10 @@ interface LearnerRow {
   preferred_language: string;
   current_concept: string;
   last_mastery: string;
+  placement_level: string;
+  placement_score: number;
+  placement_total: number;
+  placement_evidence: string;
   created_at: string;
   updated_at: string;
 }
@@ -88,6 +92,10 @@ function learnerFromRow(row: LearnerRow): LearnerProfile {
     preferredLanguage: row.preferred_language,
     currentConcept: row.current_concept,
     lastMastery: row.last_mastery,
+    placementLevel: row.placement_level,
+    placementScore: row.placement_score,
+    placementTotal: row.placement_total,
+    placementEvidence: JSON.parse(row.placement_evidence) as unknown,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });
@@ -131,6 +139,10 @@ export class SqliteLearningRepository implements LearningRepository {
         preferred_language TEXT NOT NULL,
         current_concept TEXT NOT NULL,
         last_mastery TEXT NOT NULL,
+        placement_level TEXT NOT NULL DEFAULT 'unplaced',
+        placement_score INTEGER NOT NULL DEFAULT 0,
+        placement_total INTEGER NOT NULL DEFAULT 0,
+        placement_evidence TEXT NOT NULL DEFAULT '[]',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         UNIQUE(phone_hash, normalized_name)
@@ -207,6 +219,29 @@ export class SqliteLearningRepository implements LearningRepository {
         "ALTER TABLE teaching_turns ADD COLUMN model_route TEXT NOT NULL DEFAULT 'unknown'",
       );
     }
+    const learnerColumns = this.#database.pragma(
+      "table_info(learners)",
+    ) as { name: string }[];
+    if (!learnerColumns.some((column) => column.name === "placement_level")) {
+      this.#database.exec(
+        "ALTER TABLE learners ADD COLUMN placement_level TEXT NOT NULL DEFAULT 'unplaced'",
+      );
+    }
+    if (!learnerColumns.some((column) => column.name === "placement_score")) {
+      this.#database.exec(
+        "ALTER TABLE learners ADD COLUMN placement_score INTEGER NOT NULL DEFAULT 0",
+      );
+    }
+    if (!learnerColumns.some((column) => column.name === "placement_total")) {
+      this.#database.exec(
+        "ALTER TABLE learners ADD COLUMN placement_total INTEGER NOT NULL DEFAULT 0",
+      );
+    }
+    if (!learnerColumns.some((column) => column.name === "placement_evidence")) {
+      this.#database.exec(
+        "ALTER TABLE learners ADD COLUMN placement_evidence TEXT NOT NULL DEFAULT '[]'",
+      );
+    }
     const usageColumns = this.#database.pragma(
       "table_info(model_usage)",
     ) as { name: string }[];
@@ -235,10 +270,12 @@ export class SqliteLearningRepository implements LearningRepository {
       .prepare(
         `INSERT INTO learners (
           id, phone_hash, name, normalized_name, preferred_language,
-          current_concept, last_mastery, created_at, updated_at
+          current_concept, last_mastery, created_at, updated_at,
+          placement_level, placement_score, placement_total, placement_evidence
         ) VALUES (
           @id, @phoneHash, @name, @normalizedName, @preferredLanguage,
-          @currentConcept, @lastMastery, @createdAt, @updatedAt
+          @currentConcept, @lastMastery, @createdAt, @updatedAt,
+          @placementLevel, @placementScore, @placementTotal, @placementEvidenceJson
         )
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
@@ -246,11 +283,16 @@ export class SqliteLearningRepository implements LearningRepository {
           preferred_language = excluded.preferred_language,
           current_concept = excluded.current_concept,
           last_mastery = excluded.last_mastery,
+          placement_level = excluded.placement_level,
+          placement_score = excluded.placement_score,
+          placement_total = excluded.placement_total,
+          placement_evidence = excluded.placement_evidence,
           updated_at = excluded.updated_at`,
       )
       .run({
         ...learner,
         normalizedName: normalizeLearnerName(learner.name),
+        placementEvidenceJson: JSON.stringify(learner.placementEvidence),
       });
   }
 

@@ -18,6 +18,14 @@ const sciencePack = CurriculumPackSchema.parse({
     offlineLanguageHints: [],
     syllabus: "Example science syllabus",
   },
+  placementDiagnostic: {
+    ...fractionsPack.placementDiagnostic,
+    recommendations: {
+      foundational: "states_of_matter",
+      developing: "states_of_matter",
+      grade_ready: "states_of_matter",
+    },
+  },
   concepts: [
     {
       ...baseConcept,

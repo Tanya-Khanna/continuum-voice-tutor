@@ -128,14 +128,48 @@ describe("Realtime teaching controller", () => {
       (event) => sent.push(event),
     );
     const modeOutput = parseToolOutput(sent[2]!);
-    expect(modeOutput).toMatchObject({ ok: true, mode: "guided" });
-    expect(modeOutput.spoken_response).toContain("Which is the bigger share");
+    expect(modeOutput).toMatchObject({
+      ok: true,
+      mode: "guided",
+      placement_required: true,
+    });
+    expect(modeOutput.spoken_response).toContain("shared equally");
     expect(sent[3]).toMatchObject({
       type: "response.create",
       response: {
         instructions: expect.stringContaining("authoritative onboarding copy"),
       },
     });
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "call_placement",
+        name: "complete_placement",
+        arguments: {
+          answers: [
+            { question_id: "equal_shares", answer: "Each gets one half." },
+            {
+              question_id: "compare_halves_quarters",
+              answer: "One half, because two pieces are bigger pieces.",
+            },
+            {
+              question_id: "compare_thirds_fifths",
+              answer: "One third, because fewer pieces means bigger pieces.",
+            },
+          ],
+        },
+      }),
+      (event) => sent.push(event),
+    );
+    const placementOutput = parseToolOutput(sent[4]!);
+    expect(placementOutput).toMatchObject({
+      ok: true,
+      placement_required: false,
+      placement_level: "grade_ready",
+      placement_score: 3,
+      placement_total: 3,
+    });
+    expect(placementOutput.spoken_response).toContain("Which is the bigger share");
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -149,13 +183,13 @@ describe("Realtime teaching controller", () => {
       (event) => sent.push(event),
     );
 
-    const turnOutput = parseToolOutput(sent[4]!);
+    const turnOutput = parseToolOutput(sent[6]!);
     expect(turnOutput).toMatchObject({
       ok: true,
       language_mode: "hi-Latn+en",
       mastery_status: "needs_support",
     });
-    expect(sent[5]).toMatchObject({ type: "response.create" });
+    expect(sent[7]).toMatchObject({ type: "response.create" });
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -165,7 +199,7 @@ describe("Realtime teaching controller", () => {
       }),
       (event) => sent.push(event),
     );
-    const historyOutput = parseToolOutput(sent[6]!);
+    const historyOutput = parseToolOutput(sent[8]!);
     expect(historyOutput).toMatchObject({ ok: true, language_mode: "hi-Latn+en" });
     expect(historyOutput.spoken_response).toContain("Comparing unit fractions");
 
@@ -177,7 +211,7 @@ describe("Realtime teaching controller", () => {
       }),
       (event) => sent.push(event),
     );
-    const sandboxOutput = parseToolOutput(sent[8]!);
+    const sandboxOutput = parseToolOutput(sent[10]!);
     expect(sandboxOutput).toMatchObject({
       ok: true,
       mode: "curious_sandbox",

@@ -9,6 +9,7 @@ import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js"
 import type { TeachingEngine } from "../src/engine/teaching-engine.js";
 import { LessonService } from "../src/lesson/lesson-service.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
+import { buildDashboardSnapshot } from "../src/observability/dashboard.js";
 
 const temporaryDirectories: string[] = [];
 const PHONE_HASH_SECRET = "test-phone-secret-12345";
@@ -31,6 +32,86 @@ afterEach(() => {
 });
 
 describe("LessonService", () => {
+  it("persists curriculum-scored placement evidence", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const context = service.beginOrResume({
+      phoneNumber: "+91 99999 00001",
+      learnerName: "Placed Learner",
+    });
+    expect(service.requiresPlacement(context)).toBe(true);
+    expect(service.placementQuestions()).toHaveLength(3);
+
+    const completed = await service.completePlacement(context, [
+      { questionId: "equal_shares", answer: "Each gets half." },
+      {
+        questionId: "compare_halves_quarters",
+        answer: "One half, because there are fewer pieces.",
+      },
+      {
+        questionId: "compare_thirds_fifths",
+        answer: "One third, because fewer pieces are bigger pieces.",
+      },
+    ]);
+
+    expect(completed.result).toMatchObject({
+      level: "grade_ready",
+      score: 3,
+      total: 3,
+      recommendedConcept: "comparing_unit_fractions",
+    });
+    expect(service.requiresPlacement(completed.context)).toBe(false);
+    expect(repository.findLearner(context.learner.id)).toMatchObject({
+      placementLevel: "grade_ready",
+      placementScore: 3,
+      placementTotal: 3,
+      placementEvidence: expect.arrayContaining([
+        "Question 1: correct with required evidence.",
+      ]),
+    });
+    const placementSnapshot = buildDashboardSnapshot({
+      repository,
+      curriculumPack: fractionsPack,
+    });
+    expect(placementSnapshot.sessions[0]?.placement).toMatchObject({
+      level: "grade_ready",
+      score: 3,
+      total: 3,
+    });
+    repository.close();
+  });
+
+  it("starts a foundational learner at the recommended concept", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const context = service.beginOrResume({
+      phoneNumber: "+91 99999 00002",
+      learnerName: "Foundation Learner",
+    });
+    const completed = await service.completePlacement(context, [
+      { questionId: "equal_shares", answer: "I do not know." },
+      { questionId: "compare_halves_quarters", answer: "Maybe one fourth." },
+      { questionId: "compare_thirds_fifths", answer: "I am not sure." },
+    ]);
+
+    expect(completed.result.level).toBe("foundational");
+    expect(completed.context.session.concept).toBe("equal_shares");
+    expect(completed.context.session.lastPrompt).toContain("shared equally");
+    expect(completed.spokenResponse).toContain("Making equal shares");
+    repository.close();
+  });
+
+
   it("builds the voice menu from deployment subject metadata", () => {
     const geographyPack = CurriculumPackSchema.parse({
       ...fractionsPack,
@@ -271,6 +352,17 @@ describe("LessonService", () => {
               "I may be unsure, but we can reason together. What do you think?",
             follow_up_question: "What do you think?",
             should_end_session: false,
+          },
+        };
+      },
+      async evaluatePlacement(request) {
+        return {
+          value: {
+            checks: request.answers.map((answer) => ({
+              question_id: answer.questionId,
+              correct: true,
+              evidence: "correct with required evidence.",
+            })),
           },
         };
       },

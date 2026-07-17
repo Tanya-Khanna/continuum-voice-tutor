@@ -52,6 +52,12 @@ describe("mission-control snapshot", () => {
     expect(snapshot.sessions[0]).toMatchObject({
       learner_ref: expect.stringMatching(/^learner_[a-f0-9]{10}$/u),
       turn_count: 1,
+      placement: {
+        level: "unplaced",
+        score: 0,
+        total: 0,
+        evidence: [],
+      },
       usage: expect.objectContaining({
         request_count: 1,
         total_tokens: 240,

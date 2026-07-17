@@ -37,6 +37,8 @@ Run the placement diagnostic:
 npm run diagnostic
 ```
 
+The CLI command is the zero-credit deterministic adapter. In a live call, a first-time guided learner hears the same pack-defined questions before teaching. GPT-5.6 judges meaning across languages, while application code derives the score, placement level, and valid recommended concept. The result, score, and per-question evidence persist on the learner profile.
+
 ## Verify the build
 
 ```bash
@@ -62,13 +64,15 @@ It currently covers Hindi/English, Spanish/English, and French/English code-swit
 
 `npm run eval:live-sandbox` intentionally spends one small Luna request to verify that a Spanish-English current-information question is tagged correctly, treated as safe, and hedged with low certainty.
 
+`npm run eval:live-placement` spends one small Luna request to verify that semantically correct Spanish answers—not English keyword matches—produce a three-of-three, grade-ready placement.
+
 The separate `npm run eval:live-history` check validates one synthetic Hindi/English learning-history narration. Realtime exposes this capability through `get_learning_history` after the caller selects their name.
 
 ## Phone architecture
 
 For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Nomad accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
 
-Realtime asks the learner's name and calls `start_lesson`. The server returns a menu built from `deployment.subject`—currently guided Math or Curious Sandbox—and Realtime calls `choose_learning_mode` with the explicit choice. A server guard prevents a guided teaching call before that choice. Realtime may translate this non-decision onboarding copy into the caller's language, but it may not change the options or question meaning.
+Realtime asks the learner's name and calls `start_lesson`. The server returns a menu built from `deployment.subject`—currently guided Math or Curious Sandbox—and Realtime calls `choose_learning_mode` with the explicit choice. A server guard prevents a guided teaching call before that choice. A first-time guided learner must then complete the curriculum's placement questions through `complete_placement`; teaching remains blocked until the result is stored. Realtime may translate this non-decision onboarding copy into the caller's language, but it may not change the options or question meaning.
 
 Every later guided learner answer must call `get_teaching_turn`; the server runs the frozen-pack teaching engine through GPT-5.6 Luna, persists the structured decision, and sends only the authoritative `spoken_response` back for Realtime to say. Asking for a name on every call keeps siblings on a shared phone separate, while phone number plus name resumes the correct interrupted lesson.
 

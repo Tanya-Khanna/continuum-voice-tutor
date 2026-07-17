@@ -19,7 +19,10 @@ await new Promise<void>((resolve, reject) => {
     reject(new Error("Realtime smoke test timed out."));
   }, 20_000);
   let inputSent = false;
-  let startLessonRouted = false;
+  let expectedTool:
+    | "start_lesson"
+    | "choose_learning_mode"
+    | "complete_placement" = "start_lesson";
 
   function finish(error?: Error): void {
     clearTimeout(timeout);
@@ -90,20 +93,20 @@ await new Promise<void>((resolve, reject) => {
         finish(new Error("Realtime response contained no function call."));
         return;
       }
-      if (!startLessonRouted && functionCall.name !== "start_lesson") {
+      if (functionCall.name !== expectedTool) {
         finish(
           new Error(
-            "Realtime did not route the learner name to start_lesson.",
+            `Realtime routed to ${functionCall.name ?? "no named tool"}, expected ${expectedTool}.`,
           ),
         );
         return;
       }
-      if (!startLessonRouted) {
-        if (!functionCall.call_id) {
-          finish(new Error("start_lesson returned no call ID."));
-          return;
-        }
-        startLessonRouted = true;
+      if (!functionCall.call_id) {
+        finish(new Error(`${expectedTool} returned no call ID.`));
+        return;
+      }
+      if (expectedTool === "start_lesson") {
+        expectedTool = "choose_learning_mode";
         socket.send(
           JSON.stringify({
             type: "conversation.item.create",
@@ -137,15 +140,64 @@ await new Promise<void>((resolve, reject) => {
         );
         return;
       }
-      if (functionCall.name !== "choose_learning_mode") {
-        finish(
-          new Error(
-            "Realtime did not route the menu choice to choose_learning_mode.",
-          ),
+      if (expectedTool === "choose_learning_mode") {
+        expectedTool = "complete_placement";
+        socket.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "function_call_output",
+              call_id: functionCall.call_id,
+              output: JSON.stringify({
+                ok: true,
+                mode: "guided",
+                placement_required: true,
+                placement_questions: [
+                  {
+                    id: "equal_shares",
+                    prompt: "What share does each of two people receive?",
+                  },
+                  {
+                    id: "compare_halves_quarters",
+                    prompt: "Which is larger, one half or one fourth, and why?",
+                  },
+                  {
+                    id: "compare_thirds_fifths",
+                    prompt: "Which is larger, one third or one fifth, and why?",
+                  },
+                ],
+                spoken_response:
+                  "What share does each of two people receive?",
+              }),
+            },
+          }),
+        );
+        socket.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "message",
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: "My placement answers are: equal_shares: one half; compare_halves_quarters: one half because fewer pieces are bigger; compare_thirds_fifths: one third because fewer pieces are bigger.",
+                },
+              ],
+            },
+          }),
+        );
+        socket.send(
+          JSON.stringify({
+            type: "response.create",
+            response: { output_modalities: ["text"] },
+          }),
         );
         return;
       }
-      console.log(`Realtime text-only name and menu routing passed on ${model}.`);
+      console.log(
+        `Realtime text-only name, menu, and placement routing passed on ${model}.`,
+      );
       finish();
     }
   });

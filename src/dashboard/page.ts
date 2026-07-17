@@ -220,6 +220,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       const analysis = text('aside', '', 'analysis'); analysis.append(text('div', 'Teaching intelligence', 'section-label'));
       addCard(analysis, 'Latest diagnosis', latest?.diagnosis ?? session.last_diagnosis);
       addCard(analysis, 'Latest mode', latest?.mode === 'curious_sandbox' ? 'Curious Sandbox · mastery not assessed' : 'Guided curriculum');
+      addCard(analysis, 'Placement', session.placement.level === 'unplaced' ? 'Pending' : session.placement.level.replaceAll('_', ' ') + ' · ' + session.placement.score + '/' + session.placement.total);
       addCard(analysis, 'Mastery evidence', latest?.mastery_evidence ?? session.mastery_evidence);
       addCard(analysis, 'Next strategy', latest?.next_strategy ?? 'awaiting first answer');
       addCard(analysis, 'Model route', latest?.model_route ?? 'pending', 'route');

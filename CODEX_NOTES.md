@@ -235,3 +235,15 @@
 - Verified the menu is not Math-hardcoded by loading an example Geography deployment and observing `guided Geography` without engine changes.
 - Extended the live text-only Realtime smoke through both `start_lesson` and `choose_learning_mode`; GPT-Realtime-2.1 Mini routed both correctly.
 - Verification: 53 of 53 automated tests, live Realtime name+menu routing, 25 of 25 deterministic teaching evals, and strict TypeScript pass.
+
+## 2026-07-17 — Persisted semantic placement in the call flow
+
+- Added persistent placement level, score, total, and per-question evidence to learner profiles with a backward-compatible SQLite migration.
+- Guided mode now returns the curriculum pack's placement questions for every unplaced learner and blocks teaching until `complete_placement` succeeds.
+- Realtime retains faithful answers and submits them; it never scores, rewrites, or answers the diagnostic itself.
+- Live GPT-5.6 evaluates semantic answer/reasoning evidence across arbitrary languages. Trusted application code validates question IDs, computes the score and level, and selects only a pack-declared concept.
+- The zero-credit engine keeps deterministic signal scoring for repeatable local tests without pretending those signals are a universal language evaluator.
+- Added a real foundational equal-shares concept. Learners without fraction evidence now begin there, while grade-ready learners begin at unit-fraction comparison.
+- Placement level reaches each teaching request for pace/scaffold adaptation and is displayed with evidence in mission control.
+- Extended the live Realtime smoke through name, menu, and placement tool routing. A separate live Luna Spanish placement gate passed three of three as grade-ready.
+- Verification: 56 of 56 automated tests, 25 of 25 deterministic teaching evals, live Realtime three-tool routing, 1 of 1 live Spanish placement gate, backward-compatible database migration, and strict TypeScript pass.

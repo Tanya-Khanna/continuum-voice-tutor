@@ -250,6 +250,101 @@ export const fractionsPack = CurriculumPackSchema.parse({
           "What do the three and four tell us about how many equal pieces each whole was split into?",
       },
     },
+    {
+      id: "equal_shares",
+      title: "Making equal shares",
+      grade: 6,
+      learningObjective:
+        "Explain that one half is one of two equal shares of the same whole.",
+      verifiedFacts: [
+        "Equal shares of the same whole have the same size.",
+        "One of two equal shares is one half.",
+        "Two halves make one whole.",
+      ],
+      verifiedRationalComparisons: [
+        {
+          id: "two_halves_equal_one_whole",
+          claim: "Two halves make one whole.",
+          left: { numerator: 2, denominator: 2 },
+          relation: "eq",
+          right: { numerator: 1, denominator: 1 },
+        },
+      ],
+      misconceptions: [
+        {
+          id: "two_parts_are_automatically_halves",
+          signals: [
+            "any two pieces",
+            "two pieces means half",
+            "does not matter if equal",
+          ],
+          diagnosis:
+            "The learner calls two unequal pieces halves without checking equal size.",
+          strategy: "contrast_cases",
+          masteryEvidence:
+            "The learner identified the number of pieces but not the equal-share condition.",
+          responseLead:
+            "Two pieces are not always two halves, so let us compare two ways of sharing.",
+          nextQuestion:
+            "If one person gets a tiny piece and another gets a large piece, did they receive equal halves? Why not?",
+        },
+      ],
+      concreteAnalogies: [
+        "Fold one sheet so both edges meet, then compare the two parts.",
+        "Share one same-sized flatbread equally between two people.",
+      ],
+      retrievalQuestions: [
+        "What must be true before two pieces can be called halves?",
+        "If two people receive equal shares of one whole, what fraction does each receive?",
+      ],
+      teachingScaffold: {
+        entryQuestion:
+          "One flatbread is shared equally between two people. What share does each person receive, and what makes the sharing fair?",
+        silenceQuestion:
+          "If you fold a sheet so its two edges meet, how many equal parts do you see?",
+        silenceResponseLead: "That is okay. Let us make it concrete.",
+        answerRequestSignals: [
+          "just tell",
+          "give me the answer",
+          "answer bata",
+          "bas bata",
+        ],
+        answerRequestDiagnosis:
+          "The learner requested the fraction name without reasoning about equality.",
+        answerRequestEvidence: "No equal-share reasoning was provided.",
+        answerRequestResponseLead:
+          "I will help you see it instead of asking you to memorize it.",
+        answerRequestQuestion:
+          "What would you check to make sure both people received the same amount?",
+        evidenceRules: [
+          {
+            answerSignals: ["one half", "one-half", "half", "aadha", "आधा"],
+            reasoningSignals: [
+              "equal",
+              "same size",
+              "same amount",
+              "fair",
+              "barabar",
+            ],
+            diagnosis:
+              "The learner connects the fraction one half with two equal shares.",
+            masteryEvidence:
+              "The learner named one half and justified it using equal size.",
+            responseLead:
+              "Exactly. One half means one of two equal shares of the same whole.",
+            nextQuestion:
+              "If the two pieces are different sizes, can either piece be called one half? Why?",
+          },
+        ],
+        fallbackDiagnosis:
+          "The response does not yet show that the learner understands equal shares.",
+        fallbackEvidence:
+          "The learner has not connected the word half with two equal parts.",
+        fallbackResponseLead: "Let us focus on the word equal.",
+        fallbackQuestion:
+          "How could you check whether both pieces are exactly the same size?",
+      },
+    },
   ],
 });
 

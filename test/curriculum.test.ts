@@ -51,4 +51,19 @@ describe("frozen fractions curriculum", () => {
       }),
     ).toThrow(/false/u);
   });
+
+  it("rejects placement recommendations for missing concepts", () => {
+    expect(() =>
+      CurriculumPackSchema.parse({
+        ...fractionsPack,
+        placementDiagnostic: {
+          ...fractionsPack.placementDiagnostic,
+          recommendations: {
+            ...fractionsPack.placementDiagnostic.recommendations,
+            foundational: "missing_concept",
+          },
+        },
+      }),
+    ).toThrow(/not a curriculum concept/u);
+  });
 });

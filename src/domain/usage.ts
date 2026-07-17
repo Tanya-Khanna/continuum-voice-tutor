@@ -4,6 +4,7 @@ export const UsageSourceSchema = z.enum([
   "responses_teaching",
   "responses_history",
   "responses_sandbox",
+  "responses_placement",
   "realtime",
 ]);
 

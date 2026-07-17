@@ -159,6 +159,18 @@ const CurriculumPackBaseSchema = z.object({
 
 export const CurriculumPackSchema = CurriculumPackBaseSchema.superRefine(
   (pack, context) => {
+    const conceptIds = new Set(pack.concepts.map((concept) => concept.id));
+    for (const [level, conceptId] of Object.entries(
+      pack.placementDiagnostic.recommendations,
+    )) {
+      if (!conceptIds.has(conceptId)) {
+        context.addIssue({
+          code: "custom",
+          path: ["placementDiagnostic", "recommendations", level],
+          message: `Placement recommendation ${conceptId} is not a curriculum concept.`,
+        });
+      }
+    }
     for (const [conceptIndex, concept] of pack.concepts.entries()) {
       for (const [comparisonIndex, comparison] of
         concept.verifiedRationalComparisons.entries()) {
