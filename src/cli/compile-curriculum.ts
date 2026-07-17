@@ -1,7 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { OpenAICurriculumCompiler } from "../compiler/openai-curriculum-compiler.js";
-import { CurriculumSourceBriefSchema } from "../compiler/schema.js";
+import {
+  CurriculumSourceBriefDraftSchema,
+  CurriculumSourceBriefSchema,
+} from "../compiler/schema.js";
 import { loadEnvironment, requireOpenAIKey } from "../config/env.js";
 
 function argument(flag: string): string {
@@ -14,9 +17,15 @@ function argument(flag: string): string {
 const sourcePath = resolve(argument("--source"));
 const outputPath = resolve(argument("--out"));
 const environment = loadEnvironment();
-const sourceBrief = CurriculumSourceBriefSchema.parse(
-  JSON.parse(readFileSync(sourcePath, "utf8")) as unknown,
-);
+const sourceDocument = JSON.parse(readFileSync(sourcePath, "utf8")) as unknown;
+const draftBrief = CurriculumSourceBriefDraftSchema.parse(sourceDocument);
+const approvedBrief = CurriculumSourceBriefSchema.safeParse(draftBrief);
+if (!approvedBrief.success) {
+  throw new Error(
+    `Curriculum source brief ${draftBrief.id} is pending human review. Run curriculum:brief:check and add an approval receipt before spending model credit.`,
+  );
+}
+const sourceBrief = approvedBrief.data;
 const compiler = new OpenAICurriculumCompiler({
   apiKey: requireOpenAIKey(environment),
   compilerModel: environment.OPENAI_COMPILER_MODEL,

@@ -20,7 +20,15 @@ The offline language detector is deliberately a configurable test adapter; it do
 
 `npm run curriculum:compile -- --source reviewed-source.json --out frozen-pack.json` runs a build-time GPT-5.6 Terra compiler followed by an independent verifier pass. The source brief must include official-source URLs, reviewed themes, bounded required concepts, local-context notes, and explicit originality requirements. Source prose is used only for scope; learner-facing questions and explanations must be original.
 
-The command writes nothing unless the generated pack passes the full schema and the verifier reports no errors. Output is create-only, carries trusted provenance attached by application code, and is never fetched or changed during a live lesson. Do not run this command on an unreviewed source brief merely to produce more subjects quickly.
+Four pending India Grade 6 briefs for Science, English, History, and Geography live under `curriculum/source-briefs/drafts`. They point to official NCERT/CIET ePathshala resources and encode subject-specific voice teaching ideas, but they are deliberately not approved curriculum. Check one without using API credit:
+
+```bash
+npm run curriculum:brief:check -- --source curriculum/source-briefs/drafts/india-grade6-science-materials.json
+```
+
+The checker validates draft structure and exits with status 2 while review is pending. The paid compiler fails before its first model request unless a named, dated human approval receipt covers the exact set of source URLs. That receipt is preserved in compiled-pack provenance alongside compiler and verifier model routes.
+
+The compiler writes nothing unless the approved source brief, generated pack schema, required vocabulary, and independent verifier all pass. Output is create-only and never fetched or changed during a live lesson. The review checklist and receipt shape are documented in [`curriculum/source-briefs/README.md`](curriculum/source-briefs/README.md); do not approve a brief without opening every listed official source.
 
 Source briefs may provide `requiredVocabulary`. Trusted application code checks concept ID, canonical term, term language, and reviewed spoken meaning exactly after compilation and before verification; a model cannot silently replace a required curriculum term with a plausible alternative.
 

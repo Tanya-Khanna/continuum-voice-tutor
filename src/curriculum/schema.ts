@@ -110,17 +110,35 @@ export const CurriculumConceptSchema = z.object({
 const CurriculumPackBaseSchema = z.object({
   id: z.string().min(1),
   version: z.string().min(1),
-  provenance: z.object({
-    method: z.enum(["hand_verified", "compiled"]),
-    sourceMaterials: z.array(
-      z.object({
-        title: z.string().min(1),
-        url: z.string().url(),
+  provenance: z.discriminatedUnion("method", [
+    z.object({
+      method: z.literal("hand_verified"),
+      sourceMaterials: z.array(
+        z.object({
+          title: z.string().min(1),
+          url: z.string().url(),
+        }),
+      ),
+    }),
+    z.object({
+      method: z.literal("compiled"),
+      sourceMaterials: z
+        .array(
+          z.object({
+            title: z.string().min(1),
+            url: z.string().url(),
+          }),
+        )
+        .min(1),
+      generatedByModel: z.string().min(1),
+      verifiedByModel: z.string().min(1),
+      humanReview: z.object({
+        reviewedBy: z.string().trim().min(1),
+        reviewedAt: z.string().datetime(),
+        scopeNotes: z.array(z.string().min(1)).min(1),
       }),
-    ),
-    generatedByModel: z.string().min(1).optional(),
-    verifiedByModel: z.string().min(1).optional(),
-  }),
+    }),
+  ]),
   deployment: z.object({
     country: z.string().min(1),
     countryCode: z.string().regex(/^[A-Z]{2}$/u),

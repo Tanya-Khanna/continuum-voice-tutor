@@ -99,6 +99,11 @@ export class OpenAICurriculumCompiler {
         })),
         generatedByModel: this.#compilerModel,
         verifiedByModel: this.#verifierModel,
+        humanReview: {
+          reviewedBy: brief.review.reviewedBy,
+          reviewedAt: brief.review.reviewedAt,
+          scopeNotes: brief.review.scopeNotes,
+        },
       },
     });
     assertRequiredVocabulary(brief, pack);

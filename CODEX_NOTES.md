@@ -371,3 +371,11 @@
 - Ran all 24 cases together afterward. The authoritative complete report passed 24 of 24 in one run: fourteen semantic teaching turns, ten orchestration results, zero execution errors, and zero failed trusted or evaluator checks.
 - The complete run recorded 78,232 input and 13,674 output text tokens. Its Git-ignored report is the artifact Mission Control reads; the paid result is runtime evidence, not a checked-in fixture.
 - F51 is now complete for the reviewed flagship deployment. Model behavior remains probabilistic, so future prompt, model, curriculum, or schema changes must rerun the full suite rather than relying on this historical pass.
+
+## 2026-07-17 — Human-gated four-subject curriculum preparation
+
+- Added separate pending and approved source-brief contracts. Drafts can be checked for free, while the paid compiler now fails before its first model request unless a named, dated approval receipt covers every source URL and no unlisted source.
+- Compiled-pack provenance now requires and preserves the human reviewer, review time, and scope notes in addition to compiler/verifier model routes. Subject metadata mismatches fail before generation.
+- Prepared pending official-source briefs for Science materials, English oral narratives, History timelines/sources, and Geography maps using NCERT/CIET ePathshala pages. Each includes reviewed-vocabulary candidates, safe subject flavor, originality rules, and explicit excluded risks; none is presented as approved.
+- Added `curriculum:brief:check` plus a reviewer checklist. All four drafts validate and intentionally exit locked. No model credit was used and no extra subject pack or five-subject menu claim was made.
+- Verification: 91 of 91 automated tests, 25 of 25 deterministic teaching cases, strict TypeScript pass, and clean diff validation.

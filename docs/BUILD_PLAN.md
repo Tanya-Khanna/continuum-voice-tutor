@@ -240,11 +240,15 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   every teaching decision as structured JSON per turn**: {learner_id, concept, learner_answer, diagnosis,
   language_mode, next_strategy, mastery_status, mastery_evidence, next_question}. Luna/Terra converse; Sol on
   diagnosis/compile turns. GPT-5.6 stays central regardless of realtime model availability.
-- **F37 Controlled curriculum grounding** — tutor teaches ONLY from frozen verified packs; personalizes HOW,
-  never invents WHAT. No live web search mid-call, ever.
-- **F38/F39 Curriculum Compiler** (build-time pipeline) — reads official Grade 6 syllabi + past-exam THEMES for
+- **F37 Controlled curriculum grounding** — ~~tutor teaches ONLY from frozen verified packs; personalizes HOW,
+  never invents WHAT. No live web search mid-call, ever~~ ✅.
+- **F38/F39 Curriculum Compiler** (build-time pipeline) — ~~reads official Grade 6 syllabus themes for
   structure/topics only; **generates ORIGINAL explanations and questions (G3 — licensing rule)**; GPT-5.6 compiles →
-  verifier-agent pass → builder spot-check → freeze. Fractions stays hand-built. Fallback: flavored sandbox.
+  verifier-agent pass → builder spot-check → freeze. Fractions stays hand-built. Pending briefs validate without
+  model spend, compilation requires an exact named/dated human source-review receipt, and that receipt survives in
+  frozen-pack provenance~~ ✅. Four official-source draft briefs are prepared but remain deliberately locked pending
+  builder review; the five-subject F21 milestone is not complete until they are approved, compiled, spot-checked,
+  frozen, and routed through the voice menu.
 - **F52 Computed math truth** — ~~safe bounded rational-comparison claims are verified in application code by
   cross-multiplication before a frozen pack loads; false declared comparisons fail closed, without `eval` or
   model-authored code~~ ✅. Extend the numeric contract as new math operation types enter reviewed packs.
@@ -369,7 +373,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
-- ~~Curriculum Compiler scaffold: provenance-bearing reviewed source brief → GPT-5.6 Terra original draft → independent verifier → create-only frozen pack~~ ✅. Live runs for Science, English, History, and Geography remain open until official-source briefs are reviewed; builder spot-check remains mandatory before each freeze.
+- ~~Curriculum Compiler scaffold: provenance-bearing reviewed source brief → GPT-5.6 Terra original draft → independent verifier → create-only frozen pack; pending/approved review states, exact-source receipts, and four official NCERT/CIET draft briefs for Science, English, History, and Geography are now wired~~ ✅. Live runs remain open until the builder reviews each draft; post-generation spot-check remains mandatory before each freeze.
 - ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
 **Afternoon:**
 - ~~Metadata-driven voice onboarding and universal Curious Sandbox choice~~ ✅ *(the active pack now exposes Math; four reviewed subject packs remain before the menu can list all five)*.
@@ -379,7 +383,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Dashboard skeleton plus deterministic eval-results view and evidence-based per-call token/cost accounting (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, per-turn model route, raw Responses/Realtime usage, and exact-model dated rates)~~ ✅.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
-- **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
+- **📦 Features landing today:** ~~F38/F39 Curriculum Compiler + G3 originality rule~~ ✅ · ~~F37 frozen-pack grounding (formalized)~~ ✅ · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
