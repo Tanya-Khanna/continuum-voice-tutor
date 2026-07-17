@@ -36,7 +36,7 @@
 
 ### Still open
 
-- Fund the OpenAI API and run one controlled live Responses request.
+- Run controlled Terra and Sol smoke checks only if they materially affect routing.
 - Finish Twilio onboarding only when the D2 gate calls for it; buy/configure the number and SIP trunk then.
 - Measure phone latency, tune VAD/barge-in, and verify disconnect/resume on a real call.
 
@@ -58,6 +58,15 @@
 - Build the 8–10 minute lesson arc and retrieval callback loop.
 - Add the remaining four Grade 6 subject packs and curriculum compiler.
 - Finish the real phone pipeline, latency measurement, VAD/barge-in tuning, and live disconnect/resume proof.
+
+## 2026-07-17 — First live GPT-5.6 API check
+
+- Builder added $5 of prepaid OpenAI API credit and kept auto-recharge off.
+- Created a restricted project key with model-list read access plus Responses and Realtime request access.
+- Stored the key only in local `.env`; verified the file is ignored by Git and set its permissions to owner-only.
+- Ran one GPT-5.6 Luna Responses API call with Structured Outputs.
+- The live model correctly diagnosed the larger-denominator misconception and selected a concrete roti analogy.
+- No Realtime audio request has run yet; the phone/audio gate remains open.
 
 ## 2026-07-16 — Universal-product correction
 

@@ -268,14 +268,13 @@ credits are CODEX credits — they extend Codex usage, do NOT upgrade model acce
 apply to the API. Verify: ① your ChatGPT plan tier (Sol in Codex reportedly needs Pro+; **Terra/Luna ARE GPT-5.6
 and fully satisfy the rules** — the "Sol is mandatory" forum claim is wrong) ② ~~which models Codex's picker actually
 offers you~~ ✅ *(Sol, Terra, and Luna available)* ③ platform.openai.com → Billing: ~~do credits appear on the API
-side?~~ ✅ *(none; $0 API balance — Codex credits are separate)* Payment method? **Set a hard API
-spend cap** (~$30–80 expected runtime cost for the week incl. judges' calls if credits are Codex-only) ④ Realtime
+side?~~ ✅ *(none initially; $5 of prepaid API credit added Jul 17 — Codex credits are separate)* ~~Payment method~~ ✅. **Use budget alerts and keep auto-recharge off** *(project budgets are soft alerts, not hard caps)* ④ Realtime
 API access on your API account. Consequences flow to routing (Terra-only mode if Sol gated) — the architecture
 absorbs every outcome; the point is knowing TONIGHT, not Friday noon.
 
-## 💰 API BUDGET: $20 HARD CAP (set tonight in platform.openai.com → Limits)
+## 💰 API BUDGET: $5 INITIAL PREPAID CREDIT · ADD UP TO $5 MORE ONLY IF NEEDED
 
-Live realtime voice audio is the only expensive thing (~$0.15–0.30/min); text tokens are near-free at this scale.
+Auto-recharge is off. Use project alerts at 50%, 80%, and 100%; the platform project budget is a soft alert, not a hard cutoff. Realtime voice is the main API expense; keep deterministic work offline, develop on Realtime Mini, and reserve full Realtime 2.1 for final-quality calls.
 **Burn rules:** ① iterate prompts/teaching logic in TEXT first (plain API calls, then the REPL) — voice only for
 latency, UX feel, and demos ② every live test call has a purpose ③ cost/call visible on dashboard from D2.
 
@@ -294,7 +293,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 ---
 
 ### 🌙 TONIGHT — Thu Jul 16, 10 PM (≤1 hour, then SLEEP)
-1. (20 min) **D0 checks above**: plan tier → ~~Codex model picker~~ ✅ → ~~API balance/credit-grant check~~ ✅ *(no API credits; funding deferred)* → payment method → **set $20 hard cap** → Realtime API access.
+1. (20 min) **D0 checks above**: plan tier → ~~Codex model picker~~ ✅ → ~~API balance/credit-grant check~~ ✅ → ~~payment method + $5 prepaid API credit~~ ✅ *(auto-recharge off)* → Realtime API access.
 2. (15 min) Create accounts if missing: ~~Twilio account created~~ ✅ *(onboarding/verification still in progress; paid upgrade remains deferred per D2 gate)* · ~~GitHub repo created private with MIT license~~ ✅ *([Tanya-Khanna/nomad-ai](https://github.com/Tanya-Khanna/nomad-ai))*.
 3. (10 min) Tell Claude the D0 findings → routing defaults get locked to reality.
 4. (5 min) Skim §1–§5 once. Then sleep — Friday is the most important day of the week.
@@ -303,7 +302,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 ### 📅 FRI Jul 17 — D1: PROVE THE PIPE (Codex: BEST model, HIGH reasoning all day — this is the novel engineering)
 **Morning (~9 AM):**
 - ~~Open THE main Codex session (this becomes the `/feedback` session — everything core happens here). First prompt: point it at this file + repo init + AGENTS.md + CODEX_NOTES.md skeleton.~~ ✅
-- Access checks in practice: first API call to each available GPT-5.6 variant; Realtime session hello-world; voice catalog listen-through (pick the warm voice; note accent options).
+- Access checks in practice: ~~first live structured-output API call to GPT-5.6 Luna~~ ✅ *(Jul 17; correct misconception diagnosis returned)*; Terra/Sol smoke checks; Realtime session hello-world; voice catalog listen-through (pick the warm voice; note accent options).
 - Twilio: buy US number, configure SIP trunk → OpenAI Realtime SIP connector.
 **Afternoon:**
 - The bridge: phone call → Twilio → SIP → Realtime → AI voice answers. G.711 8kHz confirmed.
