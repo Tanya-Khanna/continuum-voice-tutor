@@ -338,3 +338,11 @@
 - Every orchestration case still uses GPT-5.6 as a synthetic learner and independent evaluator. Trusted application assertions remain authoritative: a model evaluator cannot turn a failed state, isolation, routing, safety, or voice check into a pass.
 - Mission Control now distinguishes a complete 24-case green report from a passing targeted run, avoiding a misleading 24/24 claim.
 - Verification: 84 of 84 automated tests, all ten orchestration adapters in the zero-credit controlled-engine gate, 25 of 25 deterministic teaching cases, spend-refusal CLI smoke, and a one-of-one paid reconnect run. The reconnect run passed all four trusted checks with 659 input and 179 output text tokens; the paid full 24-case execution remains open.
+
+## 2026-07-17 — State-aware degraded-audio recovery
+
+- Added a zero-argument `recover_unclear_audio` Realtime tool and instructed the voice layer to use it whenever audio is missing, clipped, or too unclear for a faithful transcript. Partial guesses must never reach placement, teaching, history, or Sandbox tools.
+- The server, not the voice model, selects the pending recovery stage: learner identity, subject/Sandbox menu, first placement prompt, exact guided lesson question, or Sandbox curiosity prompt.
+- Recovery localizes only the neutral connection retry lead and preserves the pending prompt's meaning. It makes no teaching-engine request and leaves lesson turns, mastery, placement, and Sandbox history unchanged.
+- Existing close/pause and phone-plus-normalized-name resume behavior completes the drop-to-redial path; real packet-loss and noisy-line validation remains gated on the Twilio/SIP leg.
+- Verification: targeted Realtime SIP/controller tests cover all five recovery stages, exact guided-prompt continuity, specialized speech instructions, and zero state mutation; strict TypeScript passes.

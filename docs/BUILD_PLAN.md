@@ -163,8 +163,11 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   acknowledgment before the teaching tool call while GPT-5.6 remains the sole source of correctness, hints,
   explanation, and questions; GPT-5.6 request latency is measured and stored per interaction~~ ✅. Real phone
   mouth-to-ear latency measurement and tuning remain gated on the Twilio/SIP leg.
-- **F14 Connection-degradation recovery** — graceful "didn't catch that over the wire" + full session-state
-  machinery for drop→resume (demo's emotional peak).
+- **F14 Connection-degradation recovery** — ~~an explicit Realtime recovery tool handles missing, clipped, or
+  unclear audio without guessing: it restores the correct identity, menu, placement, guided-lesson, or Sandbox
+  prompt without calling the teaching engine or advancing persisted state; call close pauses the exact session and
+  phone plus normalized learner name resumes the pending question on redial~~ ✅. Real-carrier packet loss and noisy
+  G.711 behavior still require the Twilio/SIP phone leg.
 - **F15 Warm voice, ~20% slower** — voice config + cultural persona name (builder picks; folklore archetype,
   NOT real-person cosplay). Accent options → roadmap; check voice catalog D1.
 

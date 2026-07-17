@@ -304,6 +304,162 @@ describe("Realtime teaching controller", () => {
     repository.close();
   });
 
+  it("recovers unclear audio at the correct stage without advancing state", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+14155550109",
+      lessonService: service,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+    const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_identity",
+        name: "recover_unclear_audio",
+        arguments: {},
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      ok: true,
+      recovery_stage: "identity",
+      pending_prompt: "What name would you like me to use?",
+    });
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_start",
+        name: "start_lesson",
+        arguments: { learner_name: "Recovery Learner", language_mode: "es" },
+      }),
+      send,
+    );
+    const learnerId = parseToolOutput(sent.at(-2)!).learner_id as string;
+    const session = repository.findResumableLesson(learnerId)!;
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_menu",
+        name: "recover_unclear_audio",
+        arguments: {},
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      recovery_stage: "menu",
+      pending_prompt: expect.stringContaining("guided Math"),
+    });
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_guided_mode",
+        name: "choose_learning_mode",
+        arguments: { mode: "guided" },
+      }),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_placement",
+        name: "recover_unclear_audio",
+        arguments: {},
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      recovery_stage: "placement",
+      pending_prompt: service.placementQuestions()[0]!.prompt,
+    });
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_complete_placement",
+        name: "complete_placement",
+        arguments: {
+          answers: [
+            { question_id: "equal_shares", answer: "Each gets one half." },
+            {
+              question_id: "compare_halves_quarters",
+              answer: "One half because fewer pieces are bigger pieces.",
+            },
+            {
+              question_id: "compare_thirds_fifths",
+              answer: "One third because fewer pieces are bigger pieces.",
+            },
+          ],
+        },
+      }),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_teaching_turn",
+        name: "get_teaching_turn",
+        arguments: {
+          learner_answer:
+            "One fourth is bigger because four is bigger than three.",
+        },
+      }),
+      send,
+    );
+    const beforeRecovery = repository.findLesson(session.id)!;
+    const storedTurns = repository.listTurns(session.id).length;
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_guided",
+        name: "recover_unclear_audio",
+        arguments: {},
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      recovery_stage: "guided",
+      pending_prompt: beforeRecovery.lastPrompt,
+    });
+    expect(sent.at(-1)).toMatchObject({
+      type: "response.create",
+      response: {
+        instructions: expect.stringContaining("connection-recovery copy"),
+      },
+    });
+    expect(repository.findLesson(session.id)).toEqual(beforeRecovery);
+    expect(repository.listTurns(session.id)).toHaveLength(storedTurns);
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_sandbox_mode",
+        name: "choose_learning_mode",
+        arguments: { mode: "curious_sandbox" },
+      }),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "recover_sandbox",
+        name: "recover_unclear_audio",
+        arguments: {},
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      recovery_stage: "curious_sandbox",
+      pending_prompt: "What are you curious about?",
+    });
+    expect(repository.listSandboxTurns(session.id)).toHaveLength(0);
+
+    await controller.close();
+    repository.close();
+  });
+
   it("notifies exactly once after a normal guided recap", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({

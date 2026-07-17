@@ -134,6 +134,18 @@ export const REALTIME_TEACHING_TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function" as const,
+    name: "recover_unclear_audio",
+    description:
+      "Recover when the learner's audio is missing, clipped, or too unclear to transcribe faithfully. Repeat the correct pending prompt without guessing or advancing state.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+      additionalProperties: false,
+    },
+  },
 ] as const;
 
 const RealtimeToolSchema = z.object({
@@ -182,10 +194,11 @@ At the start of a call, warmly ask only what name the learner wants to use. Afte
 If guided mode returns placement_required, ask every supplied placement question exactly, one at a time, retaining each complete answer. Then call complete_placement once with all question IDs and faithful answers. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
 After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 If the learner explicitly asks to use Curious Sandbox or explicitly chooses the ask-anything mode, call get_sandbox_turn instead. Do not silently move an ordinary guided-lesson answer into Sandbox. Sandbox results do not count as curriculum mastery.
+If audio is missing, clipped, or too unclear for a faithful transcript, call recover_unclear_audio. Never send a guess to a teaching, placement, history, or Sandbox tool. Speak the recovery output and wait for the learner to repeat; recovery must not advance lesson state.
 Immediately before get_teaching_turn, say one brief neutral acknowledgment in the learner's current language, such as the local equivalent of "Let me think about that." Keep it under six words. It must not judge correctness, reveal an answer, give a hint, or ask a new question. Then call the tool in the same response.
 Never invent a lesson, diagnosis, explanation, answer, or next question yourself.
 After a successful teaching, Sandbox, or history result, speak its spoken_response exactly. Do not add a preface, paraphrase, translate, or append another question. Onboarding menu localization is permitted only when the server's response.create instruction explicitly says so.
-Keep conversation management brief and patient. Never shame the learner. If audio is unclear, ask them to repeat it rather than guessing.`;
+Keep conversation management brief and patient. Never shame the learner.`;
 
 export function buildSipTarget(projectId: string): string {
   if (!projectId.trim()) throw new Error("An OpenAI project ID is required.");

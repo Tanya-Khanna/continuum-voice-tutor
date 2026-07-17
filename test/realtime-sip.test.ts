@@ -40,6 +40,7 @@ describe("Realtime SIP boundary", () => {
       "get_teaching_turn",
       "get_learning_history",
       "get_sandbox_turn",
+      "recover_unclear_audio",
     ]);
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "brief neutral acknowledgment",
@@ -49,6 +50,9 @@ describe("Realtime SIP boundary", () => {
     );
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "explicit choice",
+    );
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "call recover_unclear_audio",
     );
   });
 

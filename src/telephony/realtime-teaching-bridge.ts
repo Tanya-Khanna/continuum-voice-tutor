@@ -27,6 +27,8 @@ const LearningModeArgumentsSchema = z.object({
   mode: z.enum(["guided", "curious_sandbox"]),
 });
 
+const EmptyArgumentsSchema = z.object({}).strict();
+
 const CompletePlacementArgumentsSchema = z.object({
   answers: z
     .array(
@@ -171,7 +173,7 @@ function toolOutputEvent(
 }
 
 function speakToolOutputEvent(
-  policy: "exact" | "localize_onboarding" = "exact",
+  policy: "exact" | "localize_onboarding" | "localize_recovery" = "exact",
 ): RealtimeClientEvent {
   return {
     type: "response.create",
@@ -179,7 +181,9 @@ function speakToolOutputEvent(
       instructions:
         policy === "exact"
           ? "The latest function output is authoritative. Speak its spoken_response exactly, with natural pronunciation. Add nothing before or after it, then wait for the learner."
-          : "The latest function output is authoritative onboarding copy. Say its spoken_response in the learner's current language, preserving every option and the question's meaning. Add nothing before or after it, then wait for the learner.",
+          : policy === "localize_onboarding"
+            ? "The latest function output is authoritative onboarding copy. Say its spoken_response in the learner's current language, preserving every option and the question's meaning. Add nothing before or after it, then wait for the learner."
+            : "The latest function output is authoritative connection-recovery copy. Briefly localize the retry lead into the learner's current language, then repeat pending_prompt faithfully without changing its meaning. Add nothing else, then wait for the learner.",
     },
   };
 }
@@ -275,7 +279,10 @@ export class RealtimeTeachingController {
 
     try {
       let output: Record<string, unknown>;
-      let speechPolicy: "exact" | "localize_onboarding" = "exact";
+      let speechPolicy:
+        | "exact"
+        | "localize_onboarding"
+        | "localize_recovery" = "exact";
       let completedLesson: CompletedGuidedLesson | undefined;
       if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
@@ -438,6 +445,44 @@ export class RealtimeTeachingController {
           );
           output = { ok: true, mode: "curious_sandbox", ...turn };
         }
+      } else if (call.name === "recover_unclear_audio") {
+        EmptyArgumentsSchema.parse(JSON.parse(call.arguments));
+        const retryLead =
+          "I did not catch that clearly over the connection. Please say it once more.";
+        let recoveryStage:
+          | "identity"
+          | "menu"
+          | "placement"
+          | "guided"
+          | "curious_sandbox";
+        let pendingPrompt: string;
+        if (!this.#context) {
+          recoveryStage = "identity";
+          pendingPrompt = "What name would you like me to use?";
+        } else if (!this.#learningMode) {
+          recoveryStage = "menu";
+          pendingPrompt = this.#lessonService.learningMenu(this.#context);
+        } else if (
+          this.#learningMode === "guided" &&
+          this.#lessonService.requiresPlacement(this.#context)
+        ) {
+          recoveryStage = "placement";
+          pendingPrompt = this.#lessonService.placementQuestions()[0]!.prompt;
+        } else if (this.#learningMode === "guided") {
+          recoveryStage = "guided";
+          pendingPrompt = this.#context.session.lastPrompt;
+        } else {
+          recoveryStage = "curious_sandbox";
+          pendingPrompt = "What are you curious about?";
+        }
+        output = {
+          ok: true,
+          recovery_stage: recoveryStage,
+          retry_lead: retryLead,
+          pending_prompt: pendingPrompt,
+          spoken_response: `${retryLead} ${pendingPrompt}`,
+        };
+        speechPolicy = "localize_recovery";
       } else {
         output = {
           ok: false,
