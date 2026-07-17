@@ -1,4 +1,6 @@
 import { createServer, type IncomingHttpHeaders } from "node:http";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import OpenAI from "openai";
 import { loadCurriculumPack } from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
@@ -17,6 +19,7 @@ import {
   rejectRealtimeCall,
 } from "./telephony/realtime-sip.js";
 import { RealtimeTeachingBridge } from "./telephony/realtime-teaching-bridge.js";
+import { SAMPLE_SESSION } from "./samples/sample-session.js";
 
 function headersFromIncoming(headers: IncomingHttpHeaders): Headers {
   const result = new Headers();
@@ -68,6 +71,56 @@ export const server = createServer(async (request, response) => {
         "Cache-Control": "no-store",
       });
       response.end(DASHBOARD_HTML);
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname === "/assets/sample-universal-code-switch.mp3"
+    ) {
+      const audio = await readFile(
+        resolve("public/samples/sample-universal-code-switch.mp3"),
+      );
+      const range = request.headers.range;
+      if (range) {
+        const match = /^bytes=(\d+)-(\d*)$/u.exec(range);
+        const start = Number(match?.[1]);
+        const requestedEnd = match?.[2] ? Number(match[2]) : audio.length - 1;
+        const end = Math.min(requestedEnd, audio.length - 1);
+        if (!match || !Number.isSafeInteger(start) || start < 0 || start > end) {
+          response.writeHead(416, {
+            "Content-Range": `bytes */${audio.length}`,
+          });
+          response.end();
+          return;
+        }
+        const chunk = audio.subarray(start, end + 1);
+        response.writeHead(206, {
+          "Content-Type": "audio/mpeg",
+          "Content-Length": chunk.length,
+          "Content-Range": `bytes ${start}-${end}/${audio.length}`,
+          "Accept-Ranges": "bytes",
+          "Cache-Control": "public, max-age=86400",
+        });
+        response.end(chunk);
+        return;
+      }
+      response.writeHead(200, {
+        "Content-Type": "audio/mpeg",
+        "Content-Length": audio.length,
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=86400",
+      });
+      response.end(audio);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/dashboard/sample") {
+      response.writeHead(200, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      });
+      response.end(JSON.stringify(SAMPLE_SESSION));
       return;
     }
 

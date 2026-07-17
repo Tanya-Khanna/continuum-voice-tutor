@@ -25,6 +25,7 @@ const EnvironmentSchema = z.object({
     .min(1)
     .default("gpt-realtime-2.1-mini"),
   OPENAI_REALTIME_VOICE: z.string().min(1).default("marin"),
+  OPENAI_SPEECH_MODEL: z.string().min(1).default("tts-1-hd"),
   OPENAI_WEBHOOK_SECRET: optionalNonEmpty,
   OPENAI_PROJECT_ID: optionalNonEmpty,
   TWILIO_ACCOUNT_SID: optionalNonEmpty,

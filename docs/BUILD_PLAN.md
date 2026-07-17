@@ -228,9 +228,9 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 **Trust, proof & product surface**
 - **F44 SMS recap** — post-session summary in the learner's language mode (G7); optional voice-registered parent
   number (G8).
-- **F45 Mission-control dashboard** — judges' window: ~~live transcript, per-turn model routing, diagnosis JSON,
-  mastery evidence, evidence-based cost/call (F43-lite), eval-results page, and anonymized learner IDs (G2)~~ ✅;
-  sample universal/code-switched session recording with synced transcript remains open.
+- **F45 Mission-control dashboard** — ~~judges' window with live transcript, per-turn model routing, diagnosis JSON,
+  mastery evidence, evidence-based cost/call (F43-lite), eval-results page, anonymized learner IDs (G2), and a
+  clearly labeled synthetic Spanish-English sample recording with click-to-seek synced transcript~~ ✅.
 - **F46 Child-safety guardrails** — ~~untrusted-input boundary, prompt-injection resistance, contact/address redaction before model + persistence, graceful off-topic/unsafe handling, repeated-abuse ending, deterministic + live evals, and documented deployment consent/retention limitations (G2)~~ ✅. *(Supervised prototype only; local emergency-language review and production retention enforcement remain pre-pilot requirements.)*
 - **G6 Abuse guard** — ~~HMAC-keyed per-caller sliding-window rate limit, concurrent-call protection, webhook replay idempotency, graceful repeated-abuse disengagement, and two jailbreak cases in the frozen eval~~ ✅.
 - **F51 Eval harness** — simulated-learner agent × evaluator agent (both GPT-5.6 — the multi-agent story). **24 cases:**
@@ -345,14 +345,14 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
-- Dashboard complete: ~~mirror view (live call transcript), eval-results page, anonymized IDs, cost/call~~ ✅; sample universal/code-switched recording + synced transcript remains.
+- ~~Dashboard complete: mirror view (live call transcript), eval-results page, anonymized IDs, cost/call, and universal code-switched sample recording + synced transcript~~ ✅.
 - SMS recap (language-matched) + optional parent number · per-number rate limiting.
 **Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. Stop the moment anything core wobbles.
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6, all beats incl. sandbox flash + language montage — spot-check montage languages in text first). Multiple takes; pick the best; upload unlisted.
 - ✍️ README (§8, all 11 sections + 2.5 + 7.5) + Devpost description + Judge Experience card with the real number. Distill CODEX_NOTES → README §6.
 - **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
-- **📦 Features landing today:** ~~F45 mirror, eval-results, cost/call F43-lite, and anonymized IDs G2~~ ✅ *(sample recording remains)* · F44 SMS recap + G7 language-matched · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
+- **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · F44 SMS recap + G7 language-matched · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
 
 ### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
 **Morning:**

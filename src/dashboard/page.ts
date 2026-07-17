@@ -84,6 +84,16 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .eval-row { display: grid; grid-template-columns: minmax(180px, 1fr) 160px 90px minmax(240px, 1.5fr); gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); align-items: center; }
     .pass { color: var(--lime); }
     .fail { color: var(--orange); }
+    .sample-view { margin-top: 18px; }
+    .sample-hero { padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .65fr); gap: 22px; align-items: center; }
+    audio { width: 100%; accent-color: var(--lime); }
+    .fixture { color: var(--muted); font-size: 12px; margin-top: 10px; }
+    .sample-transcript { border-top: 1px solid var(--line); padding: 20px; }
+    .sample-line { width: 100%; display: grid; grid-template-columns: 90px 100px minmax(0, 1fr); gap: 14px; text-align: left; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 12px; padding: 13px; cursor: pointer; }
+    .sample-line:hover { background: var(--panel-2); }
+    .sample-line.active { border-color: var(--lime); background: var(--panel-2); box-shadow: inset 3px 0 var(--lime); }
+    .sample-speaker { color: var(--blue); text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
+    .sample-line[data-speaker="nomad"] .sample-speaker { color: var(--lime); }
     [hidden] { display: none !important; }
     @media (max-width: 900px) {
       .shell { padding: 18px; }
@@ -101,6 +111,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       .hero-copy { grid-column: auto; }
       .eval-hero { grid-template-columns: 1fr; }
       .eval-row { grid-template-columns: 1fr; }
+      .sample-hero, .sample-line { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -116,6 +127,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         <nav class="tabs" aria-label="Dashboard views">
           <button class="tab" id="sessions-tab" type="button" aria-selected="true">Sessions</button>
           <button class="tab" id="evals-tab" type="button" aria-selected="false">Eval gate</button>
+          <button class="tab" id="sample-tab" type="button" aria-selected="false">Sample</button>
         </nav>
       </div>
     </header>
@@ -131,9 +143,12 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     <section class="panel eval-view" id="evals-view" hidden>
       <div class="empty">Running the zero-credit teaching gate…</div>
     </section>
+    <section class="panel sample-view" id="sample-view" hidden>
+      <div class="empty">Loading the sample exhibit…</div>
+    </section>
   </main>
   <script>
-    const state = { sessions: [], selected: null, evals: null, view: 'sessions' };
+    const state = { sessions: [], selected: null, evals: null, sample: null, view: 'sessions' };
     const text = (tag, value, className) => {
       const node = document.createElement(tag);
       if (className) node.className = className;
@@ -244,16 +259,59 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       }
       root.append(hero, list);
     }
+    function renderSample() {
+      const root = document.querySelector('#sample-view');
+      const sample = state.sample;
+      root.replaceChildren();
+      if (!sample) { root.append(text('div', 'Loading the sample exhibit…', 'empty')); return; }
+      const hero = text('div', '', 'sample-hero');
+      const copy = text('div', '', 'hero-copy');
+      copy.append(text('div', sample.languageModes.join(' · ') + ' / code-switching', 'eyebrow'));
+      copy.append(text('h2', sample.title));
+      copy.append(text('p', sample.description));
+      copy.append(text('div', sample.fixtureNotice + ' Audio: ' + sample.audioModel + '.', 'fixture'));
+      const playerWrap = text('div', '');
+      const player = document.createElement('audio');
+      player.controls = true;
+      player.preload = 'metadata';
+      player.src = sample.audioUrl;
+      player.setAttribute('aria-label', sample.title);
+      playerWrap.append(player);
+      hero.append(copy, playerWrap);
+      const transcript = text('div', '', 'sample-transcript');
+      transcript.append(text('div', 'Synced transcript', 'section-label'));
+      const lines = [];
+      for (const segment of sample.segments) {
+        const line = text('button', '', 'sample-line');
+        line.type = 'button';
+        line.dataset.speaker = segment.speaker;
+        line.append(text('span', segment.speaker, 'sample-speaker'));
+        line.append(text('span', segment.languageMode, 'route'));
+        line.append(text('span', segment.text));
+        line.addEventListener('click', () => { player.currentTime = segment.startMs / 1000; void player.play(); });
+        lines.push({ line, segment });
+        transcript.append(line);
+      }
+      player.addEventListener('timeupdate', () => {
+        const now = player.currentTime * 1000;
+        for (const item of lines) item.line.classList.toggle('active', now >= item.segment.startMs && now < item.segment.endMs);
+      });
+      root.append(hero, transcript);
+    }
     function selectView(view) {
       state.view = view;
       document.querySelector('#sessions-view').hidden = view !== 'sessions';
       document.querySelector('#evals-view').hidden = view !== 'evals';
+      document.querySelector('#sample-view').hidden = view !== 'sample';
       document.querySelector('#sessions-tab').setAttribute('aria-selected', String(view === 'sessions'));
       document.querySelector('#evals-tab').setAttribute('aria-selected', String(view === 'evals'));
+      document.querySelector('#sample-tab').setAttribute('aria-selected', String(view === 'sample'));
       if (view === 'evals') renderEvals();
+      if (view === 'sample') renderSample();
     }
     document.querySelector('#sessions-tab').addEventListener('click', () => selectView('sessions'));
     document.querySelector('#evals-tab').addEventListener('click', () => selectView('evals'));
+    document.querySelector('#sample-tab').addEventListener('click', () => selectView('sample'));
     async function refresh() {
       try {
         const response = await fetch('/api/dashboard/sessions', { cache: 'no-store' });
@@ -275,7 +333,17 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         state.evals = null;
       }
     }
-    refresh(); refreshEvals(); setInterval(refresh, 3000);
+    async function refreshSample() {
+      try {
+        const response = await fetch('/api/dashboard/sample', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Sample request failed');
+        state.sample = await response.json();
+        if (state.view === 'sample') renderSample();
+      } catch (error) {
+        state.sample = null;
+      }
+    }
+    refresh(); refreshEvals(); refreshSample(); setInterval(refresh, 3000);
   </script>
 </body>
 </html>`;

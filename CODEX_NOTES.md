@@ -204,3 +204,13 @@
 - Updated compiler and verifier instructions to require matching machine checks for numerical fraction claims.
 - Added a fail-closed regression proving that a pack declaring one fourth greater than one third is rejected.
 - Verification: 47 of 47 automated tests, 25 of 25 deterministic teaching evals, strict TypeScript, and curriculum Structured Outputs conversion pass.
+
+## 2026-07-17 — Universal code-switched sample exhibit
+
+- Added a reusable sample-session manifest whose language modes use the same arbitrary BCP-47-style tags as live teaching.
+- Created a 33-second Spanish-English Socratic misconception-and-transfer fixture with distinct synthetic learner and Nomad voices.
+- Labeled the exhibit explicitly as curated synthetic audio, not a child or live-call recording.
+- Added a dashboard Sample tab with native audio controls, active-line synchronization, and click-to-seek transcript rows.
+- Added a byte-range-capable audio endpoint so browser playback and seeking work reliably.
+- The official TTS-1 HD request was attempted but the restricted key returned missing scope `api.model.audio.request`; the checked-in asset therefore uses the documented zero-credit local system-voice fallback. The OpenAI regeneration path remains available after the key scope changes.
+- Verification: 49 of 49 automated tests, exact 32.65-second MP3 inspection, sample manifest/API checks, 206 byte-range smoke, dashboard HTML smoke, and strict TypeScript pass.

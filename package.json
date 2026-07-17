@@ -13,6 +13,7 @@
     "eval:live-history": "tsx src/evals/live-history-run.ts",
     "eval:live-safety": "tsx src/evals/live-safety-run.ts",
     "smoke:realtime": "tsx src/cli/realtime-smoke.ts",
+    "sample:audio": "tsx scripts/generate-sample-audio.ts",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
     "test": "vitest run",
