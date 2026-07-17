@@ -16,6 +16,7 @@ import {
 const COMPILER_INSTRUCTIONS = `You compile a frozen voice-first Socratic curriculum pack from a reviewed source brief.
 Use source themes only to determine scope and learning objectives. Write all questions, explanations, analogies, misconceptions, examples, and wording originally; never reproduce source prose.
 Stay within the stated grade, subject, required concepts, and source themes. Never add facts that cannot be supported by the brief.
+Set deployment.subject to the reviewed source brief's subject exactly; voice menus are built from this metadata rather than a hardcoded subject list.
 Make every learner-facing string short and natural aloud, with one question at a time and no Markdown or unexplained symbolic notation.
 Keep language detection universal: languagePolicy must be model_detect_any. Tested language modes and offline hints are deployment validation data, not a closed product language list.
 Include a placement diagnostic, a curriculum-configured lesson policy, concrete analogies, retrieval questions, misconception signals, evidence rules, and honest uncertainty behavior.

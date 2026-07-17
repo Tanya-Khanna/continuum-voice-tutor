@@ -32,6 +32,8 @@ export interface LessonContext {
   greeting: string;
 }
 
+export type CallLearningMode = "guided" | "curious_sandbox";
+
 export interface LessonServiceOptions {
   repository: LearningRepository;
   engine: TeachingEngine;
@@ -261,6 +263,16 @@ export class LessonService {
       },
       turn,
     };
+  }
+
+  learningMenu(context: LessonContext): string {
+    return `Welcome, ${context.learner.name}. Would you like guided ${this.#curriculumPack.deployment.subject}, or Curious Sandbox where you can ask anything?`;
+  }
+
+  modeGreeting(context: LessonContext, mode: CallLearningMode): string {
+    return mode === "guided"
+      ? context.greeting
+      : "Curious Sandbox is open. What are you curious about?";
   }
 
   pause(context: LessonContext): LessonContext {

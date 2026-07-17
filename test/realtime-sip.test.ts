@@ -23,6 +23,7 @@ describe("Realtime SIP boundary", () => {
     });
     expect(buildRealtimeAcceptPayload().tools.map((tool) => tool.name)).toEqual([
       "start_lesson",
+      "choose_learning_mode",
       "get_teaching_turn",
       "get_learning_history",
       "get_sandbox_turn",
@@ -32,6 +33,9 @@ describe("Realtime SIP boundary", () => {
     );
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "must not judge correctness",
+    );
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "explicit choice",
     );
   });
 

@@ -20,6 +20,10 @@ const SandboxTurnArgumentsSchema = z.object({
   learner_question: z.string().trim().min(1).max(2_000),
 });
 
+const LearningModeArgumentsSchema = z.object({
+  mode: z.enum(["guided", "curious_sandbox"]),
+});
+
 const FunctionCallItemSchema = z.object({
   type: z.literal("function_call"),
   name: z.string().min(1),
@@ -75,6 +79,8 @@ interface LessonOrchestrator {
   learningHistory: LessonService["learningHistory"];
   recordModelUsage: LessonService["recordModelUsage"];
   exploreSandbox: LessonService["exploreSandbox"];
+  learningMenu: LessonService["learningMenu"];
+  modeGreeting: LessonService["modeGreeting"];
 }
 
 export function usageFromRealtimeEvent(
@@ -141,12 +147,16 @@ function toolOutputEvent(
   };
 }
 
-function speakToolOutputEvent(): RealtimeClientEvent {
+function speakToolOutputEvent(
+  policy: "exact" | "localize_onboarding" = "exact",
+): RealtimeClientEvent {
   return {
     type: "response.create",
     response: {
       instructions:
-        "The latest function output is authoritative. Speak its spoken_response exactly, with natural pronunciation. Add nothing before or after it, then wait for the learner.",
+        policy === "exact"
+          ? "The latest function output is authoritative. Speak its spoken_response exactly, with natural pronunciation. Add nothing before or after it, then wait for the learner."
+          : "The latest function output is authoritative onboarding copy. Say its spoken_response in the learner's current language, preserving every option and the question's meaning. Add nothing before or after it, then wait for the learner.",
     },
   };
 }
@@ -169,6 +179,7 @@ export class RealtimeTeachingController {
   readonly #modelRoute: string;
   readonly #onError: (error: Error) => void;
   #context: LessonContext | undefined;
+  #learningMode: "guided" | "curious_sandbox" | undefined;
   #closed = false;
   #queue: Promise<void> = Promise.resolve();
   #pendingUsage: ModelUsage[] = [];
@@ -232,14 +243,16 @@ export class RealtimeTeachingController {
 
     try {
       let output: Record<string, unknown>;
+      let speechPolicy: "exact" | "localize_onboarding" = "exact";
       if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
         if (this.#context) {
           output = {
             ok: false,
             spoken_response:
-              "We already started this lesson. Please answer the question I just asked.",
+              "We already know your name. Please choose guided learning or Curious Sandbox.",
           };
+          speechPolicy = "localize_onboarding";
         } else {
           this.#context = this.#lessonService.beginOrResume({
             phoneNumber: this.#callerNumber,
@@ -252,8 +265,32 @@ export class RealtimeTeachingController {
             ok: true,
             learner_id: this.#context.learner.id,
             resumed: this.#context.resumed,
-            spoken_response: this.#context.greeting,
+            menu_options: ["guided", "curious_sandbox"],
+            spoken_response: this.#lessonService.learningMenu(this.#context),
           };
+          speechPolicy = "localize_onboarding";
+        }
+      } else if (call.name === "choose_learning_mode") {
+        const args = LearningModeArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        if (!this.#context) {
+          output = {
+            ok: false,
+            spoken_response:
+              "Before choosing a learning mode, what name would you like me to use?",
+          };
+        } else {
+          this.#learningMode = args.mode;
+          output = {
+            ok: true,
+            mode: args.mode,
+            spoken_response: this.#lessonService.modeGreeting(
+              this.#context,
+              args.mode,
+            ),
+          };
+          speechPolicy = "localize_onboarding";
         }
       } else if (call.name === "get_teaching_turn") {
         const args = TeachingTurnArgumentsSchema.parse(
@@ -265,6 +302,12 @@ export class RealtimeTeachingController {
             spoken_response:
               "Before we begin, what name would you like me to use?",
           };
+        } else if (this.#learningMode !== "guided") {
+          output = {
+            ok: false,
+            spoken_response: this.#lessonService.learningMenu(this.#context),
+          };
+          speechPolicy = "localize_onboarding";
         } else {
           const result = await this.#lessonService.respond(
             this.#context,
@@ -297,6 +340,7 @@ export class RealtimeTeachingController {
               "Before we open Curious Sandbox, what name would you like me to use?",
           };
         } else {
+          this.#learningMode = "curious_sandbox";
           const turn = await this.#lessonService.exploreSandbox(
             this.#context,
             args.learner_question,
@@ -312,7 +356,7 @@ export class RealtimeTeachingController {
       }
 
       send(toolOutputEvent(call.call_id, output));
-      send(speakToolOutputEvent());
+      send(speakToolOutputEvent(speechPolicy));
     } catch (error) {
       this.#onError(error instanceof Error ? error : new Error("Tool failed"));
       send(

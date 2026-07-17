@@ -10,6 +10,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
   deployment: {
     country: "India",
     countryCode: "IN",
+    subject: "Math",
     grade: 6,
     defaultLanguage: "en",
     languagePolicy: "model_detect_any",

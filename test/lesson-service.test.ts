@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { hashPhoneNumber } from "../src/domain/identity.js";
 import { fractionsPack } from "../src/curriculum/fractions.pack.js";
+import { CurriculumPackSchema } from "../src/curriculum/schema.js";
 import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js";
 import type { TeachingEngine } from "../src/engine/teaching-engine.js";
 import { LessonService } from "../src/lesson/lesson-service.js";
@@ -30,6 +31,28 @@ afterEach(() => {
 });
 
 describe("LessonService", () => {
+  it("builds the voice menu from deployment subject metadata", () => {
+    const geographyPack = CurriculumPackSchema.parse({
+      ...fractionsPack,
+      id: "example-geography-pack",
+      deployment: { ...fractionsPack.deployment, subject: "Geography" },
+    });
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(geographyPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: geographyPack,
+    });
+    const context = service.beginOrResume({
+      phoneNumber: "+91 99999 00000",
+      learnerName: "Map Learner",
+    });
+    expect(service.learningMenu(context)).toContain("guided Geography");
+    expect(service.learningMenu(context)).not.toContain("guided Math");
+    repository.close();
+  });
+
   it("keeps named learners separate on a shared phone", () => {
     const repository = new SqliteLearningRepository(makeDatabasePath());
     const service = new LessonService({

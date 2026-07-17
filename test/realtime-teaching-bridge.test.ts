@@ -111,11 +111,31 @@ describe("Realtime teaching controller", () => {
     const startOutput = parseToolOutput(sent[0]!);
     expect(startOutput).toMatchObject({ ok: true, resumed: false });
     expect(startOutput.spoken_response).toContain("Ravi");
+    expect(startOutput.spoken_response).toContain("guided Math");
+    expect(startOutput.menu_options).toEqual(["guided", "curious_sandbox"]);
     const startedSession = repository.findResumableLesson(
       startOutput.learner_id as string,
     );
     expect(startedSession).toBeDefined();
     expect(repository.listUsage(startedSession!.id)).toHaveLength(1);
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "call_mode",
+        name: "choose_learning_mode",
+        arguments: { mode: "guided" },
+      }),
+      (event) => sent.push(event),
+    );
+    const modeOutput = parseToolOutput(sent[2]!);
+    expect(modeOutput).toMatchObject({ ok: true, mode: "guided" });
+    expect(modeOutput.spoken_response).toContain("Which is the bigger share");
+    expect(sent[3]).toMatchObject({
+      type: "response.create",
+      response: {
+        instructions: expect.stringContaining("authoritative onboarding copy"),
+      },
+    });
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -129,13 +149,13 @@ describe("Realtime teaching controller", () => {
       (event) => sent.push(event),
     );
 
-    const turnOutput = parseToolOutput(sent[2]!);
+    const turnOutput = parseToolOutput(sent[4]!);
     expect(turnOutput).toMatchObject({
       ok: true,
       language_mode: "hi-Latn+en",
       mastery_status: "needs_support",
     });
-    expect(sent[3]).toMatchObject({ type: "response.create" });
+    expect(sent[5]).toMatchObject({ type: "response.create" });
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -145,7 +165,7 @@ describe("Realtime teaching controller", () => {
       }),
       (event) => sent.push(event),
     );
-    const historyOutput = parseToolOutput(sent[4]!);
+    const historyOutput = parseToolOutput(sent[6]!);
     expect(historyOutput).toMatchObject({ ok: true, language_mode: "hi-Latn+en" });
     expect(historyOutput.spoken_response).toContain("Comparing unit fractions");
 
@@ -157,7 +177,7 @@ describe("Realtime teaching controller", () => {
       }),
       (event) => sent.push(event),
     );
-    const sandboxOutput = parseToolOutput(sent[6]!);
+    const sandboxOutput = parseToolOutput(sent[8]!);
     expect(sandboxOutput).toMatchObject({
       ok: true,
       mode: "curious_sandbox",
@@ -203,6 +223,49 @@ describe("Realtime teaching controller", () => {
     );
 
     expect(send).toHaveBeenCalledTimes(2);
+    await controller.close();
+    repository.close();
+  });
+
+  it("does not teach before the caller chooses a learning mode", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+14155550101",
+      lessonService: service,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+    const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "start_before_mode",
+        name: "start_lesson",
+        arguments: { learner_name: "Mode Tester" },
+      }),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "teach_before_mode",
+        name: "get_teaching_turn",
+        arguments: { learner_answer: "One third." },
+      }),
+      send,
+    );
+
+    const blocked = parseToolOutput(sent[2]!);
+    expect(blocked).toMatchObject({ ok: false });
+    expect(blocked.spoken_response).toContain("guided Math");
+    const learnerId = parseToolOutput(sent[0]!).learner_id as string;
+    const session = repository.findResumableLesson(learnerId);
+    expect(repository.listTurns(session!.id)).toHaveLength(0);
     await controller.close();
     repository.close();
   });

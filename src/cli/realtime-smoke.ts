@@ -19,6 +19,7 @@ await new Promise<void>((resolve, reject) => {
     reject(new Error("Realtime smoke test timed out."));
   }, 20_000);
   let inputSent = false;
+  let startLessonRouted = false;
 
   function finish(error?: Error): void {
     clearTimeout(timeout);
@@ -79,13 +80,17 @@ await new Promise<void>((resolve, reject) => {
     }
     if (event.type === "response.done") {
       const functionCall = event.response?.output?.find(
-        (item): item is { type: string; name?: string } =>
+        (item): item is { type: string; name?: string; call_id?: string } =>
           typeof item === "object" &&
           item !== null &&
           "type" in item &&
           item.type === "function_call",
       );
-      if (functionCall?.name !== "start_lesson") {
+      if (!functionCall) {
+        finish(new Error("Realtime response contained no function call."));
+        return;
+      }
+      if (!startLessonRouted && functionCall.name !== "start_lesson") {
         finish(
           new Error(
             "Realtime did not route the learner name to start_lesson.",
@@ -93,7 +98,54 @@ await new Promise<void>((resolve, reject) => {
         );
         return;
       }
-      console.log(`Realtime text-only tool-routing smoke passed on ${model}.`);
+      if (!startLessonRouted) {
+        if (!functionCall.call_id) {
+          finish(new Error("start_lesson returned no call ID."));
+          return;
+        }
+        startLessonRouted = true;
+        socket.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "function_call_output",
+              call_id: functionCall.call_id,
+              output: JSON.stringify({
+                ok: true,
+                menu_options: ["guided", "curious_sandbox"],
+                spoken_response:
+                  "Would you like guided Math, or Curious Sandbox?",
+              }),
+            },
+          }),
+        );
+        socket.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "message",
+              role: "user",
+              content: [{ type: "input_text", text: "Guided Math, please." }],
+            },
+          }),
+        );
+        socket.send(
+          JSON.stringify({
+            type: "response.create",
+            response: { output_modalities: ["text"] },
+          }),
+        );
+        return;
+      }
+      if (functionCall.name !== "choose_learning_mode") {
+        finish(
+          new Error(
+            "Realtime did not route the menu choice to choose_learning_mode.",
+          ),
+        );
+        return;
+      }
+      console.log(`Realtime text-only name and menu routing passed on ${model}.`);
       finish();
     }
   });

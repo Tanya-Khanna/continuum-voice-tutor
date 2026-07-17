@@ -106,6 +106,7 @@ const CurriculumPackBaseSchema = z.object({
   deployment: z.object({
     country: z.string().min(1),
     countryCode: z.string().regex(/^[A-Z]{2}$/u),
+    subject: z.string().min(1),
     grade: z.number().int().positive(),
     defaultLanguage: ResolvedLanguageModeSchema,
     languagePolicy: z.literal("model_detect_any"),

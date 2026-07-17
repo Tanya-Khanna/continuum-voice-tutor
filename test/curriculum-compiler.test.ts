@@ -16,6 +16,7 @@ const sourceBrief = {
   deployment: {
     country: "Example deployment",
     countryCode: "KE",
+    subject: "Science",
     grade: 6,
     defaultLanguage: "sw",
     testedLanguageModes: ["sw", "en"],

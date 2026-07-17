@@ -41,6 +41,24 @@ export const REALTIME_TEACHING_TOOLS = [
   },
   {
     type: "function" as const,
+    name: "choose_learning_mode",
+    description:
+      "Choose guided curriculum or Curious Sandbox after start_lesson returns the available menu. Call this before the first guided teaching turn.",
+    parameters: {
+      type: "object",
+      properties: {
+        mode: {
+          type: "string",
+          enum: ["guided", "curious_sandbox"],
+          description: "The learning mode explicitly chosen by the learner.",
+        },
+      },
+      required: ["mode"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
     name: "get_teaching_turn",
     description:
       "Get the authoritative next Socratic teaching turn. Call this for every substantive learner response after start_lesson.",
@@ -115,12 +133,12 @@ export type RealtimeAcceptPayload = z.infer<
 
 export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Nomad's realtime conversation layer for a universal, voice-first Socratic tutor.
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
-At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once.
-After the lesson starts, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive learner response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
+At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once. Speak the returned subject-versus-Sandbox menu, then call choose_learning_mode with the learner's explicit choice.
+After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 If the learner explicitly asks to use Curious Sandbox or explicitly chooses the ask-anything mode, call get_sandbox_turn instead. Do not silently move an ordinary guided-lesson answer into Sandbox. Sandbox results do not count as curriculum mastery.
 Immediately before get_teaching_turn, say one brief neutral acknowledgment in the learner's current language, such as the local equivalent of "Let me think about that." Keep it under six words. It must not judge correctness, reveal an answer, give a hint, or ask a new question. Then call the tool in the same response.
 Never invent a lesson, diagnosis, explanation, answer, or next question yourself.
-After a successful tool result, speak its spoken_response exactly. Do not add a preface, paraphrase, translate, or append another question.
+After a successful teaching, Sandbox, or history result, speak its spoken_response exactly. Do not add a preface, paraphrase, translate, or append another question. Onboarding menu localization is permitted only when the server's response.create instruction explicitly says so.
 Keep conversation management brief and patient. Never shame the learner. If audio is unclear, ask them to repeat it rather than guessing.`;
 
 export function buildSipTarget(projectId: string): string {

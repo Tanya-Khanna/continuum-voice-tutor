@@ -12,6 +12,7 @@ const sciencePack = CurriculumPackSchema.parse({
     ...fractionsPack.deployment,
     country: "Example deployment",
     countryCode: "KE",
+    subject: "Science",
     defaultLanguage: "sw",
     testedLanguageModes: ["sw", "en"],
     offlineLanguageHints: [],

@@ -225,3 +225,13 @@
 - Mission control merges Sandbox interactions into the chronological transcript and labels their mastery status `not_assessed`.
 - The zero-credit fallback makes no open-world factual claim. One live Luna Spanish-English current-weather case passed language, safety, low-certainty, and voice-format checks.
 - Verification: 51 of 51 automated tests, 25 of 25 deterministic teaching evals, 1 of 1 live Sandbox gate, and strict TypeScript pass.
+
+## 2026-07-17 — Metadata-driven voice menu
+
+- Added required `deployment.subject` metadata to universal curriculum/source-brief contracts; compiler instructions must copy the reviewed subject exactly.
+- Changed the call opening to name → subject-versus-Sandbox menu → explicit `choose_learning_mode` selection.
+- Added a server-side guard that refuses `get_teaching_turn` before guided mode is selected, so Realtime cannot skip onboarding.
+- Realtime can localize only the non-decision menu and opening prompt while preserving all options and meaning; structured teaching, history, and Sandbox responses remain exact.
+- Verified the menu is not Math-hardcoded by loading an example Geography deployment and observing `guided Geography` without engine changes.
+- Extended the live text-only Realtime smoke through both `start_lesson` and `choose_learning_mode`; GPT-Realtime-2.1 Mini routed both correctly.
+- Verification: 53 of 53 automated tests, live Realtime name+menu routing, 25 of 25 deterministic teaching evals, and strict TypeScript pass.

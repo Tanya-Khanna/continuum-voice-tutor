@@ -46,7 +46,7 @@ npm run eval
 
 `npm run eval` runs the frozen 25-case teaching gate and reports misconception, answer-request, reasoning, insufficient-evidence, multilingual, and voice-formatting results. Current multilingual fixtures include English, Hindi/English code-switching, Spanish, Swahili, and Tamil.
 
-With an API key configured, this low-cost command verifies live Realtime tool routing using text only:
+With an API key configured, this low-cost command verifies live Realtime name capture and guided-subject/Sandbox menu routing using text only:
 
 ```bash
 npm run smoke:realtime
@@ -68,7 +68,9 @@ The separate `npm run eval:live-history` check validates one synthetic Hindi/Eng
 
 For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Nomad accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
 
-Realtime asks the learner's name and calls `start_lesson`. Every later learner answer must call `get_teaching_turn`; the server runs the frozen-pack teaching engine through GPT-5.6 Luna, persists the structured decision, and sends only the authoritative `spoken_response` back for Realtime to say. Asking for a name on every call keeps siblings on a shared phone separate, while phone number plus name resumes the correct interrupted lesson.
+Realtime asks the learner's name and calls `start_lesson`. The server returns a menu built from `deployment.subject`—currently guided Math or Curious Sandbox—and Realtime calls `choose_learning_mode` with the explicit choice. A server guard prevents a guided teaching call before that choice. Realtime may translate this non-decision onboarding copy into the caller's language, but it may not change the options or question meaning.
+
+Every later guided learner answer must call `get_teaching_turn`; the server runs the frozen-pack teaching engine through GPT-5.6 Luna, persists the structured decision, and sends only the authoritative `spoken_response` back for Realtime to say. Asking for a name on every call keeps siblings on a shared phone separate, while phone number plus name resumes the correct interrupted lesson.
 
 The lesson arc is deployment-configured. The first pack uses eight teaching turns with explicit explore, independent-check, and recap phases. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. The server also prevents any model from marking mastery secure until it has observed at least two reasoning turns.
 
