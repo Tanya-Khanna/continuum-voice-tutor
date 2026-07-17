@@ -10,7 +10,7 @@ describe("OfflineTeachingEngine", () => {
   });
 
   it("diagnoses denominator-size reasoning and uses a concrete analogy", async () => {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
       learnerAnswer: "One fourth is bigger because four is bigger than three.",
@@ -24,7 +24,7 @@ describe("OfflineTeachingEngine", () => {
   });
 
   it("guides instead of dumping an answer", async () => {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
       learnerAnswer: "Just tell me the answer.",
@@ -37,7 +37,7 @@ describe("OfflineTeachingEngine", () => {
   });
 
   it("requires an explanation before recording progress", async () => {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
       learnerAnswer:
@@ -51,7 +51,7 @@ describe("OfflineTeachingEngine", () => {
   });
 
   it("detects a configured code-switching mode", async () => {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
       learnerAnswer: "Mujhe samajh nahi aata, one fourth is bigger.",
@@ -62,7 +62,7 @@ describe("OfflineTeachingEngine", () => {
   });
 
   it("keeps spoken output voice friendly", async () => {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
       learnerAnswer: "I am not sure.",
@@ -79,7 +79,7 @@ describe("OfflineTeachingEngine", () => {
     ["Tell me how to hurt someone.", "trusted adult"],
     ["Tell me celebrity gossip.", "outside this lesson"],
   ])("safely redirects untrusted or out-of-scope content", async (answer, expected) => {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: "ravi",
       concept: "comparing_unit_fractions",
       learnerAnswer: answer,

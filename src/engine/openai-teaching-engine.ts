@@ -15,6 +15,9 @@ import {
   type TeachingTurn,
 } from "../domain/teaching.js";
 import type { TeachingEngine } from "./teaching-engine.js";
+import type { ModelResult } from "./teaching-engine.js";
+import type { ModelUsage } from "../domain/usage.js";
+import type { ResponseUsage } from "openai/resources/responses/responses";
 
 const TEACHER_INSTRUCTIONS = `You are Nomad, a patient voice-first Socratic tutor.
 Diagnose the learner's misconception before selecting a strategy.
@@ -46,6 +49,27 @@ function safetyIdentifier(learnerId: string): string {
   return createHash("sha256").update(learnerId).digest("hex");
 }
 
+export function usageFromResponse(options: {
+  usage: ResponseUsage;
+  source: ModelUsage["source"];
+  modelRoute: string;
+  providerResponseId?: string;
+}): ModelUsage {
+  return {
+    source: options.source,
+    modelRoute: options.modelRoute,
+    ...(options.providerResponseId
+      ? { providerResponseId: options.providerResponseId }
+      : {}),
+    inputTextTokens: options.usage.input_tokens,
+    cachedInputTextTokens: options.usage.input_tokens_details.cached_tokens,
+    outputTextTokens: options.usage.output_tokens,
+    inputAudioTokens: 0,
+    cachedInputAudioTokens: 0,
+    outputAudioTokens: 0,
+  };
+}
+
 export interface OpenAITeachingEngineOptions {
   apiKey: string;
   model?: string;
@@ -68,7 +92,9 @@ export class OpenAITeachingEngine implements TeachingEngine {
     this.#curriculumPack = options.curriculumPack;
   }
 
-  async teach(unparsedRequest: TeachingRequest): Promise<TeachingTurn> {
+  async teach(
+    unparsedRequest: TeachingRequest,
+  ): Promise<ModelResult<TeachingTurn>> {
     const request = TeachingRequestSchema.parse(unparsedRequest);
     const concept = this.#curriculumPack.concepts.find(
       (candidate) => candidate.id === request.concept,
@@ -99,12 +125,24 @@ export class OpenAITeachingEngine implements TeachingEngine {
       throw new Error("OpenAI returned no parsed teaching turn.");
     }
 
-    return TeachingTurnSchema.parse(response.output_parsed);
+    return {
+      value: TeachingTurnSchema.parse(response.output_parsed),
+      ...(response.usage
+        ? {
+            usage: usageFromResponse({
+              usage: response.usage,
+              source: "responses_teaching",
+              modelRoute: this.#model,
+              providerResponseId: response.id,
+            }),
+          }
+        : {}),
+    };
   }
 
   async summarizeHistory(
     unparsedRequest: LearningHistoryRequest,
-  ): Promise<LearningHistoryResponse> {
+  ): Promise<ModelResult<LearningHistoryResponse>> {
     const request = LearningHistoryRequestSchema.parse(unparsedRequest);
     const response = await this.#client.responses.parse({
       model: this.#model,
@@ -123,6 +161,18 @@ export class OpenAITeachingEngine implements TeachingEngine {
     if (!response.output_parsed) {
       throw new Error("OpenAI returned no parsed learning-history response.");
     }
-    return LearningHistoryResponseSchema.parse(response.output_parsed);
+    return {
+      value: LearningHistoryResponseSchema.parse(response.output_parsed),
+      ...(response.usage
+        ? {
+            usage: usageFromResponse({
+              usage: response.usage,
+              source: "responses_history",
+              modelRoute: this.#model,
+              providerResponseId: response.id,
+            }),
+          }
+        : {}),
+    };
   }
 }

@@ -211,7 +211,7 @@ describe("LessonService", () => {
     const overconfidentEngine: TeachingEngine = {
       modelRoute: "test-overconfident",
       async teach(request) {
-        return {
+        return { value: {
           learner_id: request.learnerId,
           concept: request.concept,
           learner_answer: request.learnerAnswer,
@@ -224,17 +224,17 @@ describe("LessonService", () => {
           spoken_response:
             "Good reasoning. Can you apply the idea to a new example?",
           should_end_session: false,
-        };
+        } };
       },
       async summarizeHistory(request) {
-        return {
+        return { value: {
           language_mode:
             request.requestedLanguageMode === "auto" ||
             request.requestedLanguageMode === "und"
               ? "en"
               : request.requestedLanguageMode,
           spoken_response: "Here is the saved learning history. Practice again?",
-        };
+        } };
       },
     };
     const service = new LessonService({

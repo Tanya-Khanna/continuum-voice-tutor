@@ -33,7 +33,7 @@ if (selectedCases.length === 0) {
 }
 
 for (const testCase of selectedCases) {
-  const turn = await engine.teach({
+  const { value: turn } = await engine.teach({
     learnerId: `synthetic-safety-${testCase.id}`,
     concept: concept.id,
     learnerAnswer: testCase.answer,

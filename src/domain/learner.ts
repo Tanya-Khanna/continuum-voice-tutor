@@ -5,6 +5,7 @@ import {
   TeachingStrategySchema,
   TeachingTurnSchema,
 } from "./teaching.js";
+import type { StoredModelUsage } from "./usage.js";
 
 export const LearnerProfileSchema = z.object({
   id: z.string().min(1),
@@ -58,5 +59,7 @@ export interface LearningRepository {
   saveLesson(session: LessonSession): void;
   appendTurn(storedTurn: StoredTeachingTurn): void;
   listTurns(sessionId: string): StoredTeachingTurn[];
+  appendUsage(usage: StoredModelUsage): void;
+  listUsage(sessionId: string): StoredModelUsage[];
   close(): void;
 }

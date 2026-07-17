@@ -4,6 +4,7 @@ import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js"
 import { LessonService } from "../src/lesson/lesson-service.js";
 import { buildDashboardSnapshot } from "../src/observability/dashboard.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
+import { StoredModelUsageSchema } from "../src/domain/usage.js";
 
 describe("mission-control snapshot", () => {
   it("exposes teaching evidence without learner names or phone numbers", async () => {
@@ -22,6 +23,22 @@ describe("mission-control snapshot", () => {
       context,
       "One fourth is bigger because four is bigger than three.",
     );
+    repository.appendUsage(
+      StoredModelUsageSchema.parse({
+        id: "usage_dashboard",
+        sessionId: context.session.id,
+        source: "realtime",
+        modelRoute: "gpt-realtime-2.1-mini",
+        providerResponseId: "resp_dashboard",
+        inputTextTokens: 70,
+        cachedInputTextTokens: 20,
+        outputTextTokens: 30,
+        inputAudioTokens: 100,
+        cachedInputAudioTokens: 30,
+        outputAudioTokens: 40,
+        createdAt: "2026-07-17T11:59:00.000Z",
+      }),
+    );
 
     const snapshot = buildDashboardSnapshot({
       repository,
@@ -34,6 +51,13 @@ describe("mission-control snapshot", () => {
     expect(snapshot.sessions[0]).toMatchObject({
       learner_ref: expect.stringMatching(/^learner_[a-f0-9]{10}$/u),
       turn_count: 1,
+      usage: expect.objectContaining({
+        request_count: 1,
+        total_tokens: 240,
+        estimated_cost_usd: expect.any(Number),
+        pricing_as_of: "2026-07-17",
+        unpriced_models: [],
+      }),
       turns: [
         expect.objectContaining({
           model_route: "offline",

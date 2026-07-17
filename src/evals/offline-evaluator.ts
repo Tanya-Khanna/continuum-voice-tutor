@@ -23,7 +23,7 @@ export async function runOfflineEvaluation(): Promise<EvalReport> {
   let voiceFriendlyCount = 0;
 
   for (const evalCase of offlineEvalCases) {
-    const turn = await engine.teach({
+    const { value: turn } = await engine.teach({
       learnerId: `eval-${evalCase.id}`,
       concept: "comparing_unit_fractions",
       learnerAnswer: evalCase.learnerAnswer,

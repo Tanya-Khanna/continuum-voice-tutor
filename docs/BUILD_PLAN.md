@@ -225,9 +225,9 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 **Trust, proof & product surface**
 - **F44 SMS recap** — post-session summary in the learner's language mode (G7); optional voice-registered parent
   number (G8).
-- **F45 Mission-control dashboard** — judges' window: live transcript (their own call — §3 the mirror), per-turn
-  model routing, diagnosis JSON, mastery evidence ("Needs support"→"Developing"), cost/call (F43-lite),
-  **eval-results page**, sample Hinglish session recording, anonymized learner IDs (G2).
+- **F45 Mission-control dashboard** — judges' window: ~~live transcript, per-turn model routing, diagnosis JSON,
+  mastery evidence, evidence-based cost/call (F43-lite), eval-results page, and anonymized learner IDs (G2)~~ ✅;
+  sample universal/code-switched session recording with synced transcript remains open.
 - **F46 Child-safety guardrails** — ~~untrusted-input boundary, prompt-injection resistance, contact/address redaction before model + persistence, graceful off-topic/unsafe handling, repeated-abuse ending, deterministic + live evals, and documented deployment consent/retention limitations (G2)~~ ✅. *(Supervised prototype only; local emergency-language review and production retention enforcement remain pre-pilot requirements.)*
 - **G6 Abuse guard** — ~~HMAC-keyed per-caller sliding-window rate limit, concurrent-call protection, webhook replay idempotency, graceful repeated-abuse disengagement, and two jailbreak cases in the frozen eval~~ ✅.
 - **F51 Eval harness** — simulated-learner agent × evaluator agent (both GPT-5.6 — the multi-agent story). **24 cases:**
@@ -335,21 +335,21 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - ~~Callback loop (exact recent-drop recovery, later retrieval practice, and post-completion retrieval)~~ ✅ · ~~voice-queryable per-profile history with GPT-5.6 language-aware narration~~ ✅ · shared-phone profiles polished.
 - **Eval harness**: simulated-learner × evaluator agents; ~~all 25 cases (§4.1) in text mode; iterate prompts until green~~ ✅ *(deterministic offline gate; agent-based judge pass still open)*. 2–3 live smoke calls only.
 **Evening:**
-- ~~Dashboard skeleton (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, and per-turn model route)~~ ✅ *(cost/call remains open until usage accounting lands)*.
+- ~~Dashboard skeleton plus deterministic eval-results view and evidence-based per-call token/cost accounting (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, per-turn model route, raw Responses/Realtime usage, and exact-model dated rates)~~ ✅.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
 - **📦 Features landing today:** F38/F39 Curriculum Compiler + G3 originality rule · F37 frozen-pack grounding (formalized) · F20 sandbox mode · F21-full five subjects + flavored fallbacks · F22 voice-menu onboarding · F24 experiments + anchor objects (pack/prompt content) · F32-flavor real-world word problems · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · F15-persona NAME decided (+ product name)
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
-- Dashboard complete: mirror view (live call transcript), eval-results page, sample Hinglish recording + synced transcript, anonymized IDs, cost/call.
+- Dashboard complete: ~~mirror view (live call transcript), eval-results page, anonymized IDs, cost/call~~ ✅; sample universal/code-switched recording + synced transcript remains.
 - SMS recap (language-matched) + optional parent number · per-number rate limiting.
 **Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. Stop the moment anything core wobbles.
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6, all beats incl. sandbox flash + language montage — spot-check montage languages in text first). Multiple takes; pick the best; upload unlisted.
 - ✍️ README (§8, all 11 sections + 2.5 + 7.5) + Devpost description + Judge Experience card with the real number. Distill CODEX_NOTES → README §6.
 - **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
-- **📦 Features landing today:** F45-complete dashboard (mirror view, eval-results page, sample recording, cost/call F43-lite, anonymized IDs G2) · F44 SMS recap + G7 language-matched · G8 parent number · G6 rate limiting + graceful disengage · F46 child-safety (verified end-to-end + documented) · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
+- **📦 Features landing today:** ~~F45 mirror, eval-results, cost/call F43-lite, and anonymized IDs G2~~ ✅ *(sample recording remains)* · F44 SMS recap + G7 language-matched · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · G9 honest-limitations + G2 consent/retention (README) · §4.3 roadmap features (README mentions)
 
 ### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
 **Morning:**

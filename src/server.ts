@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { loadCurriculumPack } from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
+import { runOfflineEvaluation } from "./evals/offline-evaluator.js";
 import { hashPhoneNumber } from "./domain/identity.js";
 import { buildDashboardSnapshot } from "./observability/dashboard.js";
 import { SqliteLearningRepository } from "./persistence/sqlite-learning-repository.js";
@@ -96,6 +97,22 @@ export const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/dashboard/evals") {
+      const report = await runOfflineEvaluation();
+      response.writeHead(200, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      });
+      response.end(
+        JSON.stringify({
+          generated_at: new Date().toISOString(),
+          gate: "deterministic_offline",
+          ...report,
+        }),
+      );
+      return;
+    }
+
     if (
       request.method === "POST" &&
       url.pathname === "/webhooks/openai"
@@ -159,6 +176,7 @@ export const server = createServer(async (request, response) => {
             callId,
             callerNumber,
             lessonService: runtime.lessonService,
+            modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
               console.error(`Realtime call ${callId}:`, bridgeError.message),
           });

@@ -12,7 +12,7 @@ const engine = new OpenAITeachingEngine({
   model: environment.OPENAI_TEXT_MODEL,
   curriculumPack,
 });
-const history = await engine.summarizeHistory({
+const { value: history } = await engine.summarizeHistory({
   learnerId: "synthetic-history-eval",
   requestedLanguageMode: "hi-Latn+en",
   entries: [

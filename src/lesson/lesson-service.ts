@@ -10,6 +10,7 @@ import {
   type LearningRepository,
   type LessonSession,
 } from "../domain/learner.js";
+import { StoredModelUsageSchema, type ModelUsage } from "../domain/usage.js";
 import {
   TeachingTurnSchema,
   type LanguageMode,
@@ -174,7 +175,7 @@ export class LessonService {
       consecutiveSafetyRedirects += 1;
     }
     const redactedLearnerAnswer = redactPotentialPii(learnerAnswer);
-    const generatedTurn = await this.#engine.teach({
+    const generated = await this.#engine.teach({
       learnerId: context.learner.id,
       concept: context.session.concept,
       learnerAnswer: redactedLearnerAnswer,
@@ -189,6 +190,7 @@ export class LessonService {
         consecutiveSafetyRedirects,
       },
     });
+    const generatedTurn = generated.value;
     const shouldEndForSafety =
       generatedTurn.next_strategy === "safety_redirect" &&
       consecutiveSafetyRedirects + 1 >=
@@ -236,6 +238,12 @@ export class LessonService {
         createdAt: now,
       }),
     );
+    if (generated.usage) {
+      this.recordModelUsage(
+        { ...context, session: nextSession, learner: nextLearner },
+        generated.usage,
+      );
+    }
     this.#repository.saveLesson(nextSession);
     this.#repository.saveLearner(nextLearner);
 
@@ -280,11 +288,24 @@ export class LessonService {
         masteryEvidence: session.masteryEvidence,
         lastDiagnosis: session.lastDiagnosis,
       }));
-    return this.#engine.summarizeHistory({
+    const result = await this.#engine.summarizeHistory({
       learnerId: context.learner.id,
       requestedLanguageMode: context.learner.preferredLanguage,
       entries,
     });
+    if (result.usage) this.recordModelUsage(context, result.usage);
+    return result.value;
+  }
+
+  recordModelUsage(context: LessonContext, usage: ModelUsage): void {
+    this.#repository.appendUsage(
+      StoredModelUsageSchema.parse({
+        ...usage,
+        id: this.#makeId(),
+        sessionId: context.session.id,
+        createdAt: this.#clock().toISOString(),
+      }),
+    );
   }
 
   #concept(conceptId: string): CurriculumPack["concepts"][number] {

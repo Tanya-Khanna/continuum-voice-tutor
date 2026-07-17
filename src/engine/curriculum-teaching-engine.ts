@@ -12,13 +12,12 @@ import {
   type TeachingTurn,
 } from "../domain/teaching.js";
 import type { LanguageDetector } from "../language/language-detector.js";
-import type { TeachingEngine } from "./teaching-engine.js";
 
 function includesAny(answer: string, signals: string[]): boolean {
   return signals.some((signal) => answer.includes(signal.toLowerCase()));
 }
 
-export class CurriculumTeachingEngine implements TeachingEngine {
+export class CurriculumTeachingEngine {
   readonly modelRoute = "offline";
   readonly #pack: CurriculumPack;
   readonly #languageDetector: LanguageDetector;

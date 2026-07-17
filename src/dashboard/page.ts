@@ -36,6 +36,10 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .eyebrow { color: var(--lime); letter-spacing: .18em; text-transform: uppercase; font-size: 11px; }
     h1 { margin: 7px 0 0; font: 700 clamp(28px, 4vw, 52px)/.95 system-ui, sans-serif; letter-spacing: -.04em; }
     .status { display: flex; align-items: center; gap: 9px; color: var(--muted); }
+    .header-tools { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+    .tabs { display: flex; gap: 7px; }
+    .tab { color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+    .tab[aria-selected="true"] { color: var(--paper); border-color: var(--lime); background: var(--lime); }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 16px var(--lime); }
     .grid { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 18px; margin-top: 18px; }
     .panel { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
@@ -74,6 +78,13 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .card-label { color: var(--orange); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
     .card p { margin: 0; overflow-wrap: anywhere; }
     .route { color: var(--blue); }
+    .eval-view { margin-top: 18px; }
+    .eval-hero { padding: 24px; display: grid; grid-template-columns: 1fr repeat(3, minmax(135px, .35fr)); gap: 14px; }
+    .eval-list { border-top: 1px solid var(--line); }
+    .eval-row { display: grid; grid-template-columns: minmax(180px, 1fr) 160px 90px minmax(240px, 1.5fr); gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); align-items: center; }
+    .pass { color: var(--lime); }
+    .fail { color: var(--orange); }
+    [hidden] { display: none !important; }
     @media (max-width: 900px) {
       .shell { padding: 18px; }
       .grid { grid-template-columns: 1fr; }
@@ -85,8 +96,11 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     }
     @media (max-width: 520px) {
       header { align-items: flex-start; flex-direction: column; }
+      .header-tools { align-items: flex-start; }
       .hero { grid-template-columns: 1fr; }
       .hero-copy { grid-column: auto; }
+      .eval-hero { grid-template-columns: 1fr; }
+      .eval-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -97,9 +111,15 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         <div class="eyebrow">Nomad AI / Mission Control</div>
         <h1>The learning continues.</h1>
       </div>
-      <div class="status"><span class="pulse"></span><span id="sync">Waiting for sessions</span></div>
+      <div class="header-tools">
+        <div class="status"><span class="pulse"></span><span id="sync">Waiting for sessions</span></div>
+        <nav class="tabs" aria-label="Dashboard views">
+          <button class="tab" id="sessions-tab" type="button" aria-selected="true">Sessions</button>
+          <button class="tab" id="evals-tab" type="button" aria-selected="false">Eval gate</button>
+        </nav>
+      </div>
     </header>
-    <section class="grid">
+    <section class="grid" id="sessions-view">
       <aside class="panel">
         <div class="panel-head"><strong>Recent sessions</strong><span class="count" id="count">0</span></div>
         <div id="sessions"><div class="empty">No calls recorded yet.</div></div>
@@ -108,9 +128,12 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         <div class="empty">Start the local text demo or complete a call to see the teaching trace.</div>
       </section>
     </section>
+    <section class="panel eval-view" id="evals-view" hidden>
+      <div class="empty">Running the zero-credit teaching gate…</div>
+    </section>
   </main>
   <script>
-    const state = { sessions: [], selected: null };
+    const state = { sessions: [], selected: null, evals: null, view: 'sessions' };
     const text = (tag, value, className) => {
       const node = document.createElement(tag);
       if (className) node.className = className;
@@ -184,8 +207,49 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       addCard(analysis, 'Mastery evidence', latest?.mastery_evidence ?? session.mastery_evidence);
       addCard(analysis, 'Next strategy', latest?.next_strategy ?? 'awaiting first answer');
       addCard(analysis, 'Model route', latest?.model_route ?? 'pending', 'route');
+      const usage = session.usage;
+      const cost = usage.estimated_cost_usd === null
+        ? 'Unavailable · missing exact rate for ' + usage.unpriced_models.join(', ')
+        : '$' + usage.estimated_cost_usd.toFixed(6) + (usage.pricing_as_of ? ' · rates ' + usage.pricing_as_of : '');
+      addCard(analysis, 'Recorded model usage', usage.request_count + ' responses · ' + usage.total_tokens + ' tokens');
+      addCard(analysis, 'Estimated API cost', cost);
       details.append(transcript, analysis); root.append(hero, details);
     }
+    function renderEvals() {
+      const root = document.querySelector('#evals-view');
+      const report = state.evals;
+      root.replaceChildren();
+      if (!report) { root.append(text('div', 'Running the zero-credit teaching gate…', 'empty')); return; }
+      const hero = text('div', '', 'eval-hero');
+      const copy = text('div', '', 'hero-copy');
+      copy.append(text('div', 'Deterministic / zero API spend', 'eyebrow'));
+      copy.append(text('h2', report.passed === report.total ? 'Teaching gate is green.' : 'Teaching gate needs attention.'));
+      copy.append(text('p', 'Frozen cases for pedagogy, language, safety, and voice formatting.'));
+      hero.append(copy);
+      for (const [label, value] of [['Cases', report.passed + '/' + report.total], ['Pass rate', Math.round(report.passRate * 100) + '%'], ['Voice friendly', Math.round(report.voiceFriendlyRate * 100) + '%']]) {
+        const metric = text('div', '', 'metric'); metric.append(text('span', label)); metric.append(text('strong', value)); hero.append(metric);
+      }
+      const list = text('div', '', 'eval-list');
+      for (const result of report.results) {
+        const row = text('div', '', 'eval-row');
+        row.append(text('strong', result.id));
+        row.append(text('span', result.category));
+        row.append(text('span', result.passed ? 'PASS' : 'FAIL', result.passed ? 'pass' : 'fail'));
+        row.append(text('span', result.failures.join(' · ') || 'All assertions passed.', 'count'));
+        list.append(row);
+      }
+      root.append(hero, list);
+    }
+    function selectView(view) {
+      state.view = view;
+      document.querySelector('#sessions-view').hidden = view !== 'sessions';
+      document.querySelector('#evals-view').hidden = view !== 'evals';
+      document.querySelector('#sessions-tab').setAttribute('aria-selected', String(view === 'sessions'));
+      document.querySelector('#evals-tab').setAttribute('aria-selected', String(view === 'evals'));
+      if (view === 'evals') renderEvals();
+    }
+    document.querySelector('#sessions-tab').addEventListener('click', () => selectView('sessions'));
+    document.querySelector('#evals-tab').addEventListener('click', () => selectView('evals'));
     async function refresh() {
       try {
         const response = await fetch('/api/dashboard/sessions', { cache: 'no-store' });
@@ -197,7 +261,17 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         renderList(); renderWorkspace();
       } catch (error) { document.querySelector('#sync').textContent = 'Waiting for server'; }
     }
-    refresh(); setInterval(refresh, 3000);
+    async function refreshEvals() {
+      try {
+        const response = await fetch('/api/dashboard/evals', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Eval request failed');
+        state.evals = await response.json();
+        if (state.view === 'evals') renderEvals();
+      } catch (error) {
+        state.evals = null;
+      }
+    }
+    refresh(); refreshEvals(); setInterval(refresh, 3000);
   </script>
 </body>
 </html>`;

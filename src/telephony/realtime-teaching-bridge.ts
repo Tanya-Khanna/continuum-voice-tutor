@@ -1,6 +1,7 @@
 import WebSocket, { type RawData } from "ws";
 import { z } from "zod";
 import { ResolvedLanguageModeSchema } from "../domain/teaching.js";
+import { ModelUsageSchema, type ModelUsage } from "../domain/usage.js";
 import type {
   LessonContext,
   LessonService,
@@ -30,7 +31,33 @@ const OutputItemDoneSchema = z.object({
 const ResponseDoneSchema = z.object({
   type: z.literal("response.done"),
   response: z.object({
+    id: z.string().min(1).optional(),
     output: z.array(z.unknown()),
+    usage: z
+      .object({
+        input_tokens: z.number().int().nonnegative().optional(),
+        output_tokens: z.number().int().nonnegative().optional(),
+        input_token_details: z
+          .object({
+            text_tokens: z.number().int().nonnegative().optional(),
+            audio_tokens: z.number().int().nonnegative().optional(),
+            cached_tokens: z.number().int().nonnegative().optional(),
+            cached_tokens_details: z
+              .object({
+                text_tokens: z.number().int().nonnegative().optional(),
+                audio_tokens: z.number().int().nonnegative().optional(),
+              })
+              .optional(),
+          })
+          .optional(),
+        output_token_details: z
+          .object({
+            text_tokens: z.number().int().nonnegative().optional(),
+            audio_tokens: z.number().int().nonnegative().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   }),
 });
 
@@ -42,6 +69,43 @@ interface LessonOrchestrator {
   respond: LessonService["respond"];
   pause: LessonService["pause"];
   learningHistory: LessonService["learningHistory"];
+  recordModelUsage: LessonService["recordModelUsage"];
+}
+
+export function usageFromRealtimeEvent(
+  event: unknown,
+  modelRoute: string,
+): ModelUsage | undefined {
+  const parsed = ResponseDoneSchema.safeParse(event);
+  if (!parsed.success || !parsed.data.response.usage) return undefined;
+  const { response } = parsed.data;
+  const usage = response.usage;
+  if (!usage) return undefined;
+  const inputDetails = usage.input_token_details;
+  const outputDetails = usage.output_token_details;
+  const inputAudioTokens = inputDetails?.audio_tokens ?? 0;
+  const outputAudioTokens = outputDetails?.audio_tokens ?? 0;
+  const cachedInputAudioTokens =
+    inputDetails?.cached_tokens_details?.audio_tokens ?? 0;
+  const cachedInputTokens = inputDetails?.cached_tokens ?? 0;
+
+  return ModelUsageSchema.parse({
+    source: "realtime",
+    modelRoute,
+    ...(response.id ? { providerResponseId: response.id } : {}),
+    inputTextTokens:
+      inputDetails?.text_tokens ??
+      Math.max(0, (usage.input_tokens ?? 0) - inputAudioTokens),
+    cachedInputTextTokens:
+      inputDetails?.cached_tokens_details?.text_tokens ??
+      Math.max(0, cachedInputTokens - cachedInputAudioTokens),
+    outputTextTokens:
+      outputDetails?.text_tokens ??
+      Math.max(0, (usage.output_tokens ?? 0) - outputAudioTokens),
+    inputAudioTokens,
+    cachedInputAudioTokens,
+    outputAudioTokens,
+  });
 }
 
 function functionCallsFromEvent(event: unknown): z.infer<
@@ -96,18 +160,23 @@ export class RealtimeTeachingController {
   readonly #callerNumber: string;
   readonly #lessonService: LessonOrchestrator;
   readonly #handledCallIds = new Set<string>();
+  readonly #handledUsageIds = new Set<string>();
+  readonly #modelRoute: string;
   readonly #onError: (error: Error) => void;
   #context: LessonContext | undefined;
   #closed = false;
   #queue: Promise<void> = Promise.resolve();
+  #pendingUsage: ModelUsage[] = [];
 
   constructor(options: {
     callerNumber: string;
     lessonService: LessonOrchestrator;
+    modelRoute: string;
     onError?: (error: Error) => void;
   }) {
     this.#callerNumber = options.callerNumber;
     this.#lessonService = options.lessonService;
+    this.#modelRoute = options.modelRoute;
     this.#onError = options.onError ?? (() => undefined);
   }
 
@@ -117,9 +186,21 @@ export class RealtimeTeachingController {
   ): Promise<void> {
     this.#queue = this.#queue
       .then(async () => {
+        const usage = usageFromRealtimeEvent(event, this.#modelRoute);
+        if (
+          usage &&
+          (!usage.providerResponseId ||
+            !this.#handledUsageIds.has(usage.providerResponseId))
+        ) {
+          if (usage.providerResponseId) {
+            this.#handledUsageIds.add(usage.providerResponseId);
+          }
+          this.#pendingUsage.push(usage);
+        }
         for (const call of functionCallsFromEvent(event)) {
           await this.#handleFunctionCall(call, send);
         }
+        this.#flushUsage();
       })
       .catch((error: unknown) => {
         this.#onError(
@@ -127,6 +208,14 @@ export class RealtimeTeachingController {
         );
       });
     return this.#queue;
+  }
+
+  #flushUsage(): void {
+    if (!this.#context) return;
+    for (const usage of this.#pendingUsage) {
+      this.#lessonService.recordModelUsage(this.#context, usage);
+    }
+    this.#pendingUsage = [];
   }
 
   async #handleFunctionCall(
@@ -235,6 +324,7 @@ export class RealtimeTeachingBridge {
     callId: string;
     callerNumber: string;
     lessonService: LessonOrchestrator;
+    modelRoute: string;
     WebSocketImplementation?: typeof WebSocket;
     onError?: (error: Error) => void;
   }) {
@@ -246,6 +336,7 @@ export class RealtimeTeachingBridge {
     this.#controller = new RealtimeTeachingController({
       callerNumber: options.callerNumber,
       lessonService: options.lessonService,
+      modelRoute: options.modelRoute,
       onError: this.#onError,
     });
   }

@@ -6,6 +6,7 @@ import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-rep
 import {
   RealtimeTeachingController,
   type RealtimeClientEvent,
+  usageFromRealtimeEvent,
 } from "../src/telephony/realtime-teaching-bridge.js";
 
 const PHONE_HASH_SECRET = "realtime-test-secret-12345";
@@ -32,6 +33,40 @@ function parseToolOutput(event: RealtimeClientEvent): Record<string, unknown> {
 }
 
 describe("Realtime teaching controller", () => {
+  it("separates Realtime text, cached, and audio usage", () => {
+    expect(
+      usageFromRealtimeEvent(
+        {
+          type: "response.done",
+          response: {
+            id: "resp_voice",
+            output: [],
+            usage: {
+              input_tokens: 170,
+              output_tokens: 70,
+              input_token_details: {
+                text_tokens: 70,
+                audio_tokens: 100,
+                cached_tokens: 50,
+                cached_tokens_details: { text_tokens: 20, audio_tokens: 30 },
+              },
+              output_token_details: { text_tokens: 30, audio_tokens: 40 },
+            },
+          },
+        },
+        "gpt-realtime-2.1-mini",
+      ),
+    ).toMatchObject({
+      providerResponseId: "resp_voice",
+      inputTextTokens: 70,
+      cachedInputTextTokens: 20,
+      outputTextTokens: 30,
+      inputAudioTokens: 100,
+      cachedInputAudioTokens: 30,
+      outputAudioTokens: 40,
+    });
+  });
+
   it("starts a named profile, delegates every teaching turn, and pauses on close", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({
@@ -43,8 +78,26 @@ describe("Realtime teaching controller", () => {
     const controller = new RealtimeTeachingController({
       callerNumber: "+919999900001",
       lessonService: service,
+      modelRoute: "gpt-realtime-2.1-mini",
     });
     const sent: RealtimeClientEvent[] = [];
+
+    await controller.handleServerEvent(
+      {
+        type: "response.done",
+        response: {
+          id: "resp_opening",
+          output: [],
+          usage: {
+            input_tokens: 12,
+            output_tokens: 8,
+            input_token_details: { text_tokens: 12, audio_tokens: 0 },
+            output_token_details: { text_tokens: 2, audio_tokens: 6 },
+          },
+        },
+      },
+      (event) => sent.push(event),
+    );
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -58,6 +111,11 @@ describe("Realtime teaching controller", () => {
     const startOutput = parseToolOutput(sent[0]!);
     expect(startOutput).toMatchObject({ ok: true, resumed: false });
     expect(startOutput.spoken_response).toContain("Ravi");
+    const startedSession = repository.findResumableLesson(
+      startOutput.learner_id as string,
+    );
+    expect(startedSession).toBeDefined();
+    expect(repository.listUsage(startedSession!.id)).toHaveLength(1);
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -108,6 +166,7 @@ describe("Realtime teaching controller", () => {
     const controller = new RealtimeTeachingController({
       callerNumber: "+14155550100",
       lessonService: service,
+      modelRoute: "gpt-realtime-2.1-mini",
     });
     const send = vi.fn<(event: RealtimeClientEvent) => void>();
     const item = {

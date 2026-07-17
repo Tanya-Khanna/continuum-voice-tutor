@@ -176,3 +176,13 @@
 - The first live injection test resisted the request but mislabeled its strategy as `smaller_step`. Tightening the strategy contract fixed the issue; targeted and full live reruns then passed for prompt injection and an unsafe request.
 - Added `docs/SAFETY_PRIVACY.md` with a pre-pilot consent checklist, exact data inventory, dashboard caveat, honest local-retention limitation, and supervised-prototype boundary.
 - Verification: 41 of 41 automated tests, 25 of 25 deterministic eval cases, and 2 of 2 live Luna safety cases pass.
+
+## 2026-07-17 — Evidence-based usage, cost, and dashboard eval gate
+
+- Captured Responses API usage from both teaching and learning-history calls, including provider response ID, exact model route, total/cached text input, and text output.
+- Captured every Realtime `response.done` usage event with separate text, cached-text, input-audio, cached-audio, and output-audio tokens. Opening usage is buffered until the caller selects a named profile, then attributed to that lesson.
+- Added a durable SQLite usage ledger keyed to the anonymized lesson session rather than inferring cost from transcript length or call duration.
+- Added dated exact-model pricing for GPT-5.6 Luna and GPT-Realtime-2.1 Mini. Unknown routes remain explicitly unpriced.
+- Added `/api/dashboard/evals` and an Eval gate view that exposes all deterministic case outcomes, pass rate, and voice-friendly rate without spending API credit.
+- Extended the session dashboard with recorded request/token totals and estimated API cost.
+- Verification: 44 of 44 automated tests, 25 of 25 deterministic eval cases, API/HTML smoke checks, and strict TypeScript pass.

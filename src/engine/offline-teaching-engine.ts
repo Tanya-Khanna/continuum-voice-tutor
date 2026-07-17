@@ -10,6 +10,7 @@ import {
 } from "../language/language-detector.js";
 import { CurriculumTeachingEngine } from "./curriculum-teaching-engine.js";
 import type { TeachingEngine } from "./teaching-engine.js";
+import type { ModelResult } from "./teaching-engine.js";
 
 export class OfflineTeachingEngine implements TeachingEngine {
   readonly modelRoute = "offline";
@@ -22,13 +23,15 @@ export class OfflineTeachingEngine implements TeachingEngine {
     this.#engine = new CurriculumTeachingEngine({ pack, languageDetector });
   }
 
-  teach(request: TeachingRequest): Promise<TeachingTurn> {
-    return this.#engine.teach(request);
+  async teach(request: TeachingRequest): Promise<ModelResult<TeachingTurn>> {
+    return { value: await this.#engine.teach(request) };
   }
 
   summarizeHistory(
     request: LearningHistoryRequest,
-  ): Promise<LearningHistoryResponse> {
-    return this.#engine.summarizeHistory(request);
+  ): Promise<ModelResult<LearningHistoryResponse>> {
+    return this.#engine
+      .summarizeHistory(request)
+      .then((value) => ({ value }));
   }
 }

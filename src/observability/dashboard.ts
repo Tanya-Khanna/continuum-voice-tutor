@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { CurriculumPack } from "../curriculum/schema.js";
 import type { LearningRepository } from "../domain/learner.js";
+import { estimateUsageCost } from "./pricing.js";
 
 const DashboardTurnSchema = z.object({
   sequence: z.number().int().positive(),
@@ -27,6 +28,19 @@ const DashboardSessionSchema = z.object({
   mastery_evidence: z.string(),
   last_diagnosis: z.string(),
   updated_at: z.string().datetime(),
+  usage: z.object({
+    request_count: z.number().int().nonnegative(),
+    input_text_tokens: z.number().int().nonnegative(),
+    cached_input_text_tokens: z.number().int().nonnegative(),
+    output_text_tokens: z.number().int().nonnegative(),
+    input_audio_tokens: z.number().int().nonnegative(),
+    cached_input_audio_tokens: z.number().int().nonnegative(),
+    output_audio_tokens: z.number().int().nonnegative(),
+    total_tokens: z.number().int().nonnegative(),
+    estimated_cost_usd: z.number().nonnegative().nullable(),
+    pricing_as_of: z.string().optional(),
+    unpriced_models: z.array(z.string()),
+  }),
   turns: z.array(DashboardTurnSchema),
 });
 
@@ -53,7 +67,34 @@ export function buildDashboardSnapshot(options: {
   );
   const sessions = options.repository
     .listRecentLessons(options.limit ?? 20)
-    .map((session) => ({
+    .map((session) => {
+      const usageRecords = options.repository.listUsage(session.id);
+      const estimates = usageRecords.map(estimateUsageCost);
+      const unpricedModels = [
+        ...new Set(
+          usageRecords
+            .filter((_, index) => estimates[index]?.usd === null)
+            .map((usage) => usage.modelRoute),
+        ),
+      ];
+      const estimatedCost =
+        unpricedModels.length > 0
+          ? null
+          : estimates.reduce((sum, estimate) => sum + (estimate.usd ?? 0), 0);
+      const pricingDates = estimates.flatMap((estimate) =>
+        estimate.asOf ? [estimate.asOf] : [],
+      );
+      const sum = (field: keyof (typeof usageRecords)[number]) =>
+        usageRecords.reduce((total, usage) => {
+          const value = usage[field];
+          return total + (typeof value === "number" ? value : 0);
+        }, 0);
+      const inputTextTokens = sum("inputTextTokens");
+      const outputTextTokens = sum("outputTextTokens");
+      const inputAudioTokens = sum("inputAudioTokens");
+      const outputAudioTokens = sum("outputAudioTokens");
+
+      return {
       session_id: session.id,
       learner_ref: learnerReference(session.learnerId),
       concept_id: session.concept,
@@ -64,6 +105,25 @@ export function buildDashboardSnapshot(options: {
       mastery_evidence: session.masteryEvidence,
       last_diagnosis: session.lastDiagnosis,
       updated_at: session.updatedAt,
+      usage: {
+        request_count: usageRecords.length,
+        input_text_tokens: inputTextTokens,
+        cached_input_text_tokens: sum("cachedInputTextTokens"),
+        output_text_tokens: outputTextTokens,
+        input_audio_tokens: inputAudioTokens,
+        cached_input_audio_tokens: sum("cachedInputAudioTokens"),
+        output_audio_tokens: outputAudioTokens,
+        total_tokens:
+          inputTextTokens +
+          outputTextTokens +
+          inputAudioTokens +
+          outputAudioTokens,
+        estimated_cost_usd: estimatedCost,
+        ...(pricingDates.length > 0
+          ? { pricing_as_of: pricingDates.sort().at(0) }
+          : {}),
+        unpriced_models: unpricedModels,
+      },
       turns: options.repository.listTurns(session.id).map((entry) => ({
         sequence: entry.sequence,
         learner_answer: entry.turn.learner_answer,
@@ -76,7 +136,8 @@ export function buildDashboardSnapshot(options: {
         model_route: entry.modelRoute,
         created_at: entry.createdAt,
       })),
-    }));
+    };
+    });
 
   return DashboardSnapshotSchema.parse({
     generated_at: (options.now ?? new Date()).toISOString(),

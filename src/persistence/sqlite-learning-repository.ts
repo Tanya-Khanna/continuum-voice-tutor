@@ -11,6 +11,10 @@ import {
   type LessonSession,
   type StoredTeachingTurn,
 } from "../domain/learner.js";
+import {
+  StoredModelUsageSchema,
+  type StoredModelUsage,
+} from "../domain/usage.js";
 
 interface LearnerRow {
   id: string;
@@ -44,6 +48,21 @@ interface TurnRow {
   sequence: number;
   turn_json: string;
   model_route: string;
+  created_at: string;
+}
+
+interface UsageRow {
+  id: string;
+  session_id: string;
+  source: string;
+  model_route: string;
+  provider_response_id: string | null;
+  input_text_tokens: number;
+  cached_input_text_tokens: number;
+  output_text_tokens: number;
+  input_audio_tokens: number;
+  cached_input_audio_tokens: number;
+  output_audio_tokens: number;
   created_at: string;
 }
 
@@ -133,6 +152,24 @@ export class SqliteLearningRepository implements LearningRepository {
         created_at TEXT NOT NULL,
         UNIQUE(session_id, sequence)
       );
+
+      CREATE TABLE IF NOT EXISTS model_usage (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES lesson_sessions(id),
+        source TEXT NOT NULL,
+        model_route TEXT NOT NULL,
+        provider_response_id TEXT,
+        input_text_tokens INTEGER NOT NULL,
+        cached_input_text_tokens INTEGER NOT NULL,
+        output_text_tokens INTEGER NOT NULL,
+        input_audio_tokens INTEGER NOT NULL,
+        cached_input_audio_tokens INTEGER NOT NULL,
+        output_audio_tokens INTEGER NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS model_usage_session_idx
+        ON model_usage(session_id, created_at);
     `);
     const turnColumns = this.#database.pragma(
       "table_info(teaching_turns)",
@@ -279,6 +316,59 @@ export class SqliteLearningRepository implements LearningRepository {
         sequence: row.sequence,
         turn: JSON.parse(row.turn_json) as unknown,
         modelRoute: row.model_route,
+        createdAt: row.created_at,
+      }),
+    );
+  }
+
+  appendUsage(unparsedUsage: StoredModelUsage): void {
+    const usage = StoredModelUsageSchema.parse(unparsedUsage);
+    this.#database
+      .prepare(
+        `INSERT INTO model_usage (
+          id, session_id, source, model_route, provider_response_id,
+          input_text_tokens, cached_input_text_tokens, output_text_tokens,
+          input_audio_tokens, cached_input_audio_tokens, output_audio_tokens,
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        usage.id,
+        usage.sessionId,
+        usage.source,
+        usage.modelRoute,
+        usage.providerResponseId ?? null,
+        usage.inputTextTokens,
+        usage.cachedInputTextTokens,
+        usage.outputTextTokens,
+        usage.inputAudioTokens,
+        usage.cachedInputAudioTokens,
+        usage.outputAudioTokens,
+        usage.createdAt,
+      );
+  }
+
+  listUsage(sessionId: string): StoredModelUsage[] {
+    const rows = this.#database
+      .prepare(
+        "SELECT * FROM model_usage WHERE session_id = ? ORDER BY created_at, id",
+      )
+      .all(sessionId) as UsageRow[];
+    return rows.map((row) =>
+      StoredModelUsageSchema.parse({
+        id: row.id,
+        sessionId: row.session_id,
+        source: row.source,
+        modelRoute: row.model_route,
+        ...(row.provider_response_id
+          ? { providerResponseId: row.provider_response_id }
+          : {}),
+        inputTextTokens: row.input_text_tokens,
+        cachedInputTextTokens: row.cached_input_text_tokens,
+        outputTextTokens: row.output_text_tokens,
+        inputAudioTokens: row.input_audio_tokens,
+        cachedInputAudioTokens: row.cached_input_audio_tokens,
+        outputAudioTokens: row.output_audio_tokens,
         createdAt: row.created_at,
       }),
     );
