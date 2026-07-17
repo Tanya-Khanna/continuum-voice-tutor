@@ -226,6 +226,16 @@ describe("LessonService", () => {
           should_end_session: false,
         };
       },
+      async summarizeHistory(request) {
+        return {
+          language_mode:
+            request.requestedLanguageMode === "auto" ||
+            request.requestedLanguageMode === "und"
+              ? "en"
+              : request.requestedLanguageMode,
+          spoken_response: "Here is the saved learning history. Practice again?",
+        };
+      },
     };
     const service = new LessonService({
       repository,
@@ -246,6 +256,38 @@ describe("LessonService", () => {
       "Here is independent reasoning.",
     );
     expect(second.turn.mastery_status).toBe("secure");
+    repository.close();
+  });
+
+  it("keeps voice-queryable history isolated between learners sharing a phone", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      makeId: sequentialIds(),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    let ravi = service.beginOrResume({
+      phoneNumber: "+91 99999 77777",
+      learnerName: "Ravi",
+    });
+    const asha = service.beginOrResume({
+      phoneNumber: "+91 99999 77777",
+      learnerName: "Asha",
+    });
+    ravi = (
+      await service.respond(
+        ravi,
+        "One third, because fewer pieces means a bigger piece.",
+      )
+    ).context;
+
+    const raviHistory = await service.learningHistory(ravi);
+    const ashaHistory = await service.learningHistory(asha);
+
+    expect(raviHistory.spoken_response).toContain("Comparing unit fractions");
+    expect(ashaHistory.spoken_response).toContain("not recorded");
     repository.close();
   });
 });

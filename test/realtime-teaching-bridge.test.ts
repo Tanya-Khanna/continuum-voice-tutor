@@ -79,6 +79,18 @@ describe("Realtime teaching controller", () => {
     });
     expect(sent[3]).toMatchObject({ type: "response.create" });
 
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "call_history",
+        name: "get_learning_history",
+        arguments: {},
+      }),
+      (event) => sent.push(event),
+    );
+    const historyOutput = parseToolOutput(sent[4]!);
+    expect(historyOutput).toMatchObject({ ok: true, language_mode: "hi-Latn+en" });
+    expect(historyOutput.spoken_response).toContain("Comparing unit fractions");
+
     await controller.close();
     const learnerId = startOutput.learner_id as string;
     expect(repository.findResumableLesson(learnerId)?.status).toBe("paused");

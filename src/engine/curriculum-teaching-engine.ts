@@ -1,5 +1,11 @@
 import type { CurriculumPack } from "../curriculum/schema.js";
 import {
+  LearningHistoryRequestSchema,
+  LearningHistoryResponseSchema,
+  type LearningHistoryRequest,
+  type LearningHistoryResponse,
+} from "../domain/history.js";
+import {
   TeachingRequestSchema,
   TeachingTurnSchema,
   type TeachingRequest,
@@ -136,6 +142,25 @@ export class CurriculumTeachingEngine implements TeachingEngine {
       mastery_evidence: scaffold.fallbackEvidence,
       next_question: scaffold.fallbackQuestion,
       spoken_response: `${scaffold.fallbackResponseLead} ${scaffold.fallbackQuestion}`,
+    });
+  }
+
+  async summarizeHistory(
+    unparsedRequest: LearningHistoryRequest,
+  ): Promise<LearningHistoryResponse> {
+    const request = LearningHistoryRequestSchema.parse(unparsedRequest);
+    const latest = request.entries[0];
+    const language =
+      request.requestedLanguageMode === "auto" ||
+      request.requestedLanguageMode === "und"
+        ? this.#pack.deployment.defaultLanguage
+        : request.requestedLanguageMode;
+    const spokenResponse = latest
+      ? `You have worked on ${latest.conceptTitle}. Your latest progress is ${latest.masteryStatus.replaceAll("_", " ")}. Would you like to practice the last idea again?`
+      : "We have not recorded a teaching turn yet. Would you like to begin now?";
+    return LearningHistoryResponseSchema.parse({
+      language_mode: language,
+      spoken_response: spokenResponse,
     });
   }
 }

@@ -9,6 +9,7 @@
     "diagnostic": "tsx src/cli/diagnostic.ts",
     "eval": "tsx src/evals/run.ts",
     "eval:live": "tsx src/evals/live-run.ts",
+    "eval:live-history": "tsx src/evals/live-history-run.ts",
     "smoke:realtime": "tsx src/cli/realtime-smoke.ts",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",

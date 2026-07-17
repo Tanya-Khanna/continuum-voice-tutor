@@ -41,6 +41,7 @@ interface LessonOrchestrator {
   beginOrResume: LessonService["beginOrResume"];
   respond: LessonService["respond"];
   pause: LessonService["pause"];
+  learningHistory: LessonService["learningHistory"];
 }
 
 function functionCallsFromEvent(event: unknown): z.infer<
@@ -177,6 +178,19 @@ export class RealtimeTeachingController {
           );
           this.#context = result.context;
           output = { ok: true, ...result.turn };
+        }
+      } else if (call.name === "get_learning_history") {
+        if (!this.#context) {
+          output = {
+            ok: false,
+            spoken_response:
+              "Before I check your learning history, what name would you like me to use?",
+          };
+        } else {
+          const history = await this.#lessonService.learningHistory(
+            this.#context,
+          );
+          output = { ok: true, ...history };
         }
       } else {
         output = {

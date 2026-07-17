@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { CurriculumPack } from "../curriculum/schema.js";
+import type { LearningHistoryResponse } from "../domain/history.js";
 import { hashPhoneNumber, normalizeLearnerName } from "../domain/identity.js";
 import {
   LearnerProfileSchema,
@@ -244,6 +245,32 @@ export class LessonService {
     });
     this.#repository.saveLesson(pausedSession);
     return { ...context, session: pausedSession };
+  }
+
+  async learningHistory(
+    context: LessonContext,
+  ): Promise<LearningHistoryResponse> {
+    const entries = this.#repository
+      .listRecentLessons(100)
+      .filter(
+        (session) =>
+          session.learnerId === context.learner.id && session.turnCount > 0,
+      )
+      .slice(0, 20)
+      .map((session) => ({
+        concept: session.concept,
+        conceptTitle: this.#concept(session.concept).title,
+        status: session.status,
+        turnCount: session.turnCount,
+        masteryStatus: session.masteryStatus,
+        masteryEvidence: session.masteryEvidence,
+        lastDiagnosis: session.lastDiagnosis,
+      }));
+    return this.#engine.summarizeHistory({
+      learnerId: context.learner.id,
+      requestedLanguageMode: context.learner.preferredLanguage,
+      entries,
+    });
   }
 
   #concept(conceptId: string): CurriculumPack["concepts"][number] {

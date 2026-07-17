@@ -3,6 +3,12 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { CurriculumPack } from "../curriculum/schema.js";
 import {
+  LearningHistoryRequestSchema,
+  LearningHistoryResponseSchema,
+  type LearningHistoryRequest,
+  type LearningHistoryResponse,
+} from "../domain/history.js";
+import {
   TeachingRequestSchema,
   TeachingTurnSchema,
   type TeachingRequest,
@@ -24,6 +30,13 @@ Mark mastery secure only after at least two pieces of reasoning evidence.
 Use lessonState when supplied. During explore, diagnose and guide. During check, ask for independent reasoning. During recap, briefly summarize progress in the learner's current language, invite them to call again, set should_end_session true, and store a retrieval question in next_question without speaking that question now.
 Set should_end_session false outside the recap phase.
 Return only the required structured output.`;
+
+const HISTORY_INSTRUCTIONS = `You are Nomad's learning-history narrator.
+Summarize only the supplied persisted learning records. Never invent a lesson, score, date, learner identity, or achievement.
+Respond in the requested language mode, preserving code-switching when requested. If it is und or auto, infer a natural language only from the records; otherwise use the supplied tag or tag combination.
+Use at most three short, warm, voice-friendly sentences with no Markdown or symbolic notation.
+Mention the most recent concept and honest mastery evidence, then ask one short question about whether the learner wants to practice it again.
+If there are no records, say so plainly and ask whether they want to begin.`;
 
 function safetyIdentifier(learnerId: string): string {
   return createHash("sha256").update(learnerId).digest("hex");
@@ -82,5 +95,29 @@ export class OpenAITeachingEngine implements TeachingEngine {
     }
 
     return TeachingTurnSchema.parse(response.output_parsed);
+  }
+
+  async summarizeHistory(
+    unparsedRequest: LearningHistoryRequest,
+  ): Promise<LearningHistoryResponse> {
+    const request = LearningHistoryRequestSchema.parse(unparsedRequest);
+    const response = await this.#client.responses.parse({
+      model: this.#model,
+      instructions: HISTORY_INSTRUCTIONS,
+      input: JSON.stringify(request),
+      text: {
+        format: zodTextFormat(
+          LearningHistoryResponseSchema,
+          "learning_history_response",
+        ),
+      },
+      reasoning: { effort: "low" },
+      safety_identifier: safetyIdentifier(request.learnerId),
+      store: false,
+    });
+    if (!response.output_parsed) {
+      throw new Error("OpenAI returned no parsed learning-history response.");
+    }
+    return LearningHistoryResponseSchema.parse(response.output_parsed);
   }
 }

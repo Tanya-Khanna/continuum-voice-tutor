@@ -144,3 +144,13 @@
 - Added the documented SIP reject boundary with status 486 for concurrent or over-limit calls.
 - Bounded and time-pruned the in-memory webhook and caller admission maps to avoid turning the guard itself into an unbounded memory surface.
 - Verification: 31 of 31 automated tests pass, including replay, concurrency, rate-window expiry, and SIP rejection coverage.
+
+## 2026-07-17 — Voice-queryable learning history
+
+- Added validated learning-history request and response contracts alongside the teaching-turn contract.
+- Added `get_learning_history` to the Realtime tool set. It is available only after the caller selects a named profile.
+- History queries collect only that learner's persisted lesson summaries, so siblings sharing a phone cannot hear each other's progress.
+- GPT-5.6 Luna narrates live history in the saved language mode with `store: false`; Realtime is again limited to saying the authoritative `spoken_response` exactly.
+- Added an offline narrator for zero-credit development without claiming it translates arbitrary languages.
+- Added `npm run eval:live-history`; the synthetic Hindi/English history case passed with correct `hi-Latn+en` tagging and voice-safe formatting.
+- Verification: 32 of 32 automated tests pass, including the sideband history handoff and shared-phone isolation.

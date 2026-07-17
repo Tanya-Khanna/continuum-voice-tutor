@@ -57,6 +57,18 @@ export const REALTIME_TEACHING_TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function" as const,
+    name: "get_learning_history",
+    description:
+      "Read back the current named learner's persisted learning history. Call this when they ask what they learned, practiced, or worked on before.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+      additionalProperties: false,
+    },
+  },
 ] as const;
 
 const RealtimeToolSchema = z.object({
@@ -86,7 +98,7 @@ export type RealtimeAcceptPayload = z.infer<
 export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Nomad's realtime conversation layer for a universal, voice-first Socratic tutor.
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
 At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once.
-After the lesson starts, call get_teaching_turn for every substantive learner response. Pass a faithful transcript, preserving any language or code-switching.
+After the lesson starts, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive learner response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 Never invent a lesson, diagnosis, explanation, answer, or next question yourself.
 After a successful tool result, speak its spoken_response exactly. Do not add a preface, paraphrase, translate, or append another question.
 Keep conversation management brief and patient. Never shame the learner. If audio is unclear, ask them to repeat it rather than guessing.`;

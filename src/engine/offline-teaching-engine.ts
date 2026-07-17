@@ -1,4 +1,8 @@
 import type { CurriculumPack } from "../curriculum/schema.js";
+import type {
+  LearningHistoryRequest,
+  LearningHistoryResponse,
+} from "../domain/history.js";
 import type { TeachingRequest, TeachingTurn } from "../domain/teaching.js";
 import {
   ConfiguredLanguageDetector,
@@ -20,5 +24,11 @@ export class OfflineTeachingEngine implements TeachingEngine {
 
   teach(request: TeachingRequest): Promise<TeachingTurn> {
     return this.#engine.teach(request);
+  }
+
+  summarizeHistory(
+    request: LearningHistoryRequest,
+  ): Promise<LearningHistoryResponse> {
+    return this.#engine.summarizeHistory(request);
   }
 }

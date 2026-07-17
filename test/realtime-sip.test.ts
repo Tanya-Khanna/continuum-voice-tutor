@@ -24,6 +24,7 @@ describe("Realtime SIP boundary", () => {
     expect(buildRealtimeAcceptPayload().tools.map((tool) => tool.name)).toEqual([
       "start_lesson",
       "get_teaching_turn",
+      "get_learning_history",
     ]);
   });
 
