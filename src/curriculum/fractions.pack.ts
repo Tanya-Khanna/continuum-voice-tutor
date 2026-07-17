@@ -132,7 +132,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
     unsafeDiagnosis:
       "The learner requested unsafe or age-inappropriate assistance.",
     unsafeResponseLead:
-      "I cannot help with anything that could hurt you or someone else. Please talk to a trusted adult or local emergency service now if anyone is in immediate danger.",
+      "I cannot help with harm; please talk to a trusted adult or local emergency service now if anyone is in immediate danger.",
     promptInjectionDiagnosis:
       "The learner attempted to override the tutor's curriculum or safety instructions.",
     promptInjectionResponseLead:
@@ -169,7 +169,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
             "neeche wala number",
           ],
           offlineBridgeLead:
-            "You described the bottom number. The curriculum word is denominator: the number that tells how many equal parts make the whole.",
+            "Your phrase bottom number connects to the curriculum word denominator: the number that tells how many equal parts make the whole.",
         },
         {
           canonicalTerm: "unit fraction",
@@ -178,7 +178,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
             "a fraction that names one equal part of a whole",
           informalSignals: ["one piece out of", "one equal piece", "one on top"],
           offlineBridgeLead:
-            "You described one equal piece. The curriculum phrase is unit fraction: one equal part of a whole.",
+            "Your phrase one equal piece connects to the curriculum phrase unit fraction: one equal part of a whole.",
         },
       ],
       verifiedRationalComparisons: [
@@ -221,7 +221,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "Fold two equal sheets of paper into three and four equal parts and compare one part from each.",
       ],
       retrievalQuestions: [
-        "If two rotis are the same size, is one third or one fourth the bigger share? Why?",
+        "Why is one third the bigger share when two same-sized rotis are split into thirds and fourths?",
         "As the number of equal pieces increases, what happens to each piece?",
       ],
       teachingScaffold: {
@@ -229,7 +229,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
           "Which is the bigger share, one third or one fourth? Tell me why.",
         silenceQuestion:
           "Imagine one roti shared equally by three people. How many equal pieces would you make?",
-        silenceResponseLead: "That is okay. We can start small.",
+        silenceResponseLead: "That is okay; we can start small.",
         answerRequestSignals: [
           "just tell",
           "give me the answer",
@@ -260,7 +260,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
               "The learner correctly connects denominator size with equal-piece size.",
             masteryEvidence:
               "The learner chose one third and justified it using piece size.",
-            responseLead: "Exactly. More equal pieces make each piece smaller.",
+            responseLead: "Exactly: more equal pieces make each piece smaller.",
             nextQuestion:
               "Now compare one fifth and one eighth. Which share is larger, and what rule are you using?",
           },
@@ -293,7 +293,7 @@ export const fractionsPack = CurriculumPackSchema.parse({
             "parts of the same whole that have exactly the same size",
           informalSignals: ["same amount", "same size for both", "fair pieces"],
           offlineBridgeLead:
-            "You described the same amount for each person. The curriculum phrase is equal shares: parts of one whole with exactly the same size.",
+            "Your phrase same amount connects to the curriculum phrase equal shares: parts of one whole with exactly the same size.",
         },
       ],
       verifiedRationalComparisons: [

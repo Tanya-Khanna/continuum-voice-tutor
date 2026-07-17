@@ -40,7 +40,7 @@ const sciencePack = CurriculumPackSchema.parse({
           spokenDefinition: "the amount of matter in something",
           informalSignals: ["heaviness"],
           offlineBridgeLead:
-            "You called it heaviness. The curriculum word is mass: the amount of matter in something.",
+            "Your word heaviness connects to the curriculum word mass: the amount of matter in something.",
         },
       ],
       misconceptions: [
@@ -111,7 +111,7 @@ describe("CurriculumTeachingEngine", () => {
       requestedLanguageMode: "sw+en",
     });
 
-    expect(turn.spoken_response).toContain("curriculum word is mass");
+    expect(turn.spoken_response).toContain("curriculum word mass");
     expect(turn.spoken_response).not.toContain("denominator");
     expect(turn.language_mode).toBe("sw+en");
   });

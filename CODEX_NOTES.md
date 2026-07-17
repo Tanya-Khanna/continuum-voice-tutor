@@ -287,3 +287,12 @@
 - Added a compatibility reader for historical turn JSON and saved agent reports. Old records receive only their historical diagnosis as a tutor inference marked unclear; the application neither fabricates missing learner claims nor discards the turn.
 - The agent pilot's trusted structural layer now fails future live cases that omit either learner-stated evidence or a tutor inference.
 - Verification: 70 of 70 automated tests, 25 of 25 deterministic evals, legacy SQLite/report compatibility, TeachingTurn Structured Outputs conversion, and strict TypeScript pass.
+
+## 2026-07-17 — Enforced voice-native turn policy
+
+- Added one shared application validator for the offline adapter, live GPT-5.6 teaching output, lesson-service persistence boundary, and agent-eval structural checks.
+- Active teaching turns must contain exactly one spoken question and no more than three short sentences. A completed recap or safety-forced ending intentionally contains zero spoken questions while keeping exactly one voice-friendly `next_question` for later retrieval.
+- Markdown markers, digit-slash and Unicode symbolic fractions, multiple questions, missing stored questions, and overlong responses fail closed before a turn reaches SQLite or Realtime speech.
+- The first run of the new guard caught genuine four-sentence composition in the frozen pack. Vocabulary bridge leads, the successful-reasoning lead, the silence lead, unsafe guidance, and a two-question retrieval prompt were tightened instead of weakening the validator.
+- Curriculum compiler and verifier instructions now account for the composed response, not just each string in isolation.
+- Verification: 76 of 76 automated tests and 25 of 25 deterministic evals pass with the guard enabled; strict TypeScript and diff checks pass.

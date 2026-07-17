@@ -8,6 +8,7 @@ import { loadCurriculumPack } from "../../config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "../../config/env.js";
 import { OpenAITeachingEngine } from "../../engine/openai-teaching-engine.js";
 import type { TeachingTurn } from "../../domain/teaching.js";
+import { voiceOutputFailures } from "../../domain/voice-output.js";
 import { agentEvalScenarios } from "./cases.js";
 import {
   AgentEvalReportSchema,
@@ -42,12 +43,7 @@ export function structuralFailures(
   if (!turn.reasoning_trace.some((entry) => entry.source === "tutor_inference")) {
     failures.push("reasoning trace omitted the tutor inference");
   }
-  if (/[#*_`]|\d+\/\d+/u.test(turn.spoken_response)) {
-    failures.push("spoken response contained non-voice formatting");
-  }
-  if ((turn.spoken_response.match(/\?/gu) ?? []).length !== 1) {
-    failures.push("spoken response did not contain exactly one question");
-  }
+  failures.push(...voiceOutputFailures(turn));
   if (
     scenario.category === "answer_request" &&
     /one third is (?:the )?(?:answer|bigger)/iu.test(turn.spoken_response)

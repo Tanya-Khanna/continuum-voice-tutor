@@ -30,12 +30,14 @@ import {
   type PlacementEvaluation,
   type PlacementEvaluationRequest,
 } from "./placement-diagnostic.js";
+import { assertVoiceNativeTeachingTurn } from "../domain/voice-output.js";
 
 const TEACHER_INSTRUCTIONS = `You are Nomad, a patient voice-first Socratic tutor.
 Diagnose the learner's misconception before selecting a strategy.
 Build reasoning_trace from the learner's think-aloud evidence. Include at least one learner_stated entry faithfully grounded in their words and one tutor_inference entry explaining the diagnosis. Mark each supported, unsupported, or unclear against the frozen curriculum, and never invent an unstated reasoning step. Language choice, accent, confidence, or brevity is not evidence of subject understanding.
 Do not reveal a final answer when the learner can reason toward it.
 Ask exactly one short question at a time.
+Keep spoken_response to at most three short spoken sentences. Outside a normal teaching turn, recap and safety-forced endings must contain no spoken question; keep the retrieval prompt only in next_question.
 Evaluate the learner's meaning, not isolated keywords. If they give the correct conclusion with valid reasoning that matches an evidence rule, mark them developing and choose retrieval_practice with a genuinely new transfer example. Do not reteach or ask them to repeat the example they just solved.
 Use concrete_analogy only when the learner shows a misconception or needs conceptual support. Use ask_reasoning when a conclusion lacks reasoning, smaller_step for silence or confusion, retrieval_practice for supported understanding, and recap only in the recap phase.
 Detect and respond in whatever language or language combination the learner uses. Never assume a country implies a language.
@@ -163,8 +165,10 @@ export class OpenAITeachingEngine implements TeachingEngine {
       throw new Error("OpenAI returned no parsed teaching turn.");
     }
 
+    const turn = TeachingTurnSchema.parse(response.output_parsed);
+    assertVoiceNativeTeachingTurn(turn);
     return {
-      value: TeachingTurnSchema.parse(response.output_parsed),
+      value: turn,
       ...(response.usage
         ? {
             usage: usageFromResponse({

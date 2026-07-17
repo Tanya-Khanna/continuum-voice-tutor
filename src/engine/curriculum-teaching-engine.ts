@@ -12,6 +12,7 @@ import {
   type TeachingTurn,
 } from "../domain/teaching.js";
 import type { LanguageDetector } from "../language/language-detector.js";
+import { assertVoiceNativeTeachingTurn } from "../domain/voice-output.js";
 
 function includesAny(answer: string, signals: string[]): boolean {
   return signals.some((signal) => answer.includes(signal.toLowerCase()));
@@ -51,10 +52,13 @@ export class CurriculumTeachingEngine {
     const vocabularyBridge = concept.vocabularyBridges.find((bridge) =>
       includesAny(normalized, bridge.informalSignals),
     );
-    const withVocabularyBridge = (spokenResponse: string): string =>
+    const composeTeachingResponse = (
+      responseLead: string,
+      nextQuestion: string,
+    ): string =>
       vocabularyBridge
-        ? `${vocabularyBridge.offlineBridgeLead} ${spokenResponse}`
-        : spokenResponse;
+        ? `${vocabularyBridge.offlineBridgeLead} ${nextQuestion}`
+        : `${responseLead} ${nextQuestion}`;
     const base = {
       learner_id: request.learnerId,
       concept: request.concept,
@@ -72,6 +76,7 @@ export class CurriculumTeachingEngine {
     const finalize = (candidate: unknown): TeachingTurn => {
       const turn = TeachingTurnSchema.parse(candidate);
       if (request.lessonState?.phase !== "recap") {
+        assertVoiceNativeTeachingTurn(turn);
         return turn;
       }
 
@@ -79,13 +84,15 @@ export class CurriculumTeachingEngine {
         concept.retrievalQuestions[
           request.lessonState.turnNumber % concept.retrievalQuestions.length
         ] ?? concept.retrievalQuestions[0]!;
-      return TeachingTurnSchema.parse({
+      const recap = TeachingTurnSchema.parse({
         ...turn,
         next_strategy: "recap",
         next_question: retrievalQuestion,
         spoken_response: `${this.#pack.lessonPolicy.recapResponseLead} ${this.#pack.lessonPolicy.callAgainInvitation}`,
         should_end_session: true,
       });
+      assertVoiceNativeTeachingTurn(recap);
+      return recap;
     };
 
     const safetyTurn = (diagnosis: string, responseLead: string) => {
@@ -207,8 +214,9 @@ export class CurriculumTeachingEngine {
         mastery_status: "needs_support",
         mastery_evidence: misconception.masteryEvidence,
         next_question: misconception.nextQuestion,
-        spoken_response: withVocabularyBridge(
-          `${misconception.responseLead} ${misconception.nextQuestion}`,
+        spoken_response: composeTeachingResponse(
+          misconception.responseLead,
+          misconception.nextQuestion,
         ),
       });
     }
@@ -238,8 +246,9 @@ export class CurriculumTeachingEngine {
         mastery_status: "developing",
         mastery_evidence: evidenceRule.masteryEvidence,
         next_question: evidenceRule.nextQuestion,
-        spoken_response: withVocabularyBridge(
-          `${evidenceRule.responseLead} ${evidenceRule.nextQuestion}`,
+        spoken_response: composeTeachingResponse(
+          evidenceRule.responseLead,
+          evidenceRule.nextQuestion,
         ),
       });
     }
@@ -259,8 +268,9 @@ export class CurriculumTeachingEngine {
       mastery_status: "needs_support",
       mastery_evidence: scaffold.fallbackEvidence,
       next_question: scaffold.fallbackQuestion,
-      spoken_response: withVocabularyBridge(
-        `${scaffold.fallbackResponseLead} ${scaffold.fallbackQuestion}`,
+      spoken_response: composeTeachingResponse(
+        scaffold.fallbackResponseLead,
+        scaffold.fallbackQuestion,
       ),
     });
   }

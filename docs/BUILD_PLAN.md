@@ -204,11 +204,14 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   score/level/recommendation, results and evidence survive drops, foundational learners start at an equal-shares
   concept, and the dashboard shows placement provenance~~ ✅. Offline development retains the deterministic adapter.
 - **F32-flavor Real-world grounding** — word problems set in mandis/rotis/local life (cultural grounding, free).
-- **F34 Radio-host turn-taking** — ≤2–3 sentences per turn, always ends with a question back.
+- **F34 Radio-host turn-taking** — ~~application-enforced maximum of three short sentences and exactly one spoken
+  question per active teaching turn~~ ✅; completed recap and safety-forced ending intentionally finish without a
+  question while retaining one retrieval question for a future call.
 - **F35 Judgment-free tone** — infinite patience, warm, never scolds; prompt property.
 - **F36 Adaptive pacing** — repeats/rephrases on confusion; never rushes.
-- **F40 Voice-native output** — speakable prose only; voice-math craft: "one-fourth," NEVER "1/4"; no notation,
-  no markdown.
+- **F40 Voice-native output** — ~~speakable prose only; trusted code rejects Markdown, symbolic fractions such as
+  "1/4", multiple questions, and overlong output before persistence or Realtime speech~~ ✅. Curriculum copy and
+  live prompts use spoken forms such as "one-fourth."
 - **G4 Lesson arc** — ~8–10 min session: greet → teach → check → recap → "call again tomorrow."
 
 **Memory & learner model**
@@ -345,7 +348,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Evening — ⛔ THE GATE:**
 - Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · ~~F13/F50 neutral preamble + engine-latency telemetry~~ ✅ *(real phone measurement remains)* · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · ~~F16 universal code-switching (live model gate)~~ ✅ · ~~F17/F31 pack-driven concept bridging + vocabulary~~ ✅ · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · ~~F52 computed rational-comparison truth~~ ✅ · F40 voice-math formatting · F34 turn-taking · F35 judgment-free tone · F36 adaptive pacing · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 persisted semantic placement + adaptive start~~ ✅ · ~~F56 uncertainty honesty~~ ✅ · ~~F48 auditable think-aloud diagnosis~~ ✅ *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
+- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · ~~F13/F50 neutral preamble + engine-latency telemetry~~ ✅ *(real phone measurement remains)* · ~~F14 drop recovery + resume machinery~~ ✅ · F21-flagship fractions pack · F23 Socratic method · ~~F16 universal code-switching (live model gate)~~ ✅ · ~~F17/F31 pack-driven concept bridging + vocabulary~~ ✅ · F25 auditory analogies · F26/F27 micro-lessons + verbal checks · F28 short-form structure · ~~F52 computed rational-comparison truth~~ ✅ · ~~F40 enforced voice-math formatting~~ ✅ · ~~F34 enforced radio turn-taking~~ ✅ · F35 judgment-free tone · F36 adaptive pacing · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 persisted semantic placement + adaptive start~~ ✅ · ~~F56 uncertainty honesty~~ ✅ · ~~F48 auditable think-aloud diagnosis~~ ✅ *(most are prompt-lines inside prompts v1 + pack content — that's why one day holds them)*
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**

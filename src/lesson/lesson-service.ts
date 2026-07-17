@@ -22,6 +22,7 @@ import {
   type LessonPhase,
   type TeachingTurn,
 } from "../domain/teaching.js";
+import { assertVoiceNativeTeachingTurn } from "../domain/voice-output.js";
 import type { TeachingEngine } from "../engine/teaching-engine.js";
 import {
   placementResultFromEvaluation,
@@ -224,6 +225,7 @@ export class LessonService {
         phase === "recap" ? "recap" : generatedTurn.next_strategy,
       should_end_session: phase === "recap" || shouldEndForSafety,
     });
+    assertVoiceNativeTeachingTurn(turn);
     const now = this.#clock().toISOString();
 
     const nextSession = LessonSessionSchema.parse({

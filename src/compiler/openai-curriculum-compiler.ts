@@ -17,7 +17,7 @@ const COMPILER_INSTRUCTIONS = `You compile a frozen voice-first Socratic curricu
 Use source themes only to determine scope and learning objectives. Write all questions, explanations, analogies, misconceptions, examples, and wording originally; never reproduce source prose.
 Stay within the stated grade, subject, required concepts, and source themes. Never add facts that cannot be supported by the brief.
 Set deployment.subject to the reviewed source brief's subject exactly; voice menus are built from this metadata rather than a hardcoded subject list.
-Make every learner-facing string short and natural aloud, with one question at a time and no Markdown or unexplained symbolic notation.
+Make every learner-facing string short and natural aloud, so a composed teaching response remains at most three sentences with exactly one question. Recap and safety-ending copy has no spoken question. Use no Markdown, symbolic fractions, or unexplained notation.
 Keep language detection universal: languagePolicy must be model_detect_any. Tested language modes and offline hints are deployment validation data, not a closed product language list.
 Include a placement diagnostic, a curriculum-configured lesson policy, concrete analogies, retrieval questions, misconception signals, evidence rules, and honest uncertainty behavior.
 For every concept, include at least one vocabulary bridge. Honor requiredVocabulary exactly when supplied. Each bridge must preserve a reviewed canonical term and its language, give a short voice-friendly definition, list informal learner expressions only as offline test signals, and provide original offline bridge copy. Vocabulary must help connect a learner's own words to curriculum language without treating English as universal.
@@ -26,7 +26,7 @@ Include a child-safety policy with deployment-tested offline signals, prompt-inj
 Return only the schema-valid draft. Provenance is attached by trusted application code after generation.`;
 
 const VERIFIER_INSTRUCTIONS = `You independently verify a generated curriculum pack against its reviewed source brief.
-Reject it if it exceeds source scope, copies or closely paraphrases source wording, contains inconsistent answers, omits or changes required vocabulary, lacks machine-checkable comparisons for numerical fraction claims, lacks voice-friendly Socratic scaffolds, embeds a closed language assumption, or invents unreviewed facts.
+Reject it if it exceeds source scope, copies or closely paraphrases source wording, contains inconsistent answers, omits or changes required vocabulary, lacks machine-checkable comparisons for numerical fraction claims, composes into more than three sentences or multiple spoken questions, lacks voice-friendly Socratic scaffolds, embeds a closed language assumption, or invents unreviewed facts.
 Treat warnings as non-blocking only when they do not affect factual correctness, originality, safety, or schema completeness.
 approved must be false whenever any error issue exists. Return only the verification result.`;
 
