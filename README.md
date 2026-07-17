@@ -64,7 +64,7 @@ npm run eval:agents -- --confirm-spend --case agent-spanish-english-switch
 
 Omit `--case` only when intentionally running all 24 scenarios. Each case makes two live GPT-5.6 requests; semantic teaching, placement, Sandbox, and voice-format cases add one production-engine request, with one bounded retry when a teaching result fails the trusted voice policy. The latest complete report is written under `.data`, stays out of Git, and appears below the deterministic gate in Mission Control. Targeted runs use a separate `.targeted` report and cannot overwrite the full-suite evidence.
 
-The latest complete paid run is **23/24**. All trusted structural checks and all ten orchestration paths passed; the remaining failure is a Hindi-only confusion turn whose smaller-step question was judged grammatically awkward. This is shown as a failure rather than hidden behind a targeted passing rerun.
+The latest complete paid run is **24/24**: fourteen semantic teaching results, ten orchestration results, zero execution errors, and no failed trusted or evaluator checks. The run recorded 78,232 input and 13,674 output text tokens. Mission Control reads this complete report; a targeted 1/1 result cannot replace it.
 
 With an API key configured, this low-cost command verifies live Realtime name capture and guided-subject/Sandbox menu routing using text only:
 

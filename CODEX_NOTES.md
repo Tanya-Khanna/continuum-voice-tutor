@@ -364,3 +364,10 @@
 - Targeted runs now write a separate `.targeted` artifact and cannot overwrite the complete report shown in Mission Control.
 - Final complete result: 23 of 24 pass with 77,773 input and 13,173 output text tokens. All ten orchestration cases and every trusted structural check pass. The sole open case is Hindi-only confusion: correct diagnosis, language, smaller-step strategy, and safety, but an independently judged awkward Hindi question. Added a universal idiomatic-language instruction; a future complete run must prove it before claiming 24/24.
 - Verification: 87 of 87 automated tests, 25 of 25 deterministic teaching cases, multiple targeted paid regressions, complete paid report persistence, and strict TypeScript pass.
+
+## 2026-07-17 — F51 complete paid proof
+
+- Re-ran the previously open Hindi-only confusion case after the universal idiomatic-language instruction; the targeted case passed and remained isolated in the `.targeted` report.
+- Ran all 24 cases together afterward. The authoritative complete report passed 24 of 24 in one run: fourteen semantic teaching turns, ten orchestration results, zero execution errors, and zero failed trusted or evaluator checks.
+- The complete run recorded 78,232 input and 13,674 output text tokens. Its Git-ignored report is the artifact Mission Control reads; the paid result is runtime evidence, not a checked-in fixture.
+- F51 is now complete for the reviewed flagship deployment. Model behavior remains probabilistic, so future prompt, model, curriculum, or schema changes must rerun the full suite rather than relying on this historical pass.
