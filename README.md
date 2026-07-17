@@ -164,3 +164,5 @@ Copy `.env.example` to `.env`. The default `TEACHING_ENGINE=offline` mode requir
 SMS recaps are off by default. Enable `NOMAD_SMS_RECAP_ENABLED=true` only after the caller or responsible adult has explicitly consented to lesson content appearing on that specific phone, then provide the three Twilio variables in `.env`. The prototype sends only to the number that placed the call; it does not collect or infer a parent number. Shared-phone deployments need a stricter recipient policy before this flag is enabled.
 
 The complete product scope and schedule are in [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md). Current decisions and progress are in [`CODEX_NOTES.md`](CODEX_NOTES.md).
+
+The executable local-judge path, real-phone release gates, three-minute recording order, and submission placeholders are in [`docs/DEMO_AND_JUDGE_RUNBOOK.md`](docs/DEMO_AND_JUDGE_RUNBOOK.md).

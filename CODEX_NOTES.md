@@ -392,3 +392,9 @@
 - Reconciled the core manifest against implemented paths and current gates, striking only the completed software behavior for universal code-switching architecture, strict Socratic routing, flagship auditory grounding, short verbal units, adaptive/judgment-free teaching, the lesson arc, named/shared-phone continuity, callback retrieval, and two-layer model routing.
 - Kept the claims narrower than the product aspiration: actual G.711 accent/timing behavior remains open; Science/English/History/Geography flavor remains in F21; “every language” is not claimed from a finite multilingual gate.
 - Re-ran the secret-safe phone preflight. Readiness remains 3/10: live teaching mode, API key, and the phone HMAC secret pass; OpenAI project/webhook/public delivery plus Twilio credentials/number/routing/trunk remain external setup work.
+
+## 2026-07-17 — Honest judge and demo runbook
+
+- Added one executable runbook for the current secret-free local judge path, the future real-phone judge card, the three-minute demo recording, final evidence capture, and submission placeholders.
+- Release gates explicitly forbid publishing a phone number before preflight and real G.711 behavior pass, presenting local/browser audio as a carrier call, exposing the unauthenticated dashboard with learner data, or claiming five callable subjects while four packs remain human-gated.
+- The demo order centers observable teaching evidence: misconception diagnosis, code-switching, exact drop/resume, Mission Control reasoning/usage, break-it behavior, architecture, and the 25/25 plus 24/24 scorecards.
