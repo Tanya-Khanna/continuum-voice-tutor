@@ -489,3 +489,4 @@
 - The job receives no OpenAI or Twilio secrets and has only `contents: read`; checkout persistence is disabled. Concurrency cancels stale runs for the same ref, and a 15-minute timeout bounds failures.
 - Pinned the current official major lines, `actions/checkout@v6` and `actions/setup-node@v6`, after checking their 2026 release pages rather than copying older workflow examples. Node remains fixed to the repository's supported major, 22.
 - Added the Release gate badge and documented that CI repeats the compiled-server smoke, 113 tests, 25-case deterministic eval, synthetic seed, and exact resume proof.
+- The first GitHub-hosted push run, `29570390805`, completed green in 42 seconds on commit `578f797`; every workflow step passed without repository secrets.
