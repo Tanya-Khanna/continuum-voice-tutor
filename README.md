@@ -12,6 +12,12 @@ Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to change the depl
 
 The offline language detector is deliberately a configurable test adapter; it does not claim to translate arbitrary languages. In live mode, the model detects and responds in the learner's actual language while remaining grounded in the selected pack.
 
+## Curriculum compiler
+
+`npm run curriculum:compile -- --source reviewed-source.json --out frozen-pack.json` runs a build-time GPT-5.6 Terra compiler followed by an independent verifier pass. The source brief must include official-source URLs, reviewed themes, bounded required concepts, local-context notes, and explicit originality requirements. Source prose is used only for scope; learner-facing questions and explanations must be original.
+
+The command writes nothing unless the generated pack passes the full schema and the verifier reports no errors. Output is create-only, carries trusted provenance attached by application code, and is never fetched or changed during a live lesson. Do not run this command on an unreviewed source brief merely to produce more subjects quickly.
+
 ## Run the zero-credit demo
 
 ```bash

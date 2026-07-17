@@ -329,7 +329,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
-- Curriculum Compiler: syllabus structure in → ORIGINAL lessons/questions out (G3 rule) → verifier-agent pass. Run for Science, English, History, Geography (Grade 6). Spot-check each pack yourself (~15 min each) → freeze.
+- ~~Curriculum Compiler scaffold: provenance-bearing reviewed source brief → GPT-5.6 Terra original draft → independent verifier → create-only frozen pack~~ ✅. Live runs for Science, English, History, and Geography remain open until official-source briefs are reviewed; builder spot-check remains mandatory before each freeze.
 - ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
 **Afternoon:**
 - Five-subject voice onboarding + flavored-sandbox fallbacks (experiments/anchor objects · conversation · time-machine choices · look-around prompts).

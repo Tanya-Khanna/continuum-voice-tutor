@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "chat": "tsx src/cli/chat.ts",
+    "curriculum:compile": "tsx src/cli/compile-curriculum.ts",
     "diagnostic": "tsx src/cli/diagnostic.ts",
     "eval": "tsx src/evals/run.ts",
     "eval:live": "tsx src/evals/live-run.ts",

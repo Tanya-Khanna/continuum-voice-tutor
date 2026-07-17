@@ -3,6 +3,10 @@ import { CurriculumPackSchema } from "./schema.js";
 export const fractionsPack = CurriculumPackSchema.parse({
   id: "india-ncert-grade-6-fractions",
   version: "0.1.0-hand-verified",
+  provenance: {
+    method: "hand_verified",
+    sourceMaterials: [],
+  },
   deployment: {
     country: "India",
     countryCode: "IN",

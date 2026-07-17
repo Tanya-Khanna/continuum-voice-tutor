@@ -154,3 +154,14 @@
 - Added an offline narrator for zero-credit development without claiming it translates arbitrary languages.
 - Added `npm run eval:live-history`; the synthetic Hindi/English history case passed with correct `hi-Latn+en` tagging and voice-safe formatting.
 - Verification: 32 of 32 automated tests pass, including the sideband history handoff and shared-phone isolation.
+
+## 2026-07-17 — Guarded curriculum compiler scaffold
+
+- Added a provenance-bearing curriculum source-brief contract with official-source URLs, reviewed themes, required concepts, local context, and explicit originality requirements.
+- Added a GPT-5.6 Terra compiler pass that produces the same universal pack schema used by the teaching engine.
+- Added an independent verifier pass covering source grounding, original wording, schema completeness, voice formatting, answer consistency, and unreviewed-scope rejection.
+- Trusted application code attaches source and model provenance after generation; the model cannot author its own provenance record.
+- Added a create-only CLI that writes no output unless verification approves the pack with no error issues, and refuses to overwrite an existing reviewed artifact.
+- Kept the hand-built fractions pack explicitly marked `hand_verified`.
+- No live compiler request was run. Official source briefs and human spot-checks are required before generating the four additional subject packs.
+- Verification: 35 of 35 automated tests pass, and the full curriculum draft schema successfully converts to the Responses Structured Outputs format.

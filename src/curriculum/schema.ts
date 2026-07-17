@@ -58,6 +58,17 @@ export const CurriculumConceptSchema = z.object({
 export const CurriculumPackSchema = z.object({
   id: z.string().min(1),
   version: z.string().min(1),
+  provenance: z.object({
+    method: z.enum(["hand_verified", "compiled"]),
+    sourceMaterials: z.array(
+      z.object({
+        title: z.string().min(1),
+        url: z.string().url(),
+      }),
+    ),
+    generatedByModel: z.string().min(1).optional(),
+    verifiedByModel: z.string().min(1).optional(),
+  }),
   deployment: z.object({
     country: z.string().min(1),
     countryCode: z.string().regex(/^[A-Z]{2}$/u),
@@ -100,3 +111,6 @@ export const CurriculumPackSchema = z.object({
 
 export type CurriculumConcept = z.infer<typeof CurriculumConceptSchema>;
 export type CurriculumPack = z.infer<typeof CurriculumPackSchema>;
+export const CurriculumPackDraftSchema = CurriculumPackSchema.omit({
+  provenance: true,
+});
