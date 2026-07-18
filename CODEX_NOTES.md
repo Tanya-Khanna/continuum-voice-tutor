@@ -596,7 +596,8 @@
 ### Verification and honest open gates
 
 - The repository remains strict-TypeScript and zero-credit runnable. The expanded automated suite covers the new domain, persistence, callback, SMS, scheduler, guardian, DTMF, evidence, and metrics paths.
-- Latest local gate after homework, scheduled-call controls, hint routing, and Outcomes UI: strict TypeScript passed, 170/170 automated tests passed, and the deterministic teaching eval remained 25/25 with 100% voice-friendly output.
+- Latest local gate after homework, scheduled-call controls, hint routing, Outcomes UI, and expanded secret initialization: strict TypeScript passed, 171/171 automated tests passed, and the deterministic teaching eval remained 25/25 with 100% voice-friendly output.
+- Expanded `npm run secrets:init` to create missing portable-identity, guardian, and callback secrets without printing or overwriting configured values. Generated the three missing local values in the ignored mode-0600 environment and transferred them plus the public base URL to Railway with deployment intentionally deferred; the feature switches and Twilio routing remain off until a dedicated missed-call route is chosen and carrier-tested.
 - The four additional subject packs remain correctly human-gated. They are not exposed merely to satisfy a breadth claim.
 - No live carrier claim is made yet for the new missed-call, DTMF, feedback, cross-phone, scheduling, or guardian paths. They require the documented smoke matrix and five consecutive golden journeys.
 - Carrier status callbacks and actual Twilio duration/price receipts remain open before measured completion/cost claims. The homework assignment/reply ledger is implemented and automated, but still needs its live carrier smoke.

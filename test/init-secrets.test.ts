@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   initializeLocalDashboardToken,
+  initializeLocalApplicationSecrets,
   initializeLocalPhoneHashSecret,
 } from "../src/config/init-secrets.js";
 
@@ -61,5 +62,38 @@ describe("local secret initializer", () => {
       "shorter than 24 characters",
     );
     expect(await readFile(path, "utf8")).toBe(contents);
+  });
+
+  it("initializes portable identity, guardian, and callback secrets without rewriting other values", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "continuum-app-secrets-"));
+    const path = join(directory, ".env");
+    await writeFile(
+      path,
+      "OPENAI_API_KEY=keep-this\nNOMAD_LEARNER_CODE_SECRET=local-learner-code-change-me\n",
+      "utf8",
+    );
+    const result = await initializeLocalApplicationSecrets(path);
+    expect(result).toMatchObject({
+      NOMAD_LEARNER_CODE_SECRET: "rotated_default",
+      NOMAD_GUARDIAN_CODE_SECRET: "created",
+      NOMAD_CALLBACK_SECRET: "created",
+    });
+    const contents = await readFile(path, "utf8");
+    expect(contents).toContain("OPENAI_API_KEY=keep-this");
+    expect(contents).toMatch(
+      /NOMAD_LEARNER_CODE_SECRET=learner_[A-Za-z0-9_-]{43}/u,
+    );
+    expect(contents).toMatch(
+      /NOMAD_GUARDIAN_CODE_SECRET=guardian_[A-Za-z0-9_-]{43}/u,
+    );
+    expect(contents).toMatch(
+      /NOMAD_CALLBACK_SECRET=callback_[A-Za-z0-9_-]{43}/u,
+    );
+    expect((await stat(path)).mode & 0o777).toBe(0o600);
+    expect(await initializeLocalApplicationSecrets(path)).toEqual({
+      NOMAD_LEARNER_CODE_SECRET: "already_configured",
+      NOMAD_GUARDIAN_CODE_SECRET: "already_configured",
+      NOMAD_CALLBACK_SECRET: "already_configured",
+    });
   });
 });
