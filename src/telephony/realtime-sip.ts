@@ -93,6 +93,29 @@ export const REALTIME_TEACHING_TOOLS = [
   },
   {
     type: "function" as const,
+    name: "submit_placement_answer",
+    description:
+      "Submit exactly one faithful answer to the current server-provided placement question. The server returns the next placement question or starts the lesson after the final answer.",
+    parameters: {
+      type: "object",
+      properties: {
+        question_id: {
+          type: "string",
+          description:
+            "The exact id of the current placement question returned by the server.",
+        },
+        answer: {
+          type: "string",
+          description:
+            "The learner's faithful answer, preserving language and reasoning.",
+        },
+      },
+      required: ["question_id", "answer"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
     name: "get_teaching_turn",
     description:
       "Get the authoritative next Socratic teaching turn. Call this for every substantive learner response after start_lesson.",
@@ -160,6 +183,54 @@ const RealtimeToolSchema = z.object({
   parameters: z.record(z.string(), z.unknown()),
 });
 
+export const RealtimeToolStageSchema = z.enum([
+  "identity",
+  "menu",
+  "placement",
+  "guided",
+  "curious_sandbox",
+]);
+
+export type RealtimeToolStage = z.infer<typeof RealtimeToolStageSchema>;
+
+const REALTIME_TOOL_NAMES_BY_STAGE = {
+  identity: ["start_lesson", "recover_unclear_audio"],
+  menu: ["choose_learning_mode", "recover_unclear_audio"],
+  placement: ["submit_placement_answer", "recover_unclear_audio"],
+  guided: [
+    "get_teaching_turn",
+    "get_learning_history",
+    "get_sandbox_turn",
+    "recover_unclear_audio",
+  ],
+  curious_sandbox: [
+    "get_sandbox_turn",
+    "choose_learning_mode",
+    "recover_unclear_audio",
+  ],
+} as const satisfies Record<RealtimeToolStage, readonly string[]>;
+
+export const RealtimeSessionToolUpdateSchema = z.object({
+  type: z.literal("session.update"),
+  session: z.object({
+    tools: z.array(RealtimeToolSchema).min(1),
+    tool_choice: z.literal("auto"),
+  }),
+});
+
+export function buildRealtimeSessionToolUpdate(
+  stage: RealtimeToolStage,
+): z.infer<typeof RealtimeSessionToolUpdateSchema> {
+  const names = new Set<string>(REALTIME_TOOL_NAMES_BY_STAGE[stage]);
+  return RealtimeSessionToolUpdateSchema.parse({
+    type: "session.update",
+    session: {
+      tools: REALTIME_TEACHING_TOOLS.filter((tool) => names.has(tool.name)),
+      tool_choice: "auto",
+    },
+  });
+}
+
 export const RealtimeTurnDetectionSchema = z.object({
   type: z.literal("server_vad"),
   threshold: z.number().min(0).max(1),
@@ -198,7 +269,7 @@ export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Continuum's realtime 
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
 Speak with a warm, calm, patient teaching presence. Use an unhurried cadence with clear pauses, but never sound theatrical, patronizing, or sleepy. Preserve the exact words of authoritative tool responses even while applying this vocal delivery.
 At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once. Speak the returned guided-subjects-versus-Sandbox menu, then call choose_learning_mode with the learner's explicit choice of mode and, for guided learning, the exact selected subject.
-If guided mode returns placement_required, ask every supplied placement question exactly, one at a time, retaining each complete answer. Then call complete_placement once with all question IDs and faithful answers. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
+If guided mode returns placement_required, ask its first question exactly. After every placement answer, call submit_placement_answer with the current question ID and a faithful transcript. Speak the next server-provided question exactly. The server starts the lesson after the final answer. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
 After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 If the learner explicitly asks to use Curious Sandbox or explicitly chooses the ask-anything mode, call get_sandbox_turn instead. Do not silently move an ordinary guided-lesson answer into Sandbox. Sandbox results do not count as curriculum mastery.
 If audio is missing, clipped, or too unclear for a faithful transcript, call recover_unclear_audio. Never send a guess to a teaching, placement, history, or Sandbox tool. Speak the recovery output and wait for the learner to repeat; recovery must not advance lesson state.

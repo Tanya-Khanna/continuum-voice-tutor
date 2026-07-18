@@ -19,6 +19,14 @@
 > passed. Real codec, latency, VAD, barge-in, noisy-line, hang-up/redial, dashboard-session, and live-SMS behavior
 > remain unverified until the corresponding measured carrier checks run.
 
+> **📞 FIRST CARRIER-BEHAVIOR RESULT — Saturday July 18:** configuration reached 11/11, but the first
+> learner-facing call **failed** the product gate. After Tanya selected fractions and answered the first placement
+> question, Continuum replayed the guided-versus-Sandbox menu; Mission Control confirmed zero completed placement
+> or teaching turns. The fix replaces model-retained batch placement with server-driven one-answer-at-a-time
+> placement and uses Realtime `session.update` to expose only the tools valid for the active call stage. A regression
+> reproduces the exact `One by three` failure; 117/117 tests and the 25/25 deterministic eval pass. Redeploy and a
+> second measured carrier call are required before any phone-experience claim is marked complete.
+
 > **This is the only document Codex needs.** Everything is in here: product, judging-criteria engineering,
 > judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
 > (Deep research receipts & citations: NOMAD_FEATURES.md. Provenance: IDEAS.md. Rules: HACKATHON_INSTRUCTIONS.md.)

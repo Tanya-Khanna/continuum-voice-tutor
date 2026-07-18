@@ -325,6 +325,131 @@ describe("Realtime teaching controller", () => {
     repository.close();
   });
 
+  it("keeps Tanya's live placement flow out of the onboarding-menu loop", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+18482160000",
+      lessonService: service,
+      modelRoute: "gpt-realtime-2.1-mini",
+      dynamicToolRouting: true,
+    });
+    const sent: RealtimeClientEvent[] = [];
+    const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "tanya_start",
+        name: "start_lesson",
+        arguments: { learner_name: "Tanya", language_mode: "hi+en" },
+      }),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "tanya_mode",
+        name: "choose_learning_mode",
+        arguments: { mode: "guided" },
+      }),
+      send,
+    );
+
+    const placementUpdate = sent.find(
+      (event) =>
+        event.type === "session.update" &&
+        JSON.stringify(event).includes("submit_placement_answer"),
+    );
+    expect(placementUpdate).toBeDefined();
+
+    // This reproduces the live model's mistaken tool choice after Tanya said
+    // "One by three." The controller now treats it as the current placement
+    // answer instead of throwing the learner back to the welcome menu.
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "tanya_first_answer_wrong_tool",
+        name: "get_teaching_turn",
+        arguments: { learner_answer: "One by three." },
+      }),
+      send,
+    );
+    let outputs = sent
+      .filter((event) => event.type === "conversation.item.create")
+      .map(parseToolOutput);
+    expect(outputs.at(-1)).toMatchObject({
+      ok: true,
+      placement_required: true,
+      placement_complete: false,
+      current_question_id: "compare_halves_quarters",
+    });
+    expect(String(outputs.at(-1)?.spoken_response)).not.toContain("Welcome");
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "tanya_second_answer",
+        name: "submit_placement_answer",
+        arguments: {
+          question_id: "compare_halves_quarters",
+          answer: "One half, because fewer pieces are bigger.",
+        },
+      }),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "tanya_third_answer",
+        name: "submit_placement_answer",
+        arguments: {
+          question_id: "compare_thirds_fifths",
+          answer: "One third, because fewer equal pieces are larger.",
+        },
+      }),
+      send,
+    );
+
+    outputs = sent
+      .filter((event) => event.type === "conversation.item.create")
+      .map(parseToolOutput);
+    expect(outputs.at(-1)).toMatchObject({
+      ok: true,
+      placement_required: false,
+      placement_complete: true,
+      placement_total: 3,
+    });
+    expect(String(outputs.at(-1)?.spoken_response)).not.toContain("Welcome");
+
+    const guidedUpdate = sent
+      .filter((event) => event.type === "session.update")
+      .at(-1);
+    expect(JSON.stringify(guidedUpdate)).toContain("get_teaching_turn");
+    expect(JSON.stringify(guidedUpdate)).not.toContain("choose_learning_mode");
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "tanya_duplicate_mode",
+        name: "choose_learning_mode",
+        arguments: { mode: "guided" },
+      }),
+      send,
+    );
+    outputs = sent
+      .filter((event) => event.type === "conversation.item.create")
+      .map(parseToolOutput);
+    expect(outputs.at(-1)).toMatchObject({
+      ok: true,
+      already_selected: true,
+      placement_required: false,
+    });
+    expect(String(outputs.at(-1)?.spoken_response)).not.toContain("Welcome");
+
+    await controller.close();
+    repository.close();
+  });
+
   it("recovers unclear audio at the correct stage without advancing state", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({

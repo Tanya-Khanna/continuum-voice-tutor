@@ -7,6 +7,10 @@ import {
 import { ModelUsageSchema, type ModelUsage } from "../domain/usage.js";
 import type { LearnerProfile } from "../domain/learner.js";
 import type { LessonContext, LessonService } from "../lesson/lesson-service.js";
+import {
+  buildRealtimeSessionToolUpdate,
+  type RealtimeToolStage,
+} from "./realtime-sip.js";
 
 const StartLessonArgumentsSchema = z.object({
   learner_name: z.string().trim().min(1).max(80),
@@ -37,6 +41,11 @@ const CompletePlacementArgumentsSchema = z.object({
       }),
     )
     .min(1),
+});
+
+const PlacementAnswerArgumentsSchema = z.object({
+  question_id: z.string().min(1),
+  answer: z.string().trim().min(1).max(2_000),
 });
 
 const FunctionCallItemSchema = z.object({
@@ -206,6 +215,7 @@ export class RealtimeTeachingController {
   readonly #handledCallIds = new Set<string>();
   readonly #handledUsageIds = new Set<string>();
   readonly #modelRoute: string;
+  readonly #dynamicToolRouting: boolean;
   readonly #onError: (error: Error) => void;
   readonly #onLessonCompleted:
     | ((lesson: CompletedGuidedLesson) => Promise<void> | void)
@@ -218,11 +228,13 @@ export class RealtimeTeachingController {
   #closed = false;
   #queue: Promise<void> = Promise.resolve();
   #pendingUsage: ModelUsage[] = [];
+  #placementAnswers: { questionId: string; answer: string }[] = [];
 
   constructor(options: {
     callerNumber: string;
     lessonService: LessonOrchestrator;
     modelRoute: string;
+    dynamicToolRouting?: boolean;
     onError?: (error: Error) => void;
     onLessonCompleted?: (
       lesson: CompletedGuidedLesson,
@@ -231,6 +243,7 @@ export class RealtimeTeachingController {
     this.#callerNumber = options.callerNumber;
     this.#lessonService = options.lessonService;
     this.#modelRoute = options.modelRoute;
+    this.#dynamicToolRouting = options.dynamicToolRouting ?? false;
     this.#onError = options.onError ?? (() => undefined);
     this.#onLessonCompleted = options.onLessonCompleted;
   }
@@ -273,6 +286,99 @@ export class RealtimeTeachingController {
     this.#pendingUsage = [];
   }
 
+  async #recordPlacementAnswer(options: {
+    answer: string;
+    questionId?: string;
+  }): Promise<{
+    output: Record<string, unknown>;
+    nextToolStage: RealtimeToolStage;
+  }> {
+    if (!this.#context || this.#learningMode !== "guided") {
+      return {
+        output: {
+          ok: false,
+          spoken_response:
+            "Please choose guided learning before the placement questions.",
+        },
+        nextToolStage: "menu",
+      };
+    }
+
+    if (!this.#lessonService.requiresPlacement(this.#context)) {
+      return {
+        output: {
+          ok: false,
+          placement_required: false,
+          spoken_response: this.#context.session.lastPrompt,
+        },
+        nextToolStage: "guided",
+      };
+    }
+
+    const questions = this.#lessonService.placementQuestions(this.#context);
+    const expectedQuestion = questions[this.#placementAnswers.length];
+    if (!expectedQuestion) {
+      this.#placementAnswers = [];
+      return {
+        output: {
+          ok: false,
+          placement_required: true,
+          spoken_response: questions[0]!.prompt,
+        },
+        nextToolStage: "placement",
+      };
+    }
+
+    if (options.questionId && options.questionId !== expectedQuestion.id) {
+      return {
+        output: {
+          ok: false,
+          placement_required: true,
+          current_question_id: expectedQuestion.id,
+          spoken_response: expectedQuestion.prompt,
+        },
+        nextToolStage: "placement",
+      };
+    }
+
+    this.#placementAnswers.push({
+      questionId: expectedQuestion.id,
+      answer: options.answer,
+    });
+    const nextQuestion = questions[this.#placementAnswers.length];
+    if (nextQuestion) {
+      return {
+        output: {
+          ok: true,
+          placement_required: true,
+          placement_complete: false,
+          current_question_id: nextQuestion.id,
+          spoken_response: nextQuestion.prompt,
+        },
+        nextToolStage: "placement",
+      };
+    }
+
+    const completed = await this.#lessonService.completePlacement(
+      this.#context,
+      this.#placementAnswers,
+    );
+    this.#context = completed.context;
+    this.#placementAnswers = [];
+    return {
+      output: {
+        ok: true,
+        placement_required: false,
+        placement_complete: true,
+        placement_level: completed.result.level,
+        placement_score: completed.result.score,
+        placement_total: completed.result.total,
+        spoken_response: completed.spokenResponse,
+      },
+      nextToolStage: "guided",
+    };
+  }
+
   async #handleFunctionCall(
     call: z.infer<typeof FunctionCallItemSchema>,
     send: RealtimeEventSender,
@@ -286,6 +392,7 @@ export class RealtimeTeachingController {
         | "exact"
         | "localize_onboarding"
         | "localize_recovery" = "exact";
+      let nextToolStage: RealtimeToolStage | undefined;
       let completedLesson: CompletedGuidedLesson | undefined;
       if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
@@ -315,6 +422,7 @@ export class RealtimeTeachingController {
             }),
           };
           speechPolicy = "localize_onboarding";
+          nextToolStage = "menu";
         }
       } else if (call.name === "choose_learning_mode") {
         const args = LearningModeArgumentsSchema.parse(
@@ -326,6 +434,42 @@ export class RealtimeTeachingController {
             spoken_response:
               "Before choosing a learning mode, what name would you like me to use?",
           };
+        } else if (
+          this.#context &&
+          this.#learningMode === args.mode &&
+          (args.mode !== "guided" ||
+            !args.subject ||
+            this.#lessonService
+              .subjectForContext(this.#context)
+              .localeCompare(args.subject, undefined, {
+                sensitivity: "base",
+              }) === 0)
+        ) {
+          const placementRequired =
+            args.mode === "guided" &&
+            this.#lessonService.requiresPlacement(this.#context);
+          const pendingPlacementQuestion = placementRequired
+            ? this.#lessonService.placementQuestions(this.#context)[
+                this.#placementAnswers.length
+              ]
+            : undefined;
+          output = {
+            ok: true,
+            mode: args.mode,
+            already_selected: true,
+            placement_required: placementRequired,
+            spoken_response:
+              pendingPlacementQuestion?.prompt ??
+              (args.mode === "guided"
+                ? this.#context.session.lastPrompt
+                : "Curious Sandbox is open. What are you curious about?"),
+          };
+          nextToolStage = placementRequired
+            ? "placement"
+            : args.mode === "guided"
+              ? "guided"
+              : "curious_sandbox";
+          speechPolicy = "localize_onboarding";
         } else {
           const subjects = this.#lessonService.availableSubjects();
           const selectedSubject = args.subject
@@ -346,7 +490,11 @@ export class RealtimeTeachingController {
               }),
             };
             speechPolicy = "localize_onboarding";
+            nextToolStage = "menu";
             send(toolOutputEvent(call.call_id, output));
+            if (this.#dynamicToolRouting) {
+              send(buildRealtimeSessionToolUpdate(nextToolStage));
+            }
             send(speakToolOutputEvent(speechPolicy));
             return;
           }
@@ -375,6 +523,7 @@ export class RealtimeTeachingController {
           const placementQuestions = placementRequired
             ? this.#lessonService.placementQuestions(this.#context)
             : [];
+          this.#placementAnswers = [];
           output = placementRequired
             ? {
                 ok: true,
@@ -399,7 +548,23 @@ export class RealtimeTeachingController {
                 ),
               };
           speechPolicy = "localize_onboarding";
+          nextToolStage = placementRequired
+            ? "placement"
+            : args.mode === "guided"
+              ? "guided"
+              : "curious_sandbox";
         }
+      } else if (call.name === "submit_placement_answer") {
+        const args = PlacementAnswerArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        const placement = await this.#recordPlacementAnswer({
+          questionId: args.question_id,
+          answer: args.answer,
+        });
+        output = placement.output;
+        nextToolStage = placement.nextToolStage;
+        speechPolicy = "localize_onboarding";
       } else if (call.name === "complete_placement") {
         const args = CompletePlacementArgumentsSchema.parse(
           JSON.parse(call.arguments),
@@ -419,6 +584,7 @@ export class RealtimeTeachingController {
             })),
           );
           this.#context = completed.context;
+          this.#placementAnswers = [];
           output = {
             ok: true,
             placement_required: false,
@@ -428,6 +594,7 @@ export class RealtimeTeachingController {
             spoken_response: completed.spokenResponse,
           };
           speechPolicy = "localize_onboarding";
+          nextToolStage = "guided";
         }
       } else if (call.name === "get_teaching_turn") {
         const args = TeachingTurnArgumentsSchema.parse(
@@ -447,14 +614,19 @@ export class RealtimeTeachingController {
             }),
           };
           speechPolicy = "localize_onboarding";
-        } else if (
-          this.#learningMode !== "guided" ||
-          this.#lessonService.requiresPlacement(this.#context)
-        ) {
+        } else if (this.#learningMode !== "guided") {
           output = {
             ok: false,
             spoken_response: this.#lessonService.learningMenu(this.#context),
           };
+          speechPolicy = "localize_onboarding";
+          nextToolStage = "menu";
+        } else if (this.#lessonService.requiresPlacement(this.#context)) {
+          const placement = await this.#recordPlacementAnswer({
+            answer: args.learner_answer,
+          });
+          output = placement.output;
+          nextToolStage = placement.nextToolStage;
           speechPolicy = "localize_onboarding";
         } else {
           const result = await this.#lessonService.respond(
@@ -505,6 +677,7 @@ export class RealtimeTeachingController {
             args.learner_question,
           );
           output = { ok: true, mode: "curious_sandbox", ...turn };
+          nextToolStage = "curious_sandbox";
         }
       } else if (call.name === "recover_unclear_audio") {
         EmptyArgumentsSchema.parse(JSON.parse(call.arguments));
@@ -531,6 +704,9 @@ export class RealtimeTeachingController {
         ) {
           recoveryStage = "placement";
           pendingPrompt =
+            this.#lessonService.placementQuestions(this.#context)[
+              this.#placementAnswers.length
+            ]?.prompt ??
             this.#lessonService.placementQuestions(this.#context)[0]!.prompt;
         } else if (this.#learningMode === "guided") {
           recoveryStage = "guided";
@@ -556,6 +732,9 @@ export class RealtimeTeachingController {
       }
 
       send(toolOutputEvent(call.call_id, output));
+      if (nextToolStage && this.#dynamicToolRouting) {
+        send(buildRealtimeSessionToolUpdate(nextToolStage));
+      }
       send(speakToolOutputEvent(speechPolicy));
       if (completedLesson && this.#onLessonCompleted) {
         this.#completionNotified = true;
@@ -623,6 +802,7 @@ export class RealtimeTeachingBridge {
       callerNumber: options.callerNumber,
       lessonService: options.lessonService,
       modelRoute: options.modelRoute,
+      dynamicToolRouting: true,
       onError: this.#onError,
       ...(options.onLessonCompleted
         ? { onLessonCompleted: options.onLessonCompleted }
@@ -646,6 +826,7 @@ export class RealtimeTeachingBridge {
 
       socket.once("open", () => {
         opened = true;
+        send(buildRealtimeSessionToolUpdate("identity"));
         send(buildRealtimeOpeningEvent());
       });
       socket.on("message", (data: RawData) => {

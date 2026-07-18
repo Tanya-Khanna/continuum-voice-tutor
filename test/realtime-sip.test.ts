@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   acceptRealtimeCall,
   buildRealtimeAcceptPayload,
+  buildRealtimeSessionToolUpdate,
   buildSipTarget,
   callerNumberFromIncomingCall,
   rejectRealtimeCall,
@@ -37,6 +38,7 @@ describe("Realtime SIP boundary", () => {
       "start_lesson",
       "choose_learning_mode",
       "complete_placement",
+      "submit_placement_answer",
       "get_teaching_turn",
       "get_learning_history",
       "get_sandbox_turn",
@@ -63,12 +65,38 @@ describe("Realtime SIP boundary", () => {
       "call recover_unclear_audio",
     );
     expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "call submit_placement_answer",
+    );
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
       "warm, calm, patient",
     );
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "Continuum's realtime conversation layer",
     );
     expect(buildRealtimeAcceptPayload().instructions).not.toContain("Nomad");
+  });
+
+  it("exposes only the tools needed for each live call stage", () => {
+    expect(
+      buildRealtimeSessionToolUpdate("identity").session.tools.map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(["start_lesson", "recover_unclear_audio"]);
+    expect(
+      buildRealtimeSessionToolUpdate("menu").session.tools.map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(["choose_learning_mode", "recover_unclear_audio"]);
+    expect(
+      buildRealtimeSessionToolUpdate("placement").session.tools.map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(["submit_placement_answer", "recover_unclear_audio"]);
+    expect(
+      buildRealtimeSessionToolUpdate("guided").session.tools.map(
+        (tool) => tool.name,
+      ),
+    ).not.toContain("choose_learning_mode");
   });
 
   it("keeps barge-in enabled when tuning server VAD", () => {
