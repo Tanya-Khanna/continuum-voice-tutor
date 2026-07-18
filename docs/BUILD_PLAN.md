@@ -5,7 +5,7 @@
 > This evidence snapshot remains tied to `3e11e8b`; later plan-only commits do not expand what was technically
 > verified. Re-run the clean-clone gate after the next implementation change.
 > Legend: ~~struck~~ ✅ = completely done and verified · ⏳ = partially done (note says what remains) · unmarked = not started.
-> **The remaining critical path: ① the real phone leg (preflight 4/11 → PHONE_SETUP.md) ② human review of 4 subject
+> **The remaining critical path: ① the real phone leg (preflight 6/11 → PHONE_SETUP.md) ② human review of 4 subject
 > briefs → compile → freeze ③ landing-page minimum ④ Hinglish sample recording ⑤ demo video ⑥ human rewrite of
 > submission copy ⑦ submit.**
 
@@ -14,8 +14,8 @@
 > checked-in Dockerfile, attached a persistent `/data` volume, and passed public health, Mission Control,
 > unauthorized-access, authenticated-session, readiness, and writable-SQLite checks. The startup process prepares
 > the root-mounted volume and then drops to the unprivileged Node user. This closes the hosting prerequisite only:
-> phone readiness remains 4/11 until the OpenAI project/webhook and Twilio number/routing/trunk are configured and
-> the real-carrier gate passes.
+> phone readiness is now 6/11: the OpenAI project and webhook are configured, while signed-delivery proof and the
+> Twilio credentials/number/routing/trunk remain open until the real-carrier gate passes.
 
 > **This is the only document Codex needs.** Everything is in here: product, judging-criteria engineering,
 > judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
@@ -173,7 +173,7 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 ### 4.1 CORE — BUILD (days 1–3)
 
 **Channel & pipeline**
-- ⏳ **F1 Zero-data dial-in** — code + SIP target + signed-webhook boundary built; **blocked on phone leg (preflight 4/11)** — no real call yet.
+- ⏳ **F1 Zero-data dial-in** — code + SIP target + signed-webhook boundary built; **blocked on phone leg (preflight 6/11)** — no real call yet.
 - ⏳ **F7 2G/GSM-native** — inherited claim ready; needs one real G.711 carrier call to be true.
 - ~~**F8 Server-side inference** — phone is a dumb audio pipe; all intelligence in the cloud.~~ ✅
 - ⏳ **F9 G.711 μ-law 8kHz** — SIP path coded + schema-verified; live codec behavior unheard.
@@ -321,7 +321,7 @@ GPT-5.6 for submission-relevant reasoning. "Best" below = Sol if available, else
 - Minimal conversation loop with prompt v0 (Socratic + Hinglish sketch). Call it from your own phone; talk to it; note everything that feels wrong.
 - Commit milestones (≥3 today). CODEX_NOTES: 10 min.
 - **Exit: a real phone conversation with an AI exists. Latency number written down.**
-- **📦 Features landing today:** ~~F8 server-side inference~~ ✅ · ~~F15-voice configured + persona named (Continuum)~~ ✅ · **F1 · F7 · F9 · F10 · F12 · F19 — all code-complete but BLOCKED on the real phone leg (preflight 4/11; see PHONE_SETUP.md). This day's exit criterion is still open and is now the #1 remaining task.**
+- **📦 Features landing today:** ~~F8 server-side inference~~ ✅ · ~~F15-voice configured + persona named (Continuum)~~ ✅ · **F1 · F7 · F9 · F10 · F12 · F19 — all code-complete but BLOCKED on the real phone leg (preflight 6/11; see PHONE_SETUP.md). This day's exit criterion is still open and is now the #1 remaining task.**
 
 ### 📅 SAT Jul 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
 **Morning:**
@@ -385,8 +385,8 @@ truth · commit at every milestone · CODEX_NOTES 10 min every evening · all co
 **~34 of 43 core features fully DONE** (all teaching, memory, integrity, eval, dashboard, safety, docs).
 **Everything still open clusters into six human-or-external workstreams:**
 1. **📞 THE PHONE LEG** — F1, F7, F9, F10, F12, F13/50-live, F14-live, F15-live, F19 all unblock together when
-   preflight goes 4/11 → 10/11 → one smoke call → 11/11 → real-carrier checks (PHONE_SETUP.md has the sequence;
-   requires: ~~public HTTPS deploy~~ ✅, OpenAI project/webhook, Twilio upgrade + number + trunk)
+   preflight goes 6/11 → 10/11 → one smoke call → 11/11 → real-carrier checks (PHONE_SETUP.md has the sequence;
+   requires: ~~public HTTPS deploy~~ ✅, ~~OpenAI project/webhook~~ ✅, Twilio upgrade + number + trunk)
 2. **📚 PACK REVIEW** — F21-full + F22: review 4 source-briefs (~15 min each) → compile → verify → freeze
 3. **🎙️ HINGLISH SAMPLE** — your voice, replaces synthetic Spanish-English exhibit
 4. **🎬 DEMO VIDEO + human rewrite** of Devpost copy (authorship gate)

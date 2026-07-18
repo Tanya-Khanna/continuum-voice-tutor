@@ -531,3 +531,11 @@
 - Public verification passed: `/health` and `/dashboard` return 200, an unauthenticated learner-session request returns 401, the same request with the local judge token returns 200, the readiness endpoint returns 200, and SQLite opens successfully on the mounted volume. The previous `unable to open database file` failure is resolved.
 - Local release verification before deploy: strict TypeScript, 115/115 automated tests, compiled production smoke, writable SQLite, dashboard authentication, release readiness, and ranged sample audio all passed. Railway build `c912370e-94b6-435f-bdf1-26a75990748e` completed successfully.
 - Hosting is now ready for the next external gate. Phone readiness remains 4/11 until the OpenAI project ID/webhook signing secret and Twilio credentials, number, verified routing, and SIP trunk are configured and the signed-delivery plus real-carrier checks pass.
+
+## 2026-07-18 — OpenAI Realtime webhook connected
+
+- Used the signed-in OpenAI Platform console to confirm the API key belongs to the Default project, capture its documented `proj_` identifier, and create `Continuum Realtime incoming` at the deployed `/webhooks/openai` endpoint.
+- Subscribed the endpoint only to `realtime.call.incoming`. The one-time `whsec_` signing secret was written directly to the ignored mode-0600 local environment and Railway without being pasted into chat, committed, or printed by the configuration command.
+- Redeployed the unchanged committed application after setting the project ID and webhook secret. The Railway deployment succeeded, and public `/health` now reports `ok: true`, the OpenAI teaching engine, and `realtimeConfigured: true` without exposing either configured value.
+- Secret-safe phone preflight advanced from 4/11 to 6/11. The remaining checks are signed-delivery proof from the first controlled call plus Twilio credentials, a voice-capable number, verified number routing, and the OpenAI SIP trunk.
+- `NOMAD_OPENAI_WEBHOOK_PUBLIC` deliberately remains false. A created endpoint and healthy server do not substitute for receiving a valid signed `realtime.call.incoming` event over the carrier path.
