@@ -24,7 +24,7 @@
     "phone:preflight": "tsx src/cli/phone-preflight.ts",
     "secrets:init": "tsx src/cli/init-secrets.ts",
     "start": "tsx src/server.ts",
-    "start:prod": "node dist/server.js",
+    "start:prod": "node dist/start-production.js",
     "dev": "tsx watch src/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -114,7 +114,7 @@ try {
   buildProductionServer();
   const port = await reservePort();
   const baseUrl = `http://127.0.0.1:${port}`;
-  productionServer = spawn(process.execPath, ["dist/server.js"], {
+  productionServer = spawn(process.execPath, ["dist/start-production.js"], {
     cwd: repositoryRoot,
     env: safeEnvironment(port),
     stdio: ["ignore", "pipe", "pipe"],

@@ -60,6 +60,12 @@ write separate local database files. Back up the disk before a release migration
 and apply the retention/deletion policy in `docs/SAFETY_PRIVACY.md` before real
 learner use.
 
+Railway mounts volumes as root. For Railway only, set `RAILWAY_RUN_UID=0`; the
+checked-in production startup wrapper prepares only the configured SQLite
+directory and immediately drops to the image's existing unprivileged `node`
+UID/GID before loading the HTTP server. Do not use that variable with a command
+that bypasses `npm run start:prod` or `dist/start-production.js`.
+
 ## Deployment validation
 
 Before connecting Twilio:
