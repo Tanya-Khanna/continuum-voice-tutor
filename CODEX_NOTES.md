@@ -547,3 +547,11 @@
 - Stored the existing Account SID and primary auth token directly in the ignored mode-0600 local environment and Railway without pasting or printing either credential. Redeployed the unchanged committed application after the runtime-variable update.
 - Secret-safe readiness advanced from 6/11 to 7/11. The remaining four checks are the E.164 voice number, verified number routing, configured OpenAI SIP trunk, and signed public webhook delivery proven by the first controlled carrier call.
 - No Twilio upgrade, funding, number allocation, or other purchase was submitted. The free `Try out Voice` activation remains available but is not equivalent to an Elastic SIP trunk; activating it is a separate external action requiring Tanya's approval.
+
+## 2026-07-18 — Paid carrier path configured at 10/11
+
+- Upgraded the Twilio account with Tanya's explicit approval and confirmed the $20 starting balance. The balance is prepaid usage, not a $20 monthly subscription; auto-recharge remains off.
+- Created the required Individual primary compliance profile, then purchased one New Jersey US local number for Continuum at the displayed $1.15 monthly fee. Twilio reports the number active with Voice, SMS, and MMS capabilities.
+- Created the `Continuum OpenAI` Elastic SIP trunk. Its recording mode is `do-not-record`; the single enabled origination target uses the documented OpenAI project SIP address with `;transport=tls`; the Continuum number is associated with the trunk. No termination route is configured because this release is inbound-only.
+- Saved the E.164 number and the two verified Twilio routing attestations in the ignored local environment and Railway without exposing credentials or the OpenAI project identifier. The Railway variable update deployed successfully, and public health remains green.
+- `npm run phone:preflight` now reports 10/11. The only open check is a valid signed `realtime.call.incoming` webhook from exactly one controlled inbound call; `NOMAD_OPENAI_WEBHOOK_PUBLIC` remains false until that evidence exists.
