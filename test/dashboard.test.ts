@@ -46,6 +46,13 @@ describe("mission-control snapshot", () => {
     expect(DASHBOARD_HTML).toContain("Public number', 'Still gated");
   });
 
+  it("makes access, reliability, and learning evidence visible to judges", () => {
+    expect(DASHBOARD_HTML).toContain("id=\"metrics-tab\"");
+    expect(DASHBOARD_HTML).toContain("/api/dashboard/product-metrics");
+    expect(DASHBOARD_HTML).toContain("Access. Reliability. Learning.");
+    expect(DASHBOARD_HTML).toContain("state.metrics.evidenceScope");
+  });
+
   it("exposes teaching evidence without learner names or phone numbers", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({

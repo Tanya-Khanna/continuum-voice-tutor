@@ -9,6 +9,9 @@ import {
   type RealtimeClientEvent,
   usageFromRealtimeEvent,
 } from "../src/telephony/realtime-teaching-bridge.js";
+import { PortableIdentityService } from "../src/domain/portable-identity.js";
+import { GuardianAccessService } from "../src/guardian/guardian-access-service.js";
+import { GuardianControlService } from "../src/guardian/guardian-control-service.js";
 
 const PHONE_HASH_SECRET = "realtime-test-secret-12345";
 
@@ -33,6 +36,30 @@ function parseToolOutput(event: RealtimeClientEvent): Record<string, unknown> {
   return JSON.parse(item.output) as Record<string, unknown>;
 }
 
+async function makePlacedLearner(options: {
+  service: LessonService;
+  phoneNumber: string;
+  name: string;
+}) {
+  const learner = options.service.identifyLearner({
+    phoneNumber: options.phoneNumber,
+    learnerName: options.name,
+  });
+  const context = options.service.beginOrResumeSubject(learner);
+  const placed = await options.service.completePlacement(context, [
+    { questionId: "equal_shares", answer: "Each gets one half." },
+    {
+      questionId: "compare_halves_quarters",
+      answer: "One half, because fewer pieces are bigger pieces.",
+    },
+    {
+      questionId: "compare_thirds_fifths",
+      answer: "One third, because fewer pieces means bigger pieces.",
+    },
+  ]);
+  return placed.context.learner;
+}
+
 describe("Realtime teaching controller", () => {
   it("introduces the human-selected Continuum identity", () => {
     expect(buildRealtimeOpeningEvent()).toMatchObject({
@@ -43,6 +70,318 @@ describe("Realtime teaching controller", () => {
         ),
       },
     });
+  });
+
+  it("accepts a portable learner code through SIP DTMF and confirms the name", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = service.identifyLearner({
+      phoneNumber: "+919999900011",
+      learnerName: "Meena",
+    });
+    const portableIdentity = new PortableIdentityService({
+      repository,
+      secret: PHONE_HASH_SECRET,
+      makeCode: () => "482913",
+    });
+    portableIdentity.issue(learner.id);
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+919999900099",
+      lessonService: service,
+      portableIdentity,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+
+    for (const event of "482913#") {
+      await controller.handleServerEvent(
+        {
+          type: "input_audio_buffer.dtmf_event_received",
+          event,
+        },
+        (outgoing) => sent.push(outgoing),
+      );
+    }
+    expect(sent.at(-1)).toMatchObject({
+      type: "response.create",
+      response: {
+        instructions: expect.stringContaining("say the learner's name"),
+      },
+    });
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "portable-confirm",
+        name: "start_lesson",
+        arguments: { learner_name: "Meena" },
+      }),
+      (outgoing) => sent.push(outgoing),
+    );
+    const output = parseToolOutput(sent.at(-2)!);
+    expect(output).toMatchObject({
+      ok: true,
+      learner_id: learner.id,
+      portable_code_issued: null,
+    });
+    expect(
+      repository.listLearnersForPhone(
+        "a".repeat(64),
+      ),
+    ).toHaveLength(0);
+    await controller.close();
+    repository.close();
+  });
+
+  it("opens a scheduled call at the saved learning point without onboarding", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = service.identifyLearner({
+      phoneNumber: "+919999900012",
+      learnerName: "Meena",
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+919999900012",
+      lessonService: service,
+      initialLearner: learner,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+
+    expect(controller.openingToolStage()).toBe("placement");
+    expect(controller.openingEvent()).toMatchObject({
+      type: "response.create",
+      response: {
+        instructions: expect.stringContaining("scheduled Continuum lesson"),
+      },
+    });
+    expect(JSON.stringify(controller.openingEvent())).not.toContain(
+      "what name",
+    );
+    const sent: RealtimeClientEvent[] = [];
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      (outgoing) => sent.push(outgoing),
+    );
+    expect(JSON.stringify(sent.at(-1))).toContain(
+      fractionsPack.placementDiagnostic.questions[0]!.prompt,
+    );
+    await controller.close();
+    repository.close();
+  });
+
+  it("lets a low-literacy guardian hear progress through keypad controls", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = service.identifyLearner({
+      phoneNumber: "+919999900013",
+      learnerName: "Meena",
+    });
+    const guardianAccess = new GuardianAccessService({
+      repository,
+      secret: PHONE_HASH_SECRET,
+      phoneHashSecret: PHONE_HASH_SECRET,
+      makeCode: () => "654321",
+    });
+    guardianAccess.issue({
+      learnerId: learner.id,
+      guardianPhoneNumber: "+919999900013",
+      smsAllowed: true,
+      proactiveCallsAllowed: false,
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+919999900013",
+      lessonService: service,
+      guardianAccess,
+      guardianControls: new GuardianControlService({ repository }),
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "guardian-start",
+        name: "start_lesson",
+        arguments: { learner_name: "Meena" },
+      }),
+      (outgoing) => sent.push(outgoing),
+    );
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "8" },
+      (outgoing) => sent.push(outgoing),
+    );
+    for (const event of "654321#") {
+      await controller.handleServerEvent(
+        { type: "input_audio_buffer.dtmf_event_received", event },
+        (outgoing) => sent.push(outgoing),
+      );
+    }
+    expect(JSON.stringify(sent.at(-1))).toContain("Press 1 for progress");
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      (outgoing) => sent.push(outgoing),
+    );
+    expect(JSON.stringify(sent.at(-1))).toContain("no completed lesson yet");
+    await controller.close();
+    repository.close();
+  });
+
+  it("asks for teaching feedback and persists a spoken answer before continuing", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = await makePlacedLearner({
+      service,
+      phoneNumber: "+919999900014",
+      name: "Meena",
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+919999900014",
+      lessonService: service,
+      initialLearner: learner,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "feedback-teach",
+        name: "get_teaching_turn",
+        arguments: {
+          learner_answer:
+            "One fourth is bigger because four is bigger than three.",
+        },
+      }),
+      (outgoing) => sent.push(outgoing),
+    );
+    const teaching = parseToolOutput(sent[0]!);
+    expect(teaching).toMatchObject({
+      teaching_feedback_requested: true,
+    });
+    expect(String(teaching.spoken_response)).toContain(
+      "Did that way of explaining help?",
+    );
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "feedback-answer",
+        name: "record_teaching_feedback",
+        arguments: { helpfulness: "not_helpful", pace: "too_fast" },
+      }),
+      (outgoing) => sent.push(outgoing),
+    );
+    const feedback = parseToolOutput(sent[2]!);
+    expect(feedback).toMatchObject({ ok: true, helpfulness: "not_helpful" });
+    expect(String(feedback.spoken_response)).toContain(
+      String(teaching.next_question),
+    );
+    expect(repository.listTeachingFeedback(learner.id)).toMatchObject([
+      { helpfulness: "not_helpful", pace: "too_fast", responseMode: "speech" },
+    ]);
+    await controller.close();
+    repository.close();
+  });
+
+  it("accepts teaching feedback by keypad without advancing the lesson", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = await makePlacedLearner({
+      service,
+      phoneNumber: "+919999900015",
+      name: "Meena",
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+919999900015",
+      lessonService: service,
+      initialLearner: learner,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "dtmf-feedback-teach",
+        name: "get_teaching_turn",
+        arguments: {
+          learner_answer:
+            "One fourth is bigger because four is bigger than three.",
+        },
+      }),
+      (outgoing) => sent.push(outgoing),
+    );
+    const sessionBefore = repository.findResumableLesson(learner.id)!;
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "2" },
+      (outgoing) => sent.push(outgoing),
+    );
+    const sessionAfter = repository.findResumableLesson(learner.id)!;
+    expect(sessionAfter.turnCount).toBe(sessionBefore.turnCount);
+    expect(repository.listTeachingFeedback(learner.id)).toMatchObject([
+      { helpfulness: "not_helpful", responseMode: "dtmf" },
+    ]);
+    expect(JSON.stringify(sent.at(-1))).toContain("Thanks for telling me");
+    await controller.close();
+    repository.close();
+  });
+
+  it("uses keypad 9 for a pack-grounded hint without creating mastery evidence", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = await makePlacedLearner({
+      service,
+      phoneNumber: "+919999900016",
+      name: "Meena",
+    });
+    const controller = new RealtimeTeachingController({
+      callerNumber: "+919999900016",
+      lessonService: service,
+      initialLearner: learner,
+      modelRoute: "gpt-realtime-2.1-mini",
+    });
+    const sent: RealtimeClientEvent[] = [];
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      (outgoing) => sent.push(outgoing),
+    );
+    const before = repository.findResumableLesson(learner.id)!;
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "9" },
+      (outgoing) => sent.push(outgoing),
+    );
+    const after = repository.findResumableLesson(learner.id)!;
+    expect(after.turnCount).toBe(before.turnCount);
+    expect(after.lastStrategy).toBe("hint_ladder");
+    expect(after.lastPrompt).toBe(
+      fractionsPack.concepts[0]!.teachingScaffold.silenceQuestion,
+    );
+    expect(repository.listLearningEvidence(learner.id)).toHaveLength(0);
+    expect(JSON.stringify(sent.at(-1))).toContain(after.lastPrompt);
+    await controller.close();
+    repository.close();
   });
 
   it("separates Realtime text, cached, and audio usage", () => {

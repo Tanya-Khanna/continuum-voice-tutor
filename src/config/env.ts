@@ -29,6 +29,17 @@ const optionalPathArray = z.preprocess((value) => {
   }
 }, z.array(z.string().trim().min(1)).min(1).optional());
 
+const stringArrayFromEnvironment = z.preprocess((value) => {
+  if (value === undefined || value === "") return undefined;
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value.split(",").map((entry) => entry.trim()).filter(Boolean);
+  }
+}, z.array(z.string().trim().min(1)).min(1).optional());
+
 const EnvironmentSchema = z.object({
   TEACHING_ENGINE: z.enum(["offline", "openai"]).default("offline"),
   HOST: z.string().trim().min(1).default("0.0.0.0"),
@@ -38,6 +49,36 @@ const EnvironmentSchema = z.object({
     .string()
     .min(16)
     .default("local-development-change-me"),
+  NOMAD_LEARNER_CODE_SECRET: z
+    .string()
+    .min(16)
+    .default("local-learner-code-change-me"),
+  NOMAD_GUARDIAN_CODE_SECRET: z
+    .string()
+    .min(16)
+    .default("local-guardian-code-change-me"),
+  NOMAD_CALLBACK_SECRET: z
+    .string()
+    .min(16)
+    .default("local-callback-change-me"),
+  NOMAD_PUBLIC_BASE_URL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional(),
+  ),
+  NOMAD_MISSED_CALL_ENABLED: booleanFromEnvironment,
+  NOMAD_MISSED_CALL_ADULT_DEMO: booleanFromEnvironment,
+  NOMAD_SMS_CONTROLS_ENABLED: booleanFromEnvironment,
+  NOMAD_SCHEDULER_ENABLED: booleanFromEnvironment,
+  NOMAD_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(5_000).max(300_000).default(30_000),
+  NOMAD_CALLBACK_ALLOWED_PREFIXES: stringArrayFromEnvironment.default([
+    "+1",
+    "+91",
+  ]),
+  NOMAD_DEPLOYMENT_TIME_ZONE: z.string().min(1).default("Asia/Kolkata"),
+  NOMAD_CALLBACK_QUIET_START_HOUR: z.coerce.number().int().min(0).max(23).default(21),
+  NOMAD_CALLBACK_QUIET_END_HOUR: z.coerce.number().int().min(0).max(23).default(7),
+  NOMAD_CALLBACK_PER_NUMBER_DAILY_LIMIT: z.coerce.number().int().min(1).max(20).default(3),
+  NOMAD_CALLBACK_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(1).max(10_000).default(100),
   NOMAD_CURRICULUM_PATH: optionalNonEmpty,
   NOMAD_CURRICULUM_PATHS: optionalPathArray,
   NOMAD_AGENT_EVAL_REPORT_PATH: z
@@ -76,6 +117,7 @@ const EnvironmentSchema = z.object({
   TWILIO_ACCOUNT_SID: optionalNonEmpty,
   TWILIO_AUTH_TOKEN: optionalNonEmpty,
   TWILIO_PHONE_NUMBER: optionalNonEmpty,
+  TWILIO_MISSED_CALL_NUMBER: optionalNonEmpty,
   NOMAD_TWILIO_SIP_TRUNK_CONFIGURED: booleanFromEnvironment,
   NOMAD_TWILIO_NUMBER_VOICE_READY: booleanFromEnvironment,
   NOMAD_SMS_RECAP_ENABLED: booleanFromEnvironment,
@@ -86,6 +128,49 @@ const EnvironmentSchema = z.object({
       path: ["NOMAD_CURRICULUM_PATHS"],
       message:
         "Configure NOMAD_CURRICULUM_PATH or NOMAD_CURRICULUM_PATHS, not both.",
+    });
+  }
+  if (
+    environment.NOMAD_MISSED_CALL_ENABLED &&
+    (!environment.NOMAD_PUBLIC_BASE_URL ||
+      !environment.TWILIO_ACCOUNT_SID ||
+      !environment.TWILIO_AUTH_TOKEN ||
+      !(environment.TWILIO_MISSED_CALL_NUMBER ?? environment.TWILIO_PHONE_NUMBER) ||
+      !environment.OPENAI_PROJECT_ID)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["NOMAD_MISSED_CALL_ENABLED"],
+      message:
+        "Missed-call callbacks require NOMAD_PUBLIC_BASE_URL, Twilio credentials and number, and OPENAI_PROJECT_ID.",
+    });
+  }
+  if (
+    environment.NOMAD_SMS_CONTROLS_ENABLED &&
+    (!environment.NOMAD_PUBLIC_BASE_URL ||
+      !environment.TWILIO_ACCOUNT_SID ||
+      !environment.TWILIO_AUTH_TOKEN ||
+      !environment.TWILIO_PHONE_NUMBER)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["NOMAD_SMS_CONTROLS_ENABLED"],
+      message:
+        "SMS controls require NOMAD_PUBLIC_BASE_URL and Twilio credentials and phone number.",
+    });
+  }
+  if (
+    environment.NOMAD_SCHEDULER_ENABLED &&
+    (!environment.TWILIO_ACCOUNT_SID ||
+      !environment.TWILIO_AUTH_TOKEN ||
+      !environment.TWILIO_PHONE_NUMBER ||
+      !environment.OPENAI_PROJECT_ID)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["NOMAD_SCHEDULER_ENABLED"],
+      message:
+        "The scheduler requires Twilio credentials and phone number plus OPENAI_PROJECT_ID.",
     });
   }
 });

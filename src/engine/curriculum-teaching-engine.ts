@@ -80,8 +80,37 @@ export class CurriculumTeachingEngine {
       should_end_session: false,
     } as const;
     const finalize = (candidate: unknown): TeachingTurn => {
-      const turn = TeachingTurnSchema.parse(candidate);
+      let turn = TeachingTurnSchema.parse(candidate);
+      const latestFeedback = request.lessonState?.latestFeedback;
+      if (
+        latestFeedback?.helpfulness === "not_helpful" &&
+        turn.next_strategy === latestFeedback.strategy &&
+        turn.next_strategy !== "safety_redirect" &&
+        request.lessonState?.phase !== "recap"
+      ) {
+        turn = TeachingTurnSchema.parse({
+          ...turn,
+          diagnosis: `${turn.diagnosis} The learner said the previous method was not helpful.`,
+          next_strategy: "smaller_step",
+          next_question: scaffold.fallbackQuestion,
+          spoken_response: `${scaffold.fallbackResponseLead} ${scaffold.fallbackQuestion}`,
+        });
+      }
       if (request.lessonState?.phase !== "recap") {
+        if (request.lessonState?.phase === "reflect") {
+          const responseLead = turn.spoken_response
+            .replace(/[^.!?]*\?\s*$/u, "")
+            .trim();
+          const reflection = TeachingTurnSchema.parse({
+            ...turn,
+            next_strategy: "reflection",
+            next_question: "What is one thing you understand now?",
+            spoken_response: `${responseLead} What is one thing you understand now?`,
+            should_end_session: false,
+          });
+          assertVoiceNativeTeachingTurn(reflection);
+          return reflection;
+        }
         assertVoiceNativeTeachingTurn(turn);
         return turn;
       }

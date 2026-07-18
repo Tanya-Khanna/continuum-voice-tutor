@@ -1,4 +1,5 @@
 import { createServer, type IncomingHttpHeaders } from "node:http";
+import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import OpenAI from "openai";
@@ -25,9 +26,23 @@ import {
   acceptRealtimeCall,
   buildRealtimeAcceptPayload,
   callerNumberFromIncomingCall,
+  learnerIdFromIncomingCall,
   rejectRealtimeCall,
 } from "./telephony/realtime-sip.js";
 import { RealtimeTeachingBridge } from "./telephony/realtime-teaching-bridge.js";
+import {
+  MISSED_CALL_REJECT_TWIML,
+  MissedCallCallbackService,
+  placeTwilioCallback,
+} from "./telephony/missed-call-callback.js";
+import { validateTwilioSignature } from "./telephony/twilio-signature.js";
+import { GuardianAccessService } from "./guardian/guardian-access-service.js";
+import { SmsControlService } from "./messaging/sms-control-service.js";
+import { HomeworkService } from "./messaging/homework-service.js";
+import { StudyPlanScheduler } from "./scheduling/study-plan-scheduler.js";
+import { ProductMetricEventSchema } from "./domain/product-metrics.js";
+import { buildProductMetrics } from "./observability/product-metrics.js";
+import { renderLandingPage } from "./landing/page.js";
 import { SAMPLE_SESSION } from "./samples/sample-session.js";
 import {
   assertPublicDashboardProtected,
@@ -70,6 +85,111 @@ const curriculumCatalog = loadCurriculumCatalog(
   curriculumCatalogOptions(environment),
 );
 
+function createMissedCallService(
+  repository: SqliteLearningRepository,
+): MissedCallCallbackService {
+  return new MissedCallCallbackService({
+    repository,
+    secret: environment.NOMAD_CALLBACK_SECRET,
+    phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
+    allowedPrefixes: environment.NOMAD_CALLBACK_ALLOWED_PREFIXES,
+    timeZone: environment.NOMAD_DEPLOYMENT_TIME_ZONE,
+    quietStartHour: environment.NOMAD_CALLBACK_QUIET_START_HOUR,
+    quietEndHour: environment.NOMAD_CALLBACK_QUIET_END_HOUR,
+    perNumberDailyLimit: environment.NOMAD_CALLBACK_PER_NUMBER_DAILY_LIMIT,
+    globalDailyLimit: environment.NOMAD_CALLBACK_GLOBAL_DAILY_LIMIT,
+    allowAdultDemo: environment.NOMAD_MISSED_CALL_ADULT_DEMO,
+  });
+}
+
+async function processCallbackJob(jobId: string): Promise<void> {
+  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
+  try {
+    const now = new Date();
+    const claimed = repository.claimCallbackJob({
+      id: jobId,
+      claimToken: randomUUID(),
+      claimExpiresAt: new Date(now.getTime() + 2 * 60_000).toISOString(),
+      now: now.toISOString(),
+    });
+    if (!claimed) return;
+    const service = createMissedCallService(repository);
+    try {
+      const placed = await placeTwilioCallback({
+        accountSid: environment.TWILIO_ACCOUNT_SID!,
+        authToken: environment.TWILIO_AUTH_TOKEN!,
+        from: (environment.TWILIO_MISSED_CALL_NUMBER ??
+          environment.TWILIO_PHONE_NUMBER)!,
+        to: service.destination(claimed),
+        projectId: environment.OPENAI_PROJECT_ID!,
+        relaySecret: environment.NOMAD_CALLBACK_SECRET,
+      });
+      repository.saveCallbackJob({
+        ...claimed,
+        status: "completed",
+        providerCallSid: placed.sid,
+        claimToken: null,
+        claimExpiresAt: null,
+        updatedAt: new Date().toISOString(),
+      });
+      repository.appendProductMetric(
+        ProductMetricEventSchema.parse({
+          id: randomUUID(),
+          name: "callback_placed",
+          learnerId: null,
+          sessionId: null,
+          channel: "system",
+          accessMode: "missed_call",
+          numericValue: null,
+          synthetic: false,
+          createdAt: new Date().toISOString(),
+        }),
+      );
+    } catch (error) {
+      repository.saveCallbackJob({
+        ...claimed,
+        status: "failed",
+        errorCode:
+          error instanceof Error && /status \d+/u.test(error.message)
+            ? error.message
+            : "callback_failed",
+        claimToken: null,
+        claimExpiresAt: null,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  } finally {
+    repository.close();
+  }
+}
+
+let schedulerTickRunning = false;
+async function runStudySchedulerTick(): Promise<void> {
+  if (schedulerTickRunning) return;
+  schedulerTickRunning = true;
+  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
+  try {
+    await new StudyPlanScheduler({
+      repository,
+      callbackSecret: environment.NOMAD_CALLBACK_SECRET,
+      dial: async ({ learnerId, to }) => {
+        await placeTwilioCallback({
+          accountSid: environment.TWILIO_ACCOUNT_SID!,
+          authToken: environment.TWILIO_AUTH_TOKEN!,
+          from: environment.TWILIO_PHONE_NUMBER!,
+          to,
+          projectId: environment.OPENAI_PROJECT_ID!,
+          relaySecret: environment.NOMAD_CALLBACK_SECRET,
+          learnerId,
+        });
+      },
+    }).runDue();
+  } finally {
+    repository.close();
+    schedulerTickRunning = false;
+  }
+}
+
 export const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", "http://localhost");
@@ -86,6 +206,162 @@ export const server = createServer(async (request, response) => {
           guidedSubjects: curriculumCatalog.subjects(),
         }),
       );
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/") {
+      response.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=60",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "no-referrer",
+      });
+      response.end(
+        renderLandingPage({
+          ...(environment.TWILIO_PHONE_NUMBER
+            ? { phoneNumber: environment.TWILIO_PHONE_NUMBER }
+            : {}),
+          phoneReady:
+            environment.NOMAD_TWILIO_NUMBER_VOICE_READY &&
+            environment.NOMAD_OPENAI_WEBHOOK_PUBLIC,
+          missedCallEnabled: environment.NOMAD_MISSED_CALL_ENABLED,
+          guidedSubjects: curriculumCatalog.subjects(),
+        }),
+      );
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/webhooks/twilio/missed-call"
+    ) {
+      if (!environment.NOMAD_MISSED_CALL_ENABLED) {
+        response.writeHead(404, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "missed_call_disabled" }));
+        return;
+      }
+      const rawBody = await readBody(request);
+      const parameters = new URLSearchParams(rawBody);
+      const signatureUrl = new URL(
+        request.url ?? url.pathname,
+        environment.NOMAD_PUBLIC_BASE_URL!,
+      ).toString();
+      const signatureHeader = request.headers["x-twilio-signature"];
+      const providedSignature = Array.isArray(signatureHeader)
+        ? signatureHeader[0]
+        : signatureHeader;
+      if (
+        !validateTwilioSignature({
+          authToken: environment.TWILIO_AUTH_TOKEN!,
+          url: signatureUrl,
+          parameters,
+          ...(providedSignature ? { providedSignature } : {}),
+        })
+      ) {
+        response.writeHead(403, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "invalid_twilio_signature" }));
+        return;
+      }
+      const repository = new SqliteLearningRepository(
+        environment.NOMAD_DATABASE_PATH,
+      );
+      let callbackJobId: string | undefined;
+      try {
+        const result = createMissedCallService(repository).enqueue(
+          Object.fromEntries(parameters.entries()),
+        );
+        if (result.status === "queued") callbackJobId = result.job.id;
+      } finally {
+        repository.close();
+      }
+      response.writeHead(200, {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      response.end(MISSED_CALL_REJECT_TWIML);
+      if (callbackJobId) {
+        setImmediate(() => {
+          void processCallbackJob(callbackJobId!).catch((error: unknown) =>
+            console.error(
+              "Missed-call callback worker failed:",
+              error instanceof Error ? error.message : "unknown error",
+            ),
+          );
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/webhooks/twilio/sms"
+    ) {
+      if (!environment.NOMAD_SMS_CONTROLS_ENABLED) {
+        response.writeHead(404, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "sms_controls_disabled" }));
+        return;
+      }
+      const rawBody = await readBody(request);
+      const parameters = new URLSearchParams(rawBody);
+      const signatureUrl = new URL(
+        request.url ?? url.pathname,
+        environment.NOMAD_PUBLIC_BASE_URL!,
+      ).toString();
+      const signatureHeader = request.headers["x-twilio-signature"];
+      const providedSignature = Array.isArray(signatureHeader)
+        ? signatureHeader[0]
+        : signatureHeader;
+      if (
+        !validateTwilioSignature({
+          authToken: environment.TWILIO_AUTH_TOKEN!,
+          url: signatureUrl,
+          parameters,
+          ...(providedSignature ? { providedSignature } : {}),
+        })
+      ) {
+        response.writeHead(403, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "invalid_twilio_signature" }));
+        return;
+      }
+      const repository = new SqliteLearningRepository(
+        environment.NOMAD_DATABASE_PATH,
+      );
+      try {
+        const messageSid = parameters.get("MessageSid") ?? "";
+        const existing = repository.findSmsReceipt(messageSid);
+        if (!existing) {
+          const guardianAccess = new GuardianAccessService({
+            repository,
+            secret: environment.NOMAD_GUARDIAN_CODE_SECRET,
+            phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
+          });
+          const receipt = new SmsControlService({
+            repository,
+            guardianAccess,
+            homeworkService: new HomeworkService({
+              repository,
+              phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
+            }),
+            defaultSubject: curriculumCatalog.defaultOption.subject,
+            timeZone: environment.NOMAD_DEPLOYMENT_TIME_ZONE,
+            callbackSecret: environment.NOMAD_CALLBACK_SECRET,
+          }).handle(Object.fromEntries(parameters.entries()));
+          await sendTwilioSms({
+            accountSid: environment.TWILIO_ACCOUNT_SID!,
+            authToken: environment.TWILIO_AUTH_TOKEN!,
+            from: environment.TWILIO_PHONE_NUMBER!,
+            to: parameters.get("From") ?? "",
+            body: receipt.responseText,
+          });
+        }
+      } finally {
+        repository.close();
+      }
+      response.writeHead(200, {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      response.end('<?xml version="1.0" encoding="UTF-8"?><Response/>');
       return;
     }
 
@@ -228,6 +504,43 @@ export const server = createServer(async (request, response) => {
       return;
     }
 
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/dashboard/product-metrics"
+    ) {
+      if (
+        !dashboardRequestAuthorized({
+          ...(environment.NOMAD_DASHBOARD_TOKEN
+            ? { expectedToken: environment.NOMAD_DASHBOARD_TOKEN }
+            : {}),
+          ...(request.headers.authorization
+            ? { authorizationHeader: request.headers.authorization }
+            : {}),
+        })
+      ) {
+        response.writeHead(401, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "WWW-Authenticate": 'Bearer realm="Continuum Mission Control"',
+        });
+        response.end(JSON.stringify({ error: "dashboard_access_required" }));
+        return;
+      }
+      const repository = new SqliteLearningRepository(
+        environment.NOMAD_DATABASE_PATH,
+      );
+      try {
+        response.writeHead(200, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        });
+        response.end(JSON.stringify(buildProductMetrics(repository)));
+      } finally {
+        repository.close();
+      }
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/dashboard/evals") {
       const [report, agentReport] = await Promise.all([
         runOfflineEvaluation(),
@@ -278,7 +591,10 @@ export const server = createServer(async (request, response) => {
           response.end(JSON.stringify({ received: true, duplicate: true }));
           return;
         }
-        const callerNumber = callerNumberFromIncomingCall(incomingCall);
+        const callerNumber = callerNumberFromIncomingCall(
+          incomingCall,
+          environment.NOMAD_CALLBACK_SECRET,
+        );
         const callerKey = hashPhoneNumber(
           callerNumber,
           environment.NOMAD_PHONE_HASH_SECRET,
@@ -319,11 +635,22 @@ export const server = createServer(async (request, response) => {
           });
 
           const runtime = createLessonRuntime(environment);
+          const scheduledLearnerId = learnerIdFromIncomingCall(
+            incomingCall,
+            environment.NOMAD_CALLBACK_SECRET,
+          );
+          const scheduledLearner = scheduledLearnerId
+            ? runtime.lessonService.findLearner(scheduledLearnerId)
+            : undefined;
           const bridge = new RealtimeTeachingBridge({
             apiKey,
             callId,
             callerNumber,
             lessonService: runtime.lessonService,
+            portableIdentity: runtime.portableIdentity,
+            guardianAccess: runtime.guardianAccess,
+            guardianControls: runtime.guardianControls,
+            ...(scheduledLearner ? { initialLearner: scheduledLearner } : {}),
             modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
               console.error(`Realtime call ${callId}:`, bridgeError.message),
@@ -331,12 +658,28 @@ export const server = createServer(async (request, response) => {
               ? {
                   onLessonCompleted: async ({
                     callerNumber: to,
-                    turn,
+                    context,
+                  }) => {
+                    const homework = runtime.homework.assign({
+                      learnerId: context.learner.id,
+                      sessionId: context.session.id,
+                      recipientPhoneNumber: to,
+                      draft: runtime.lessonService.homeworkDraft(context),
+                    });
+                    await sendTwilioSms({
+                      ...twilioSmsConfig,
+                      to,
+                      body: homework.smsText,
+                    });
+                  },
+                  onLessonPaused: async ({
+                    callerNumber: to,
+                    pendingQuestionNumber,
                   }) => {
                     await sendTwilioSms({
                       ...twilioSmsConfig,
                       to,
-                      body: turn.spoken_response,
+                      body: `Lesson paused at Q${pendingQuestionNumber}. Call back anytime and enter your learner code.`,
                     });
                   },
                 }
@@ -385,3 +728,20 @@ server.listen(environment.PORT, environment.HOST, () => {
     `Continuum server listening on http://${environment.HOST}:${environment.PORT}`,
   );
 });
+
+if (environment.NOMAD_SCHEDULER_ENABLED) {
+  void runStudySchedulerTick().catch((error: unknown) =>
+    console.error(
+      "Initial scheduler tick failed:",
+      error instanceof Error ? error.message : "unknown error",
+    ),
+  );
+  setInterval(() => {
+    void runStudySchedulerTick().catch((error: unknown) =>
+      console.error(
+        "Scheduler tick failed:",
+        error instanceof Error ? error.message : "unknown error",
+      ),
+    );
+  }, environment.NOMAD_SCHEDULER_INTERVAL_MS).unref();
+}

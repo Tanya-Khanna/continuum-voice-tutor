@@ -30,6 +30,32 @@ import {
   type PlacementResult,
 } from "../engine/placement-diagnostic.js";
 import { redactPotentialPii } from "../privacy/redact-pii.js";
+import {
+  EvidenceResultSchema,
+  HumanSupportDecisionSchema,
+  LearningActivitySchema,
+  LearningEvidenceSchema,
+  LearnerResponseModeSchema,
+  LessonDurationMinutesSchema,
+  PedagogyDecisionSchema,
+  TeachingFeedbackSchema,
+  activityKindForStrategy,
+  assertSafeEducationalMotivation,
+  masteryMayBeSecure,
+  nextReviewAfterDays,
+  humanSupportDecisionFor,
+  type LearningActivity,
+  type LearningEvidence,
+  type PedagogyDecision,
+  type TeachingFeedback,
+  CuriosityTrailSchema,
+  type CuriosityTrail,
+  LearnerEducationProfileSchema,
+  type LearnerEducationProfile,
+} from "../domain/classroom.js";
+import type { z } from "zod";
+import { ProductMetricEventSchema } from "../domain/product-metrics.js";
+import type { HomeworkDraft } from "../messaging/homework-service.js";
 
 export interface LessonContext {
   learner: LearnerProfile;
@@ -38,7 +64,49 @@ export interface LessonContext {
   greeting: string;
 }
 
+export interface LessonResponse {
+  context: LessonContext;
+  turn: TeachingTurn;
+  activity: LearningActivity;
+  evidence: LearningEvidence;
+  decision: PedagogyDecision;
+}
+
+export type LearnerResponseMode = z.infer<typeof LearnerResponseModeSchema>;
+export type LessonDurationMinutes = z.infer<typeof LessonDurationMinutesSchema>;
+
 export type CallLearningMode = "guided" | "curious_sandbox";
+
+function replaceFinalSpokenQuestion(options: {
+  spokenResponse: string;
+  previousQuestion: string;
+  reviewedQuestion: string;
+}): string {
+  const spoken = options.spokenResponse.trim();
+  const previous = options.previousQuestion.trim();
+  let lead = spoken;
+  if (previous && spoken.endsWith(previous)) {
+    lead = spoken.slice(0, -previous.length).trim();
+  } else {
+    lead = spoken.replace(/[^.!?]*\?\s*$/u, "").trim();
+  }
+  if (!lead) return options.reviewedQuestion;
+  const punctuatedLead = /[.!?]$/u.test(lead) ? lead : `${lead}.`;
+  return `${punctuatedLead} ${options.reviewedQuestion}`;
+}
+
+export function targetTurnsForDuration(
+  baseTargetTurns: number,
+  durationMinutes: LessonDurationMinutes,
+): number {
+  if (durationMinutes === 3) {
+    return Math.max(3, Math.round(baseTargetTurns * 0.6));
+  }
+  if (durationMinutes === 10) {
+    return Math.min(20, Math.max(baseTargetTurns + 1, baseTargetTurns * 2));
+  }
+  return baseTargetTurns;
+}
 
 export interface LessonServiceOptions {
   repository: LearningRepository;
@@ -83,6 +151,10 @@ export class LessonService {
 
   availableSubjects(): string[] {
     return [this.#curriculumPack.deployment.subject];
+  }
+
+  findLearner(learnerId: string): LearnerProfile | undefined {
+    return this.#repository.findLearner(learnerId);
   }
 
   subjectForContext(_context: LessonContext): string {
@@ -177,6 +249,32 @@ export class LessonService {
         updatedAt: now,
       });
       this.#repository.saveLesson(resumedLesson);
+      if (isRecentDrop && existingLesson.status === "paused") {
+        const sessionMetrics = this.#repository
+          .listProductMetrics()
+          .filter((event) => event.sessionId === existingLesson.id);
+        const pausedDrops = sessionMetrics.filter(
+          (event) => event.name === "drop_paused",
+        ).length;
+        const recoveredDrops = sessionMetrics.filter(
+          (event) => event.name === "drop_recovered",
+        ).length;
+        if (pausedDrops > recoveredDrops) {
+          this.#repository.appendProductMetric(
+            ProductMetricEventSchema.parse({
+              id: this.#makeId(),
+              name: "drop_recovered",
+              learnerId: persistedLearner.id,
+              sessionId: resumedLesson.id,
+              channel: "phone",
+              accessMode: "unknown",
+              numericValue: resumedLesson.turnCount + 1,
+              synthetic: false,
+              createdAt: now,
+            }),
+          );
+        }
+      }
       return {
         learner: persistedLearner,
         session: resumedLesson,
@@ -231,19 +329,37 @@ export class LessonService {
   async respond(
     context: LessonContext,
     learnerAnswer: string,
-  ): Promise<{ context: LessonContext; turn: TeachingTurn }> {
+    options: { responseMode?: LearnerResponseMode } = {},
+  ): Promise<LessonResponse> {
+    const responseMode = LearnerResponseModeSchema.parse(
+      options.responseMode ?? "speech",
+    );
     const sequence = context.session.turnCount + 1;
-    const targetTurns = this.#curriculumPack.lessonPolicy.targetTurns;
+    const targetTurns = targetTurnsForDuration(
+      this.#curriculumPack.lessonPolicy.targetTurns,
+      context.session.durationMinutes,
+    );
     const phase: LessonPhase =
       sequence >= targetTurns
         ? "recap"
         : sequence === targetTurns - 1
-          ? "check"
-          : "explore";
+          ? "reflect"
+          : sequence === targetTurns - 2
+            ? "check"
+            : "explore";
     const priorReasoningEvidenceCount = this.#repository
       .listTurns(context.session.id)
       .filter((entry) => entry.turn.mastery_status !== "needs_support").length;
     const previousTurns = this.#repository.listTurns(context.session.id);
+    const previousStrategies = previousTurns.map(
+      (entry) => entry.turn.next_strategy,
+    );
+    const latestFeedback = this.#repository
+      .listTeachingFeedback(context.learner.id, 20)
+      .find((feedback) => feedback.sessionId === context.session.id) ?? null;
+    const hintCount = previousStrategies.filter(
+      (strategy) => strategy === "smaller_step" || strategy === "hint_ladder",
+    ).length;
     let consecutiveSafetyRedirects = 0;
     for (const entry of [...previousTurns].reverse()) {
       if (entry.turn.next_strategy !== "safety_redirect") break;
@@ -265,36 +381,215 @@ export class LessonService {
         consecutiveSafetyRedirects,
         anchorObject: context.session.anchorObject,
         placementLevel: context.session.placementLevel,
+        responseMode,
+        previousStrategies,
+        latestFeedback,
+        hintCount,
+        educationProfile:
+          this.#repository.findEducationProfile(context.learner.id) ?? null,
       },
     });
     const generatedTurn = generated.value;
+    if (
+      latestFeedback?.helpfulness === "not_helpful" &&
+      generatedTurn.next_strategy === latestFeedback.strategy &&
+      generatedTurn.next_strategy !== "safety_redirect" &&
+      phase !== "recap"
+    ) {
+      throw new Error(
+        `Teaching policy violation: strategy ${generatedTurn.next_strategy} repeated after the learner marked it not helpful.`,
+      );
+    }
+    const concept = this.#concept(context.session.concept);
+    const reviewedKeypadQuestion =
+      phase === "check"
+        ? concept.keypadQuestions[sequence % concept.keypadQuestions.length]
+        : undefined;
+    const renderedSpokenResponse = reviewedKeypadQuestion
+      ? replaceFinalSpokenQuestion({
+          spokenResponse: generatedTurn.spoken_response,
+          previousQuestion: generatedTurn.next_question,
+          reviewedQuestion: reviewedKeypadQuestion.prompt,
+        })
+      : generatedTurn.spoken_response;
     const anchorObject = generatedTurn.anchor_object;
-    const acceptedAnchorObject = anchorObject
-      ? this.#concept(context.session.concept).anchorActivities.some(
+    const proposedAnchor = anchorObject
+      ? concept.anchorActivities.find(
           (activity) => activity.objectName === anchorObject,
         )
-        ? anchorObject
-        : context.session.anchorObject
+      : undefined;
+    const normalizedAnswer = redactedLearnerAnswer.toLocaleLowerCase();
+    const learnerConfirmedAnchor = proposedAnchor
+      ? [proposedAnchor.objectName, ...proposedAnchor.learnerSignals].some(
+          (signal) =>
+            normalizedAnswer.includes(signal.toLocaleLowerCase()),
+        )
+      : false;
+    const acceptedAnchorObject = learnerConfirmedAnchor
+      ? proposedAnchor!.objectName
       : context.session.anchorObject;
     const shouldEndForSafety =
       generatedTurn.next_strategy === "safety_redirect" &&
       consecutiveSafetyRedirects + 1 >=
         this.#curriculumPack.safetyPolicy.maxConsecutiveRedirects;
+    const evidenceKind =
+      context.session.lastStrategy === "reflection"
+        ? "reflection"
+        : context.session.lastStrategy === "retrieval_practice"
+        ? "retention"
+        : context.session.lastStrategy === "teach_back"
+          ? "teach_back"
+          : context.session.lastStrategy === "transfer"
+            ? "transfer"
+            : sequence === 1
+              ? "diagnostic"
+              : "guided_practice";
+    const evidenceResult = EvidenceResultSchema.parse(
+      generatedTurn.next_strategy === "safety_redirect" ||
+        generatedTurn.next_strategy === "uncertainty"
+        ? "unclear"
+        : generatedTurn.mastery_status === "secure"
+          ? "correct"
+          : generatedTurn.mastery_status === "developing"
+            ? "partial"
+            : "incorrect",
+    );
+    const independentEvidence =
+      responseMode !== "dtmf" &&
+      hintCount === 0 &&
+      (evidenceKind === "transfer" || evidenceKind === "retention");
+    const secureAllowed = masteryMayBeSecure({
+      kind: evidenceKind,
+      result: evidenceResult,
+      independent: independentEvidence,
+      responseMode,
+    });
     const turn = TeachingTurnSchema.parse({
       ...generatedTurn,
       learner_answer: redactedLearnerAnswer,
+      spoken_response: renderedSpokenResponse,
+      next_question:
+        reviewedKeypadQuestion?.prompt ?? generatedTurn.next_question,
       anchor_object: acceptedAnchorObject,
       mastery_status:
-        generatedTurn.mastery_status === "secure" &&
-        priorReasoningEvidenceCount < 1
-          ? "developing"
-          : generatedTurn.mastery_status,
+        phase === "recap"
+          ? context.session.masteryStatus
+          : generatedTurn.mastery_status === "secure" &&
+              (priorReasoningEvidenceCount < 1 || !secureAllowed)
+            ? "developing"
+            : generatedTurn.mastery_status,
       next_strategy:
-        phase === "recap" ? "recap" : generatedTurn.next_strategy,
+        phase === "recap"
+          ? "recap"
+          : phase === "check"
+            ? "transfer"
+            : generatedTurn.next_strategy,
       should_end_session: phase === "recap" || shouldEndForSafety,
     });
     assertVoiceNativeTeachingTurn(turn);
+    assertSafeEducationalMotivation(turn.spoken_response);
     const now = this.#clock().toISOString();
+    const activityKind = activityKindForStrategy({
+      strategy: turn.next_strategy,
+      phase,
+      hasMisconception: evidenceResult === "incorrect",
+    });
+    const activity = LearningActivitySchema.parse({
+      id: this.#makeId(),
+      kind: activityKind,
+      objective: concept.learningObjective,
+      voiceScript: turn.spoken_response,
+      expectedResponse: turn.should_end_session
+        ? "none"
+        : reviewedKeypadQuestion
+          ? "choice"
+        : activityKind === "reflection"
+          ? "reflection"
+          : "open_speech",
+      reviewedQuestionId: reviewedKeypadQuestion?.id ?? null,
+      keypadChoices:
+        reviewedKeypadQuestion?.choices.map((choice, index) => ({
+          key: String(index + 1),
+          label: choice.label,
+          reviewedAnswerId: choice.id,
+        })) ?? [],
+      smsText: reviewedKeypadQuestion?.featurePhoneSms ?? null,
+      estimatedSeconds: turn.should_end_session ? 15 : 45,
+      canCreateMasteryEvidence: [
+        "quiz",
+        "flashcard",
+        "teach_back",
+        "retrieval",
+        "transfer",
+      ].includes(activityKind),
+    });
+    const evidence = LearningEvidenceSchema.parse({
+      id: this.#makeId(),
+      learnerId: context.learner.id,
+      sessionId: context.session.id,
+      curriculumPackId: this.#curriculumPack.id,
+      concept: context.session.concept,
+      activityId: activity.id,
+      kind: evidenceKind,
+      result: evidenceResult,
+      independent: independentEvidence,
+      responseMode,
+      reasoningEvidence: turn.mastery_evidence,
+      strategy: context.session.lastStrategy,
+      hintCount,
+      createdAt: now,
+    });
+    const distinctFailedStrategies = new Set(
+      previousTurns
+        .filter((entry) => entry.turn.mastery_status === "needs_support")
+        .map((entry) => entry.turn.next_strategy),
+    );
+    const humanSupport = HumanSupportDecisionSchema.parse(
+      humanSupportDecisionFor({
+        immediateSafetyConcern:
+          turn.next_strategy === "safety_redirect" &&
+          /immediate danger|abuse|self-harm|suicid|emergency/iu.test(
+            turn.diagnosis,
+          ),
+        highStakesQuestion:
+          turn.next_strategy === "safety_redirect" &&
+          /medical|legal|crisis|high.stakes/iu.test(turn.diagnosis),
+        accommodationRequested: /accommodation|accessibility/iu.test(
+          turn.diagnosis,
+        ),
+        curriculumReviewNeeded:
+          turn.next_strategy === "uncertainty" &&
+          /curriculum|source|verification/iu.test(turn.diagnosis),
+        distinctFailedStrategies:
+          turn.mastery_status === "needs_support"
+            ? distinctFailedStrategies.size
+            : 0,
+      }),
+    );
+    const decision = PedagogyDecisionSchema.parse({
+      learnerId: context.learner.id,
+      sessionId: context.session.id,
+      curriculumPackId: this.#curriculumPack.id,
+      concept: context.session.concept,
+      activity,
+      diagnosis: turn.diagnosis,
+      strategy: turn.next_strategy,
+      strategyReason:
+        latestFeedback?.helpfulness === "not_helpful"
+          ? `The learner marked ${latestFeedback.strategy} not helpful, so the controller required a different method.`
+          : turn.diagnosis,
+      strategyChanged: context.session.lastStrategy !== turn.next_strategy,
+      evidenceKind,
+      evidenceResult,
+      independentEvidence,
+      responseMode,
+      humanSupport,
+      reviewAfterDays: nextReviewAfterDays({
+        result: evidenceResult,
+        masteryStatus: turn.mastery_status,
+      }),
+      createdAt: now,
+    });
 
     const nextSession = LessonSessionSchema.parse({
       ...context.session,
@@ -326,6 +621,38 @@ export class LessonService {
         createdAt: now,
       }),
     );
+    this.#repository.appendLearningEvidence(evidence);
+    this.#repository.appendPedagogyDecision(decision);
+    if (responseMode === "dtmf") {
+      this.#repository.appendProductMetric(
+        ProductMetricEventSchema.parse({
+          id: this.#makeId(),
+          name: "keypad_fallback_completed",
+          learnerId: nextLearner.id,
+          sessionId: nextSession.id,
+          channel: "dtmf",
+          accessMode: "unknown",
+          numericValue: null,
+          synthetic: false,
+          createdAt: now,
+        }),
+      );
+    }
+    if (nextSession.status === "completed") {
+      this.#repository.appendProductMetric(
+        ProductMetricEventSchema.parse({
+          id: this.#makeId(),
+          name: "lesson_completed",
+          learnerId: nextLearner.id,
+          sessionId: nextSession.id,
+          channel: "phone",
+          accessMode: "unknown",
+          numericValue: nextSession.turnCount,
+          synthetic: false,
+          createdAt: now,
+        }),
+      );
+    }
     if (generated.usage) {
       this.recordModelUsage(
         { ...context, session: nextSession, learner: nextLearner },
@@ -343,6 +670,173 @@ export class LessonService {
         greeting: context.greeting,
       },
       turn,
+      activity,
+      evidence,
+      decision,
+    };
+  }
+
+  recordTeachingFeedback(
+    context: LessonContext,
+    options: {
+      helpfulness: TeachingFeedback["helpfulness"];
+      pace?: TeachingFeedback["pace"];
+      preferredActivity?: TeachingFeedback["preferredActivity"];
+      objectiveResult?: TeachingFeedback["objectiveResult"];
+      responseMode?: LearnerResponseMode;
+    },
+  ): TeachingFeedback {
+    const feedback = TeachingFeedbackSchema.parse({
+      id: this.#makeId(),
+      learnerId: context.learner.id,
+      sessionId: context.session.id,
+      subject: this.#curriculumPack.deployment.subject,
+      strategy: context.session.lastStrategy,
+      helpfulness: options.helpfulness,
+      pace: options.pace ?? null,
+      preferredActivity: options.preferredActivity ?? null,
+      objectiveResult: options.objectiveResult ?? "unclear",
+      responseMode: options.responseMode ?? "speech",
+      createdAt: this.#clock().toISOString(),
+    });
+    this.#repository.appendTeachingFeedback(feedback);
+    return feedback;
+  }
+
+  setLessonDuration(
+    context: LessonContext,
+    durationMinutes: LessonDurationMinutes,
+  ): LessonContext {
+    const duration = LessonDurationMinutesSchema.parse(durationMinutes);
+    if (context.session.turnCount > 0) {
+      throw new Error("Lesson duration can only change before teaching begins.");
+    }
+    const session = LessonSessionSchema.parse({
+      ...context.session,
+      durationMinutes: duration,
+      updatedAt: this.#clock().toISOString(),
+    });
+    this.#repository.saveLesson(session);
+    return { ...context, session };
+  }
+
+  requestHint(context: LessonContext): {
+    context: LessonContext;
+    spokenResponse: string;
+  } {
+    if (context.session.status !== "active") {
+      throw new Error("A hint requires an active lesson.");
+    }
+    const concept = this.#concept(context.session.concept);
+    const now = this.#clock().toISOString();
+    const session = LessonSessionSchema.parse({
+      ...context.session,
+      lastPrompt: concept.teachingScaffold.silenceQuestion,
+      lastDiagnosis: "The learner explicitly requested a smaller hint.",
+      lastStrategy: "hint_ladder",
+      updatedAt: now,
+    });
+    this.#repository.saveLesson(session);
+    return {
+      context: { ...context, session },
+      spokenResponse: `${concept.teachingScaffold.silenceResponseLead} ${concept.teachingScaffold.silenceQuestion}`,
+    };
+  }
+
+  updateEducationProfile(
+    context: LessonContext,
+    options: {
+      consentConfirmed: boolean;
+      ageBand?: LearnerEducationProfile["ageBand"];
+      reportedGrade?: number | null;
+      interests?: string[];
+      aspirations?: string[];
+      curiosityTopics?: string[];
+      preferredExamples?: string[];
+      learningGoals?: string[];
+      preferredActivities?: LearnerEducationProfile["preferredActivities"];
+      preferredPace?: LearnerEducationProfile["preferredPace"];
+    },
+  ): LearnerEducationProfile {
+    if (!options.consentConfirmed) {
+      throw new Error("Learning preferences require explicit learner consent.");
+    }
+    const now = this.#clock().toISOString();
+    const existing =
+      this.#repository.findEducationProfile(context.learner.id) ??
+      LearnerEducationProfileSchema.parse({
+        learnerId: context.learner.id,
+        ageBand: "unknown",
+        reportedGrade: null,
+        interests: [],
+        aspirations: [],
+        curiosityTopics: [],
+        preferredExamples: [],
+        learningGoals: [],
+        preferredActivities: [],
+        preferredPace: null,
+        consentedFields: [],
+        updatedAt: now,
+      });
+    const fieldMap = {
+      ageBand: "age_band",
+      reportedGrade: "reported_grade",
+      interests: "interests",
+      aspirations: "aspirations",
+      curiosityTopics: "curiosity_topics",
+      preferredExamples: "preferred_examples",
+      learningGoals: "learning_goals",
+      preferredActivities: "preferred_activities",
+      preferredPace: "preferred_pace",
+    } as const;
+    const consented = new Set(existing.consentedFields);
+    const updates: Record<string, unknown> = {};
+    for (const [field, consentField] of Object.entries(fieldMap) as [
+      keyof typeof fieldMap,
+      (typeof fieldMap)[keyof typeof fieldMap],
+    ][]) {
+      if (options[field] !== undefined) {
+        updates[field] = options[field];
+        consented.add(consentField);
+      }
+    }
+    if (Object.keys(updates).length === 0) {
+      throw new Error("At least one approved learning preference is required.");
+    }
+    const profile = LearnerEducationProfileSchema.parse({
+      ...existing,
+      ...updates,
+      consentedFields: [...consented],
+      updatedAt: now,
+    });
+    this.#repository.saveEducationProfile(profile);
+    return profile;
+  }
+
+  educationProfile(context: LessonContext): LearnerEducationProfile | undefined {
+    return this.#repository.findEducationProfile(context.learner.id);
+  }
+
+  homeworkDraft(context: LessonContext): HomeworkDraft {
+    const concept = this.#concept(context.session.concept);
+    const question = concept.keypadQuestions[0];
+    if (!question) {
+      throw new Error(`Concept ${concept.id} has no reviewed homework question.`);
+    }
+    const correctIndex = question.choices.findIndex((choice) => choice.correct);
+    if (correctIndex < 0) {
+      throw new Error(`Question ${question.id} has no reviewed correct answer.`);
+    }
+    return {
+      curriculumPackId: this.#curriculumPack.id,
+      concept: concept.id,
+      reviewedQuestionId: question.id,
+      prompt: question.featurePhoneSms,
+      choices: question.choices.map((choice, index) => ({
+        key: String(index + 1) as "1" | "2" | "3" | "4",
+        label: choice.label,
+      })),
+      correctKey: String(correctIndex + 1) as "1" | "2" | "3" | "4",
     };
   }
 
@@ -433,7 +927,10 @@ export class LessonService {
     };
   }
 
-  pause(context: LessonContext): LessonContext {
+  pause(
+    context: LessonContext,
+    reason: "manual" | "drop" = "manual",
+  ): LessonContext {
     if (context.session.status === "completed") return context;
     const pausedSession = LessonSessionSchema.parse({
       ...context.session,
@@ -441,6 +938,21 @@ export class LessonService {
       updatedAt: this.#clock().toISOString(),
     });
     this.#repository.saveLesson(pausedSession);
+    if (reason === "drop") {
+      this.#repository.appendProductMetric(
+        ProductMetricEventSchema.parse({
+          id: this.#makeId(),
+          name: "drop_paused",
+          learnerId: context.learner.id,
+          sessionId: context.session.id,
+          channel: "phone",
+          accessMode: "unknown",
+          numericValue: context.session.turnCount + 1,
+          synthetic: false,
+          createdAt: this.#clock().toISOString(),
+        }),
+      );
+    }
     return { ...context, session: pausedSession };
   }
 
@@ -479,10 +991,20 @@ export class LessonService {
     learnerQuestion: string,
   ): Promise<SandboxTurn> {
     const redactedQuestion = redactPotentialPii(learnerQuestion);
+    const priorTurns = this.#repository
+      .listSandboxTurns(context.session.id)
+      .slice(-6)
+      .map((entry) => ({
+        learnerQuestion: entry.turn.learner_question,
+        spokenResponse: entry.turn.spoken_response,
+        followUpQuestion: entry.turn.follow_up_question,
+        certainty: entry.turn.certainty,
+      }));
     const result = await this.#engine.explore({
       learnerId: context.learner.id,
       learnerQuestion: redactedQuestion,
       requestedLanguageMode: context.learner.preferredLanguage,
+      previousTurns: priorTurns,
     });
     const turn = SandboxTurnSchema.parse({
       ...result.value,
@@ -507,6 +1029,46 @@ export class LessonService {
     );
     if (result.usage) this.recordModelUsage(context, result.usage);
     return turn;
+  }
+
+  createCuriosityTrail(context: LessonContext): CuriosityTrail {
+    const turns = this.#repository.listSandboxTurns(context.session.id);
+    const first = turns[0]?.turn;
+    const latest = turns.at(-1)?.turn;
+    if (!first || !latest) {
+      throw new Error("A Curiosity Trail requires at least one curiosity turn.");
+    }
+    const now = this.#clock().toISOString();
+    const trail = CuriosityTrailSchema.parse({
+      id: this.#makeId(),
+      learnerId: context.learner.id,
+      sessionId: context.session.id,
+      originalQuestion: first.learner_question,
+      summary: latest.spoken_response,
+      relatedQuestions: turns
+        .map((entry) => entry.turn.follow_up_question)
+        .filter((question, index, all) => all.indexOf(question) === index)
+        .slice(0, 8),
+      flashcards: [],
+      suggestedNextCallAt: null,
+      relatedCurriculumPackId: null,
+      relatedConceptId: null,
+      learnerApproved: true,
+      safetyStatus: turns.some(
+        (entry) => entry.turn.safety_status === "redirect",
+      )
+        ? "redirect"
+        : "safe",
+      certainty: turns.some((entry) => entry.turn.certainty === "low")
+        ? "low"
+        : turns.some((entry) => entry.turn.certainty === "medium")
+          ? "medium"
+          : "high",
+      createdAt: now,
+      updatedAt: now,
+    });
+    this.#repository.saveCuriosityTrail(trail);
+    return trail;
   }
 
   recordModelUsage(context: LessonContext, usage: ModelUsage): void {

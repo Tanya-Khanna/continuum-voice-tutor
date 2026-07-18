@@ -14,6 +14,7 @@ const { value: turn } = await engine.explore({
   learnerId: "live-sandbox-eval",
   learnerQuestion: "¿Qué tiempo hace en Bogotá right now? No lo sé.",
   requestedLanguageMode: "auto",
+  previousTurns: [],
 });
 
 const failures: string[] = [];
@@ -38,4 +39,3 @@ console.log(
 );
 for (const failure of failures) console.log(`  - ${failure}`);
 if (failures.length > 0) process.exitCode = 1;
-

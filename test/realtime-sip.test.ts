@@ -42,6 +42,9 @@ describe("Realtime SIP boundary", () => {
       "get_teaching_turn",
       "get_learning_history",
       "get_sandbox_turn",
+      "approve_curiosity_trail",
+      "save_learning_preferences",
+      "record_teaching_feedback",
       "recover_unclear_audio",
     ]);
     const modeTool = buildRealtimeAcceptPayload().tools.find(

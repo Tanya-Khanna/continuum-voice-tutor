@@ -248,6 +248,20 @@ export const fractionsPack = CurriculumPackSchema.parse({
         "Why is one third the bigger share when two same-sized rotis are split into thirds and fourths?",
         "As the number of equal pieces increases, what happens to each piece?",
       ],
+      keypadQuestions: [
+        {
+          id: "compare_fifths_eighths_keypad",
+          prompt:
+            "For equal wholes, which share is larger? Press 1 for one fifth, 2 for one eighth, or 3 if they are equal.",
+          featurePhoneSms:
+            "Equal wholes: larger share? 1 one fifth 2 one eighth 3 equal",
+          choices: [
+            { id: "one_fifth", label: "one fifth", correct: true },
+            { id: "one_eighth", label: "one eighth", correct: false },
+            { id: "equal", label: "they are equal", correct: false },
+          ],
+        },
+      ],
       teachingScaffold: {
         entryQuestion:
           "Which is the bigger share, one third or one fourth? Tell me why.",
@@ -372,6 +386,20 @@ export const fractionsPack = CurriculumPackSchema.parse({
       retrievalQuestions: [
         "What must be true before two pieces can be called halves?",
         "If two people receive equal shares of one whole, what fraction does each receive?",
+      ],
+      keypadQuestions: [
+        {
+          id: "equal_halves_keypad",
+          prompt:
+            "Which sharing makes two halves? Press 1 for two equal shares, 2 for two unequal shares, or 3 for any two pieces.",
+          featurePhoneSms:
+            "Which makes halves? 1 equal shares 2 unequal shares 3 any two pieces",
+          choices: [
+            { id: "equal_shares", label: "two equal shares", correct: true },
+            { id: "unequal_shares", label: "two unequal shares", correct: false },
+            { id: "any_two", label: "any two pieces", correct: false },
+          ],
+        },
       ],
       teachingScaffold: {
         entryQuestion:

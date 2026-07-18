@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const SipHeaderSchema = z.object({
   name: z.string().min(1),
@@ -34,6 +35,12 @@ export const REALTIME_TEACHING_TOOLS = [
           description:
             "Optional detected BCP-47 language tag, or tags joined with + for code-switching, such as es or sw+en.",
         },
+        learner_code: {
+          type: "string",
+          description:
+            "Optional existing six-digit portable learner code. Supply it only after the learner enters all six digits.",
+          pattern: "^[0-9]{6}$",
+        },
       },
       required: ["learner_name"],
       additionalProperties: false,
@@ -56,6 +63,12 @@ export const REALTIME_TEACHING_TOOLS = [
           type: "string",
           description:
             "The guided subject exactly as returned in guided_subjects. Required when guided mode has more than one available subject; omit for Curious Sandbox.",
+        },
+        duration_minutes: {
+          type: "integer",
+          enum: [3, 5, 10],
+          description:
+            "The learner's chosen lesson length. Use 5 when they do not express a preference.",
         },
       },
       required: ["mode"],
@@ -164,6 +177,96 @@ export const REALTIME_TEACHING_TOOLS = [
   },
   {
     type: "function" as const,
+    name: "approve_curiosity_trail",
+    description:
+      "Persist the current multi-turn curiosity conversation as a Curiosity Trail only after the learner explicitly says yes to saving or continuing it later.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
+    name: "save_learning_preferences",
+    description:
+      "Save learner-provided educational preferences only after the learner explicitly agrees that Continuum may remember them. Never infer a field or use this as mastery evidence.",
+    parameters: {
+      type: "object",
+      properties: {
+        consent_confirmed: { type: "boolean", const: true },
+        age_band: {
+          type: "string",
+          enum: ["under_8", "8_10", "11_13", "14_17", "adult", "unknown"],
+        },
+        reported_grade: { type: ["integer", "null"], minimum: 1, maximum: 16 },
+        interests: { type: "array", items: { type: "string" }, maxItems: 12 },
+        aspirations: { type: "array", items: { type: "string" }, maxItems: 6 },
+        curiosity_topics: { type: "array", items: { type: "string" }, maxItems: 20 },
+        preferred_examples: { type: "array", items: { type: "string" }, maxItems: 12 },
+        learning_goals: { type: "array", items: { type: "string" }, maxItems: 10 },
+        preferred_activities: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["explanation", "socratic_prompt", "analogy", "story", "worked_example", "hint", "quiz", "flashcard", "teach_back", "retrieval", "transfer", "homework", "reflection", "study_plan_step", "recap"],
+          },
+          maxItems: 8,
+        },
+        preferred_pace: {
+          type: ["string", "null"],
+          enum: ["too_fast", "right", "too_slow", null],
+        },
+      },
+      required: ["consent_confirmed"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
+    name: "record_teaching_feedback",
+    description:
+      "Record the learner's answer to the server's explicit question about whether a teaching explanation helped. Use this instead of get_teaching_turn while that feedback question is pending.",
+    parameters: {
+      type: "object",
+      properties: {
+        helpfulness: {
+          type: "string",
+          enum: ["helpful", "not_helpful", "unsure"],
+        },
+        pace: {
+          type: ["string", "null"],
+          enum: ["too_fast", "right", "too_slow", null],
+        },
+        preferred_activity: {
+          type: ["string", "null"],
+          enum: [
+            "explanation",
+            "socratic_prompt",
+            "analogy",
+            "story",
+            "worked_example",
+            "hint",
+            "quiz",
+            "flashcard",
+            "teach_back",
+            "retrieval",
+            "transfer",
+            "homework",
+            "reflection",
+            "study_plan_step",
+            "recap",
+            null,
+          ],
+        },
+      },
+      required: ["helpfulness"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
     name: "recover_unclear_audio",
     description:
       "Recover when the learner's audio is missing, clipped, or too unclear to transcribe faithfully. Repeat the correct pending prompt without guessing or advancing state.",
@@ -189,6 +292,7 @@ export const RealtimeToolStageSchema = z.enum([
   "placement",
   "guided",
   "curious_sandbox",
+  "guardian",
 ]);
 
 export type RealtimeToolStage = z.infer<typeof RealtimeToolStageSchema>;
@@ -202,12 +306,17 @@ const REALTIME_TOOL_NAMES_BY_STAGE = {
     "get_learning_history",
     "get_sandbox_turn",
     "recover_unclear_audio",
+    "save_learning_preferences",
+    "record_teaching_feedback",
   ],
   curious_sandbox: [
     "get_sandbox_turn",
+    "approve_curiosity_trail",
     "choose_learning_mode",
     "recover_unclear_audio",
+    "save_learning_preferences",
   ],
+  guardian: ["recover_unclear_audio"],
 } as const satisfies Record<RealtimeToolStage, readonly string[]>;
 
 export const RealtimeSessionToolUpdateSchema = z.object({
@@ -268,10 +377,13 @@ export type RealtimeAcceptPayload = z.infer<
 export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Continuum's realtime conversation layer for a universal, voice-first Socratic tutor.
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
 Speak with a warm, calm, patient teaching presence. Use an unhurried cadence with clear pauses, but never sound theatrical, patronizing, or sleepy. Preserve the exact words of authoritative tool responses even while applying this vocal delivery.
-At the start of a call, warmly ask only what name the learner wants to use. After they answer, call start_lesson exactly once. Speak the returned guided-subjects-versus-Sandbox menu, then call choose_learning_mode with the learner's explicit choice of mode and, for guided learning, the exact selected subject.
+At the start of a call, warmly ask only what name the learner wants to use. Then ask whether they already have a six-digit learner code. If yes, collect all six digits and call start_lesson with learner_name and learner_code. If no, call start_lesson with learner_name only. Never guess or repeat a partial code. Speak the returned guided-subjects-versus-Sandbox menu. For guided learning, ask whether the learner has 3, 5, or 10 minutes, then call choose_learning_mode with the learner's explicit choice of mode, exact selected subject, and duration. Use 5 minutes if they do not express a preference.
 If guided mode returns placement_required, ask its first question exactly. After every placement answer, call submit_placement_answer with the current question ID and a faithful transcript. Speak the next server-provided question exactly. The server starts the lesson after the final answer. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
 After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 If the learner explicitly asks to use Curious Sandbox or explicitly chooses the ask-anything mode, call get_sandbox_turn instead. Do not silently move an ordinary guided-lesson answer into Sandbox. Sandbox results do not count as curriculum mastery.
+If a Sandbox response offers to save a Curiosity Trail, call approve_curiosity_trail only after the learner explicitly agrees. Never treat a curiosity trail as guided-curriculum mastery.
+When a learner volunteers an interest, goal, aspiration, pace, or preferred activity, ask whether Continuum may remember it. Call save_learning_preferences only after an explicit yes, and pass only what the learner actually said. Never infer an aspiration or treat a preference as learning evidence.
+When the server explicitly asks whether a teaching method helped, the learner's next response is feedback, not a curriculum answer. Call record_teaching_feedback with helpful, not_helpful, or unsure, plus a pace or activity preference only when the learner actually stated it. The tool will return the pending curriculum question. Do not call get_teaching_turn until that pending question has been spoken and answered.
 If audio is missing, clipped, or too unclear for a faithful transcript, call recover_unclear_audio. Never send a guess to a teaching, placement, history, or Sandbox tool. Speak the recovery output and wait for the learner to repeat; recovery must not advance lesson state.
 Immediately before get_teaching_turn, say one brief neutral acknowledgment in the learner's current language, such as the local equivalent of "Let me think about that." Keep it under six words. It must not judge correctness, reveal an answer, give a hint, or ask a new question. Then call the tool in the same response.
 Never invent a lesson, diagnosis, explanation, answer, or next question yourself.
@@ -283,8 +395,42 @@ export function buildSipTarget(projectId: string): string {
   return `sip:${projectId}@sip.api.openai.com;transport=tls`;
 }
 
-export function callerNumberFromIncomingCall(unparsedEvent: unknown): string {
+export function callerNumberFromIncomingCall(
+  unparsedEvent: unknown,
+  relaySecret?: string,
+): string {
   const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
+  if (relaySecret) {
+    const relayedCaller = event.data.sip_headers.find(
+      (header) =>
+        header.name.toLocaleLowerCase() === "x-continuum-caller",
+    )?.value;
+    const relayedSignature = event.data.sip_headers.find(
+      (header) =>
+        header.name.toLocaleLowerCase() === "x-continuum-signature",
+    )?.value;
+    const relayedLearnerId = event.data.sip_headers.find(
+      (header) =>
+        header.name.toLocaleLowerCase() === "x-continuum-learner-id",
+    )?.value;
+    if (relayedCaller && relayedSignature && /^\+[1-9]\d{7,14}$/u.test(relayedCaller)) {
+      const expected = Buffer.from(
+        createHmac("sha256", relaySecret)
+          .update(
+            `continuum-relayed-caller:${relayedCaller}:${relayedLearnerId ?? "missed-call"}`,
+          )
+          .digest("hex"),
+        "utf8",
+      );
+      const supplied = Buffer.from(relayedSignature, "utf8");
+      if (
+        expected.length === supplied.length &&
+        timingSafeEqual(expected, supplied)
+      ) {
+        return relayedCaller;
+      }
+    }
+  }
   const from = event.data.sip_headers.find(
     (header) => header.name.toLocaleLowerCase() === "from",
   );
@@ -296,6 +442,44 @@ export function callerNumberFromIncomingCall(unparsedEvent: unknown): string {
     throw new Error("Incoming SIP From header has no caller identifier.");
   }
   return callerNumber;
+}
+
+export function learnerIdFromIncomingCall(
+  unparsedEvent: unknown,
+  relaySecret: string,
+): string | undefined {
+  const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
+  const caller = event.data.sip_headers.find(
+    (header) => header.name.toLocaleLowerCase() === "x-continuum-caller",
+  )?.value;
+  const learnerId = event.data.sip_headers.find(
+    (header) =>
+      header.name.toLocaleLowerCase() === "x-continuum-learner-id",
+  )?.value;
+  const signature = event.data.sip_headers.find(
+    (header) =>
+      header.name.toLocaleLowerCase() === "x-continuum-signature",
+  )?.value;
+  if (
+    !caller ||
+    !learnerId ||
+    !signature ||
+    !/^\+[1-9]\d{7,14}$/u.test(caller) ||
+    !/^[A-Za-z0-9_-]{1,120}$/u.test(learnerId)
+  ) {
+    return undefined;
+  }
+  const expected = Buffer.from(
+    createHmac("sha256", relaySecret)
+      .update(`continuum-relayed-caller:${caller}:${learnerId}`)
+      .digest("hex"),
+    "utf8",
+  );
+  const supplied = Buffer.from(signature, "utf8");
+  return expected.length === supplied.length &&
+    timingSafeEqual(expected, supplied)
+    ? learnerId
+    : undefined;
 }
 
 export function buildRealtimeAcceptPayload(

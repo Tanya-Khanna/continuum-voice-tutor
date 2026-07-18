@@ -60,4 +60,27 @@ describe("Curious Sandbox", () => {
     expect(turn.spoken_response).toContain("trusted adult");
     repository.close();
   });
+
+  it("continues across turns and saves a learner-approved trail without mastery", async () => {
+    const { repository, service, context } = createSandbox();
+    await service.exploreSandbox(context, "Why does the moon follow our car?");
+    await service.exploreSandbox(
+      context,
+      "Nearby trees move quickly, but the moon barely moves.",
+    );
+    const trail = service.createCuriosityTrail(context);
+
+    expect(trail).toMatchObject({
+      learnerApproved: true,
+      originalQuestion: "Why does the moon follow our car?",
+      relatedCurriculumPackId: null,
+      relatedConceptId: null,
+    });
+    expect(trail.relatedQuestions.length).toBeGreaterThan(0);
+    expect(repository.listCuriosityTrails(context.learner.id)).toEqual([trail]);
+    expect(repository.findLesson(context.session.id)?.masteryStatus).toBe(
+      "needs_support",
+    );
+    repository.close();
+  });
 });

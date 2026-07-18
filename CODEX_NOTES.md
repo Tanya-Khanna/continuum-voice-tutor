@@ -567,3 +567,36 @@
 - Added server-driven `submit_placement_answer`: each faithful answer advances exactly one curriculum-provided question, and the final answer triggers placement evaluation. If a stale model response still calls `get_teaching_turn` during placement, the controller safely treats its transcript as the current placement answer instead of resetting the menu. Duplicate mode selection repeats only the pending stage prompt.
 - Added a regression for Tanya's exact first-call sequence plus stage-tool schema coverage. Strict TypeScript, 117/117 automated tests, the production TypeScript build, and the 25/25 deterministic teaching eval pass.
 - Deployed commit `337c055` through Railway deployment `b8f1c012-6b07-4ffb-8b7b-7d83564559b4`. Public health reports the OpenAI engine and Realtime configuration healthy, and the protected release report remains configuration-ready. A second measured carrier call is still required before the live phone behavior gate can pass.
+
+## 2026-07-18 — Continuum v6 “call is the classroom” implementation
+
+### Builder decisions incorporated
+
+- Calls, DTMF, and short SMS are the complete learner classroom; WhatsApp, camera input, and a learner-facing web classroom are out of submission scope.
+- Continuum is reactive and proactive, but every proactive child call requires guardian consent. Missed-call callback, toll-free, sponsored, and direct-dial deployments are described separately so “no data” is never misrepresented as “free.”
+- The product is a persistent tutor rather than a general phone chatbot: it diagnoses, chooses and changes teaching method, asks for learner feedback, checks teach-back and transfer, reflects, saves, and schedules retrieval.
+- Portable learning belongs to the learner rather than a phone. Memory keeps only approved educational state and can be inspected or deleted.
+
+### Implemented in this milestone
+
+- Added typed, validated classroom contracts for learning activities, objective evidence, pedagogy decisions, learner feedback, educational preferences, Curiosity Trails, human-support decisions, educator assignments/summaries, study plans, SMS controls, callback jobs, and product metrics.
+- Extended the universal fractions pack with human-reviewed keypad transfer items. The lesson renderer now creates voice and DTMF activities from frozen pack data; keypad-only evidence is explicitly non-independent and cannot become secure mastery.
+- Implemented a learner-feedback interlude in the Realtime sideband controller. After a meaningful strategy switch, Continuum speaks the explanation, asks whether it helped, accepts speech or `1/2`, persists the answer without advancing curriculum state, and then restores the exact pending question.
+- Added three-, five-, and ten-minute lesson state. Trusted code derives a shorter or longer activity target from the pack's normal arc; duration is persisted and may change only before teaching begins.
+- Added six-digit portable learner identity using a fingerprint lookup plus a per-record salted scrypt hash, three attempts per call, cross-source throttling, portable cross-phone resume, and shared-phone name confirmation.
+- Added Realtime DTMF routing for identity, menus, reviewed quiz choices, learner feedback, repeats, hints/fallback, scheduled calls, and guardian controls.
+- Added atomic pending-question persistence and pause-on-drop behavior. Consent-gated pause SMS, same-phone recovery, and signed cross-phone recovery restore the exact unfinished question instead of replaying onboarding.
+- Added a signed missed-call webhook returning first-verb `<Reject reason="busy">`, duplicate collapse, enrollment/adult-demo gate, country allowlist, quiet hours, per-caller/global limits, AES-GCM callback destination protection, outbound Twilio callback, and signed identity relay to OpenAI SIP.
+- Added signed and idempotent SMS commands for schedule consent/control, progress, selective memory, and two-step deletion. Added due-job locking and consent checks for recurring outbound lessons, with no immediate application retry after a missed slot.
+- Added a separate guardian authorization code and low-literacy voice/keypad controls for progress, lesson time, pause/resume, and two-step deletion.
+- Added Curiosity Trail persistence separated from formal mastery, optional consented aspirations/preferences, structured human-support decisions, permission-bounded educator summaries, and access/reliability/learning metric aggregation with explicit synthetic/live labeling.
+- Added a mobile-first public landing page centered on missed-call access, teaching, exact resume, selective memory, and reviewed-subject honesty. It does not become a screen-based classroom.
+- Replaced the active build-plan authority with v6 and marked the old WhatsApp/camera plan historical so future Codex work cannot follow the wrong scope.
+
+### Verification and honest open gates
+
+- The repository remains strict-TypeScript and zero-credit runnable. The expanded automated suite covers the new domain, persistence, callback, SMS, scheduler, guardian, DTMF, evidence, and metrics paths.
+- Latest local gate after homework, scheduled-call controls, hint routing, and Outcomes UI: strict TypeScript passed, 170/170 automated tests passed, and the deterministic teaching eval remained 25/25 with 100% voice-friendly output.
+- The four additional subject packs remain correctly human-gated. They are not exposed merely to satisfy a breadth claim.
+- No live carrier claim is made yet for the new missed-call, DTMF, feedback, cross-phone, scheduling, or guardian paths. They require the documented smoke matrix and five consecutive golden journeys.
+- Carrier status callbacks and actual Twilio duration/price receipts remain open before measured completion/cost claims. The homework assignment/reply ledger is implemented and automated, but still needs its live carrier smoke.

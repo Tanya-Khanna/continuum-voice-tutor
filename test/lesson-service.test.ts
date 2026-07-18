@@ -182,7 +182,7 @@ describe("LessonService", () => {
       firstContext,
       "One fourth is bigger because four is bigger than three.",
     );
-    firstContext = firstService.pause(response.context);
+    firstContext = firstService.pause(response.context, "drop");
     const expectedPrompt = firstContext.session.lastPrompt;
     firstRepository.close();
 
@@ -203,6 +203,11 @@ describe("LessonService", () => {
     expect(resumed.session.turnCount).toBe(1);
     expect(resumed.greeting).toContain(expectedPrompt);
     expect(secondRepository.listTurns(resumed.session.id)).toHaveLength(1);
+    expect(
+      secondRepository
+        .listProductMetrics()
+        .map((event) => event.name),
+    ).toEqual(expect.arrayContaining(["drop_paused", "drop_recovered"]));
     secondRepository.close();
   });
 

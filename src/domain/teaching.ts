@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  LearnerEducationProfileSchema,
+  LearnerResponseModeSchema,
+  TeachingFeedbackSchema,
+} from "./classroom.js";
 
 export const LanguageTagSchema = z
   .string()
@@ -31,9 +36,20 @@ export const TeachingStrategySchema = z.enum([
   "recap",
   "safety_redirect",
   "uncertainty",
+  "story",
+  "worked_example",
+  "hint_ladder",
+  "teach_back",
+  "transfer",
+  "reflection",
 ]);
 
-export const LessonPhaseSchema = z.enum(["explore", "check", "recap"]);
+export const LessonPhaseSchema = z.enum([
+  "explore",
+  "check",
+  "reflect",
+  "recap",
+]);
 
 export const AnchorObjectSchema = z
   .string()
@@ -58,6 +74,11 @@ export const TeachingLessonStateSchema = z.object({
   placementLevel: z
     .enum(["unplaced", "foundational", "developing", "grade_ready"])
     .default("unplaced"),
+  responseMode: LearnerResponseModeSchema.optional(),
+  previousStrategies: z.array(TeachingStrategySchema).max(20).optional(),
+  latestFeedback: TeachingFeedbackSchema.nullable().optional(),
+  hintCount: z.number().int().nonnegative().optional(),
+  educationProfile: LearnerEducationProfileSchema.nullable().optional(),
 });
 
 export const TeachingRequestSchema = z.object({

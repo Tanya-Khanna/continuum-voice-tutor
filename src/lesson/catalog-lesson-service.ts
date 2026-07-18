@@ -14,6 +14,14 @@ import {
   type LessonContext,
 } from "./lesson-service.js";
 import type { LearningHistoryResponse } from "../domain/history.js";
+import type {
+  LessonDurationMinutes,
+  LearnerResponseMode,
+  LessonResponse,
+} from "./lesson-service.js";
+import type { TeachingFeedback } from "../domain/classroom.js";
+import type { CuriosityTrail } from "../domain/classroom.js";
+import type { LearnerEducationProfile } from "../domain/classroom.js";
 
 function spokenList(values: readonly string[]): string {
   if (values.length === 1) return values[0]!;
@@ -52,6 +60,10 @@ export class CatalogLessonService {
 
   availableSubjects(): string[] {
     return this.#catalog.subjects();
+  }
+
+  findLearner(learnerId: string): LearnerProfile | undefined {
+    return this.#defaultService().findLearner(learnerId);
   }
 
   subjectForContext(context: LessonContext): string {
@@ -120,12 +132,50 @@ export class CatalogLessonService {
   respond(
     context: LessonContext,
     learnerAnswer: string,
-  ): Promise<{ context: LessonContext; turn: TeachingTurn }> {
-    return this.#serviceForContext(context).respond(context, learnerAnswer);
+    options: { responseMode?: LearnerResponseMode } = {},
+  ): Promise<LessonResponse> {
+    return this.#serviceForContext(context).respond(
+      context,
+      learnerAnswer,
+      options,
+    );
   }
 
-  pause(context: LessonContext): LessonContext {
-    return this.#serviceForContext(context).pause(context);
+  recordTeachingFeedback(
+    context: LessonContext,
+    options: {
+      helpfulness: TeachingFeedback["helpfulness"];
+      pace?: TeachingFeedback["pace"];
+      preferredActivity?: TeachingFeedback["preferredActivity"];
+      objectiveResult?: TeachingFeedback["objectiveResult"];
+      responseMode?: LearnerResponseMode;
+    },
+  ): TeachingFeedback {
+    return this.#serviceForContext(context).recordTeachingFeedback(
+      context,
+      options,
+    );
+  }
+
+  setLessonDuration(
+    context: LessonContext,
+    durationMinutes: LessonDurationMinutes,
+  ): LessonContext {
+    return this.#serviceForContext(context).setLessonDuration(
+      context,
+      durationMinutes,
+    );
+  }
+
+  requestHint(context: LessonContext) {
+    return this.#serviceForContext(context).requestHint(context);
+  }
+
+  pause(
+    context: LessonContext,
+    reason: "manual" | "drop" = "manual",
+  ): LessonContext {
+    return this.#serviceForContext(context).pause(context, reason);
   }
 
   learningHistory(context: LessonContext): Promise<LearningHistoryResponse> {
@@ -140,6 +190,39 @@ export class CatalogLessonService {
       context,
       learnerQuestion,
     );
+  }
+
+  createCuriosityTrail(context: LessonContext): CuriosityTrail {
+    return this.#serviceForContext(context).createCuriosityTrail(context);
+  }
+
+  updateEducationProfile(
+    context: LessonContext,
+    options: {
+      consentConfirmed: boolean;
+      ageBand?: LearnerEducationProfile["ageBand"];
+      reportedGrade?: number | null;
+      interests?: string[];
+      aspirations?: string[];
+      curiosityTopics?: string[];
+      preferredExamples?: string[];
+      learningGoals?: string[];
+      preferredActivities?: LearnerEducationProfile["preferredActivities"];
+      preferredPace?: LearnerEducationProfile["preferredPace"];
+    },
+  ): LearnerEducationProfile {
+    return this.#serviceForContext(context).updateEducationProfile(
+      context,
+      options,
+    );
+  }
+
+  educationProfile(context: LessonContext): LearnerEducationProfile | undefined {
+    return this.#serviceForContext(context).educationProfile(context);
+  }
+
+  homeworkDraft(context: LessonContext) {
+    return this.#serviceForContext(context).homeworkDraft(context);
   }
 
   recordModelUsage(context: LessonContext, usage: ModelUsage): void {

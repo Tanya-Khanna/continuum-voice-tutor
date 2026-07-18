@@ -50,6 +50,39 @@ export const RationalNumberSchema = z.object({
   denominator: z.number().int().min(1).max(10_000),
 });
 
+export const ReviewedKeypadQuestionSchema = z
+  .object({
+    id: z.string().min(1),
+    prompt: z.string().min(1),
+    featurePhoneSms: z.string().trim().min(1).max(100),
+    choices: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string().min(1).max(120),
+          correct: z.boolean(),
+        }),
+      )
+      .min(2)
+      .max(4),
+  })
+  .superRefine((question, context) => {
+    if (question.choices.filter((choice) => choice.correct).length !== 1) {
+      context.addIssue({
+        code: "custom",
+        path: ["choices"],
+        message: "A reviewed keypad question requires exactly one correct choice.",
+      });
+    }
+    if (new Set(question.choices.map((choice) => choice.id)).size !== question.choices.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["choices"],
+        message: "Reviewed keypad choice IDs must be unique.",
+      });
+    }
+  });
+
 export const VerifiedRationalComparisonSchema = z.object({
   id: z.string().min(1),
   claim: z.string().min(1),
@@ -90,6 +123,7 @@ export const CurriculumConceptSchema = z.object({
   concreteAnalogies: z.array(z.string().min(1)).min(1),
   anchorActivities: z.array(AnchorActivitySchema).min(1),
   retrievalQuestions: z.array(z.string().min(1)).min(1),
+  keypadQuestions: z.array(ReviewedKeypadQuestionSchema).min(1),
   teachingScaffold: z.object({
     entryQuestion: z.string().min(1),
     silenceQuestion: z.string().min(1),

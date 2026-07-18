@@ -99,6 +99,9 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .sample-speaker { color: var(--blue); text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
     .sample-line[data-speaker="nomad"] .sample-speaker { color: var(--lime); }
     .release-view { margin-top: 18px; }
+    .metrics-view { margin-top: 18px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 22px; border-top: 1px solid var(--line); }
+    .metrics-group h3 { margin: 0 0 14px; font-family: system-ui, sans-serif; }
     .release-hero { padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, minmax(135px, .35fr)); gap: 14px; }
     .release-note { color: var(--muted); margin: 12px 0 0; }
     .release-list { border-top: 1px solid var(--line); }
@@ -124,6 +127,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       .eval-row { grid-template-columns: 1fr; }
       .sample-hero, .sample-line { grid-template-columns: 1fr; }
       .release-hero, .release-check { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -140,6 +144,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
           <button class="tab" id="sessions-tab" type="button" aria-selected="true">Sessions</button>
           <button class="tab" id="evals-tab" type="button" aria-selected="false">Eval gate</button>
           <button class="tab" id="sample-tab" type="button" aria-selected="false">Sample</button>
+          <button class="tab" id="metrics-tab" type="button" aria-selected="false">Outcomes</button>
           <button class="tab" id="release-tab" type="button" aria-selected="false">Release</button>
         </nav>
       </div>
@@ -159,6 +164,9 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     <section class="panel sample-view" id="sample-view" hidden>
       <div class="empty">Loading the sample exhibit…</div>
     </section>
+    <section class="panel metrics-view" id="metrics-view" hidden>
+      <div class="empty">Loading access, reliability, and learning evidence…</div>
+    </section>
     <section class="panel release-view" id="release-view" hidden>
       <div class="empty">Loading the secret-safe release checklist…</div>
     </section>
@@ -173,7 +181,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       }
       try { return window.sessionStorage.getItem('nomad-dashboard-token') ?? ''; } catch { return ''; }
     })();
-    const state = { sessions: [], selected: null, evals: null, sample: null, readiness: null, readinessLocked: false, view: 'sessions' };
+    const state = { sessions: [], selected: null, evals: null, sample: null, metrics: null, metricsLocked: false, readiness: null, readinessLocked: false, view: 'sessions' };
     const text = (tag, value, className) => {
       const node = document.createElement(tag);
       if (className) node.className = className;
@@ -426,23 +434,56 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       }
       root.append(hero, list);
     }
+    function renderMetrics() {
+      const root = document.querySelector('#metrics-view');
+      root.replaceChildren();
+      if (state.metricsLocked) {
+        root.append(text('div', 'Outcome evidence locked · add #token=…', 'empty'));
+        return;
+      }
+      if (!state.metrics) {
+        root.append(text('div', 'Loading access, reliability, and learning evidence…', 'empty'));
+        return;
+      }
+      const hero = text('div', '', 'release-hero');
+      const copy = text('div', '', 'hero-copy');
+      copy.append(text('div', 'Judge proof / ' + state.metrics.evidenceScope, 'eyebrow'));
+      copy.append(text('h2', 'Access. Reliability. Learning.'));
+      copy.append(text('p', 'Success means the learner reached, completed, and retained a lesson—not merely that a model answered. Empty and synthetic evidence are labeled honestly.'));
+      hero.append(copy);
+      const grid = text('div', '', 'metrics-grid');
+      for (const groupName of ['access', 'reliability', 'learning']) {
+        const group = text('section', '', 'metrics-group');
+        group.append(text('h3', humanize(groupName)));
+        for (const [name, value] of Object.entries(state.metrics[groupName])) {
+          const shown = value === null ? 'Not measured' : typeof value === 'number' && value > 0 && value < 1 ? Math.round(value * 100) + '%' : String(value);
+          addCard(group, humanize(name), shown);
+        }
+        grid.append(group);
+      }
+      root.append(hero, grid);
+    }
     function selectView(view) {
       state.view = view;
       document.querySelector('#sessions-view').hidden = view !== 'sessions';
       document.querySelector('#evals-view').hidden = view !== 'evals';
       document.querySelector('#sample-view').hidden = view !== 'sample';
+      document.querySelector('#metrics-view').hidden = view !== 'metrics';
       document.querySelector('#release-view').hidden = view !== 'release';
       document.querySelector('#sessions-tab').setAttribute('aria-selected', String(view === 'sessions'));
       document.querySelector('#evals-tab').setAttribute('aria-selected', String(view === 'evals'));
       document.querySelector('#sample-tab').setAttribute('aria-selected', String(view === 'sample'));
+      document.querySelector('#metrics-tab').setAttribute('aria-selected', String(view === 'metrics'));
       document.querySelector('#release-tab').setAttribute('aria-selected', String(view === 'release'));
       if (view === 'evals') renderEvals();
       if (view === 'sample') renderSample();
+      if (view === 'metrics') renderMetrics();
       if (view === 'release') renderReadiness();
     }
     document.querySelector('#sessions-tab').addEventListener('click', () => selectView('sessions'));
     document.querySelector('#evals-tab').addEventListener('click', () => selectView('evals'));
     document.querySelector('#sample-tab').addEventListener('click', () => selectView('sample'));
+    document.querySelector('#metrics-tab').addEventListener('click', () => selectView('metrics'));
     document.querySelector('#release-tab').addEventListener('click', () => selectView('release'));
     async function refresh() {
       try {
@@ -499,7 +540,21 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         state.readiness = null;
       }
     }
-    refresh(); refreshEvals(); refreshSample(); refreshReadiness(); setInterval(refresh, 3000);
+    async function refreshMetrics() {
+      try {
+        const response = await fetch('/api/dashboard/product-metrics', {
+          cache: 'no-store',
+          headers: dashboardToken ? { Authorization: 'Bearer ' + dashboardToken } : {},
+        });
+        state.metricsLocked = response.status === 401;
+        state.metrics = response.ok ? await response.json() : null;
+        if (!response.ok && response.status !== 401) throw new Error('Metrics request failed');
+        if (state.view === 'metrics') renderMetrics();
+      } catch (error) {
+        state.metrics = null;
+      }
+    }
+    refresh(); refreshEvals(); refreshSample(); refreshMetrics(); refreshReadiness(); setInterval(refresh, 3000);
   </script>
 </body>
 </html>`;

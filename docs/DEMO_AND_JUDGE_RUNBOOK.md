@@ -88,33 +88,40 @@ fragment, not the query string; verify that it disappears from the address bar.
 
 ## Three-minute demo recording order
 
-1. **0:00–0:12 — problem and product.** Show a basic phone. “Continuum is a patient
-   Socratic tutor for a learner with a dial tone but no app or data. The
-   connection may drop. The learning continues.”
-2. **0:12–0:28 — real connection proof.** Record the phone dialing the published
-   number and Continuum asking the learner’s name. Keep the carrier audio audible;
-   do not replace it with browser audio.
-3. **0:28–1:05 — teaching proof.** Choose reviewed Math, give the larger-
-   denominator misconception, and capture diagnosis → concrete analogy → one
-   Socratic question. Do not script a claim for an unreviewed subject.
-4. **1:05–1:25 — language proof.** Give one natural Hindi/English code-switched
-   answer, then a short pure-English answer. Label these as validated patterns,
-   not proof of every language or accent.
-5. **1:25–1:48 — continuity proof.** Hang up after a question, redial, use the
-   same name, and capture the exact pending prompt. This must be one continuous
-   real-phone recording or transparently labeled cuts.
-6. **1:48–2:15 — brain mirror.** Show that call in Mission Control: anonymized
-   learner reference, transcript, reasoning trace, diagnosis, mastery evidence,
-   model route, and measured usage.
-7. **2:15–2:32 — break-it proof.** Show one “just tell me” refusal or unclear-
-   audio recovery. Use the Sandbox current-information hedge only if the live
-   path is stable.
-8. **2:32–2:48 — architecture.** Realtime handles speech and tools; GPT-5.6 owns
-   structured teaching; trusted code validates against a frozen reviewed pack;
-   SQLite preserves named progress.
-9. **2:48–3:00 — proof and invitation.** Show 25/25 deterministic and 24/24 paid
-   agent results, name the current Math-only reviewed scope, then invite judges
-   to call the number.
+1. **0:00–0:12 — the access problem.** Show an ordinary keypad phone. “No
+   smartphone. No app. No data. Continuum is a tutor a learner can reach through
+   calls, keypad, and SMS.”
+2. **0:12–0:25 — missed-call access.** Meena gives a missed call; the inbound call
+   is visibly rejected, and Continuum calls her back. Do not call this universally
+   free: label the demo callback as sponsor-funded.
+3. **0:25–0:42 — cold start.** Capture Hinglish onboarding, six-digit portable
+   learner code, reviewed Math selection, and a five-minute lesson choice.
+4. **0:42–1:12 — actual teaching.** Meena gives the larger-denominator
+   misconception. The first method fails; Continuum asks whether it helped, accepts
+   “no” or keypad 2, and changes to a concrete local analogy. The visible proof is
+   diagnosis and method change—not model eloquence.
+5. **1:12–1:28 — evidence of learning.** Capture teach-back and a different
+   reviewed transfer item. Show baseline incorrect, hints, transfer result, and the
+   honest mastery state. Never turn a keypad choice alone into secure mastery.
+6. **1:28–1:47 — connectivity failure.** Drop the call while a question is
+   pending. Show the short pause SMS. No completed step may be replayed.
+7. **1:47–2:02 — portable continuity.** Call from another phone, enter the learner
+   code plus pound, confirm the name, and resume the exact unfinished question.
+8. **2:02–2:14 — speech fallback.** Make one answer intentionally unclear, press
+   star for reviewed options, and answer by keypad. Show that state advances only
+   after a valid choice.
+9. **2:14–2:27 — homework loop.** Show the tiny homework SMS and a signed,
+   idempotent reply updating the same learner. If this carrier path is not green,
+   replace it with the labeled deterministic proof and say so.
+10. **2:27–2:39 — proactive retention.** Use an explicit “next day” title card;
+    show one consented scheduled callback beginning with due retrieval or homework.
+11. **2:39–2:48 — breadth without bluffing.** Show the multi-turn Curiosity Trail
+    and the five-subject target. State that only packs passing the human release
+    gate appear in the callable menu.
+12. **2:48–2:57 — implementation.** Show Realtime SIP/DTMF, GPT-5.6 Structured
+    Outputs, frozen packs, selective SQLite memory, access/reliability/learning
+    metrics, and the Codex-built test/eval story.
+13. **2:57–3:00 — close.** “The connection may drop. The learning continues.”
 
 ## Recording checklist
 
@@ -125,6 +132,8 @@ fragment, not the query string; verify that it disappears from the address bar.
 - Use a new synthetic adult demo profile, never a child’s real data.
 - Confirm SMS recaps are off unless the receiving phone explicitly consented.
 - Keep a backup local REPL take and the checked-in synthetic code-switch sample.
+- Record five consecutive golden judge journeys before recording the final take.
+- Label every time jump, synthetic fixture, and sponsor-funded call visibly.
 - After recording, verify every on-screen number, URL, score, and scope statement.
 - Keep the deployed phone and dashboard revision unchanged except for outage
   fixes during judging.

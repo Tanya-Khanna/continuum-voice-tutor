@@ -4,13 +4,17 @@
 
 > The connection may drop. The learning continues.
 
-Continuum is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated on an OpenAI project/webhook with a public signed-delivery path plus Twilio credentials, a voice-ready number, and the SIP trunk.
+**Any phone. Any language. A tutor who comes back tomorrow.**
+
+Continuum is a persistent, multilingual tutor for a learner who may have only a shared keypad phone. The classroom is an ordinary call, keypad input, and tiny SMS—not an app, camera, smartphone, email account, or mobile-data connection. OpenAI Realtime SIP handles the voice conversation; a server-side GPT-5.6 teaching engine diagnoses the misconception and chooses the next pedagogical move; trusted code validates, persists, and renders it against a frozen reviewed curriculum pack.
+
+Continuum does not replace school or teachers. It extends high-quality tutoring to the hours, places, languages, and devices conventional digital education cannot reach.
 
 The product was renamed from its working title on July 17. Existing `NOMAD_` environment variables, the `nomad-ai` repository slug, and persisted database paths remain compatibility identifiers for this build; learner-facing copy and the tutor identity use **Continuum**.
 
 ```mermaid
 flowchart LR
-    Caller["Any phone / G.711 call"] --> Twilio["Twilio number + SIP trunk"]
+    Caller["Any phone<br/>missed call, speech, keypad, SMS"] --> Twilio["Twilio access layer"]
     Twilio --> Realtime["OpenAI Realtime voice layer"]
     Realtime <-->|"sideband tools"| Server["Continuum server"]
     Server --> Catalog["Validated subject catalog"]
@@ -21,6 +25,23 @@ flowchart LR
 ```
 
 Realtime owns listening, speech, interruption, and tool choice. GPT-5.6 owns diagnosis and the next teaching move. Trusted application code validates the structured turn against the selected frozen pack before it can be spoken or persisted.
+
+## What the runnable vertical slice proves
+
+- A learner can request a sponsored callback through a signed, rejected missed call, or dial directly where normal call cost is acceptable.
+- A six-digit portable learner code keeps siblings separate on one shared phone and restores the same learner from another phone.
+- The tutor runs placement one question at a time, changes method after confusion, asks whether the explanation helped, and accepts that feedback by speech or `1/2`.
+- Learning activities include explanations, analogies, stories, worked examples, hints, reviewed voice/DTMF quizzes, teach-back, transfer, reflection, retrieval, recap, and study-plan steps.
+- Reviewed DTMF choices are curriculum data. Keypad participation is recorded honestly but cannot independently create secure mastery.
+- The exact pending question is saved before it is spoken. A dropped call pauses the session; a return call resumes that question without replaying onboarding or completed work.
+- Guardian-approved schedules can place recurring retrieval calls. `STOP` and `PAUSE` take effect before dialing, quiet hours are enforced, and a missed slot is not immediately redialed.
+- Guardian SMS and voice/keypad controls expose progress, schedule, selective memory, pause/resume, and two-step deletion without revealing raw conversations or sibling data.
+- Ask Anything is multi-turn and can save a learner-approved Curiosity Trail, but it cannot silently award curriculum mastery.
+- Product metrics are divided into access, reliability, and learning; synthetic fixtures and live events are labeled separately.
+
+The checked-in public guided menu contains only the human-reviewed Math pack. Science, English, History, and Geography stay hidden until their official-source briefs pass human approval, compilation, independent verification, builder spot-checking, and freeze.
+
+See the [v6 build plan](docs/BUILD_PLAN.md), [32-story proof matrix](docs/USER_STORY_MATRIX.md), and [demo/judge runbook](docs/DEMO_AND_JUDGE_RUNBOOK.md) for the exact automated, carrier, curriculum-review, and submission gates.
 
 ## Why this access and teaching model
 
@@ -40,7 +61,7 @@ Continuum's first distribution path is institution-led, not an assumption that a
 
 The proposed first pilot is one district, one grade, and roughly 200 learners. It should measure independent pre/post assessment—not tutor-session performance alone—along with attendance, completion, teacher and learner feedback, language/access subgroups, failure reports, and compliance with an agreed deletion and retention policy. Teachers remain responsible for instruction; Continuum supplies additional practice and auditable evidence.
 
-Only after the carrier and learning gates pass should the project pursue a school, NGO, state-education, or carrier partner. Missed-call callback, teacher assignments, parent recaps, and cohort reporting are later consent-sensitive channels, not shipped capabilities.
+Only after the carrier and learning gates pass should the project pursue a school, NGO, state-education, or carrier partner. The build includes the missed-call callback and permission-bounded educator-summary contracts; it does not claim a live school integration, operating human-escalation network, or measured cohort outcome.
 
 ## Landscape and differentiation
 
@@ -212,9 +233,9 @@ Each structured teaching turn also carries an auditable `reasoning_trace`. Learn
 
 Voice formatting is enforced after generation, not left to prompt wording. Before a turn can be saved or handed to Realtime, application code rejects Markdown, symbolic fractions such as `1/3`, more than three spoken sentences, and anything other than one question. Normal recaps and safety-forced endings are the deliberate no-question exception; their next retrieval question remains stored for a later call. The same guard runs in offline tests, the live engine, the lesson service, and the trusted layer of the agent evaluator.
 
-The lesson arc is deployment-configured. The first pack uses eight teaching turns with explicit explore, independent-check, and recap phases. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. The server also prevents any model from marking mastery secure until it has observed at least two reasoning turns.
+The lesson arc is deployment-configured. The first pack's normal five-minute lesson uses eight teaching turns; trusted code scales that arc for an explicitly selected three-, five-, or ten-minute window while preserving transfer, reflection, and recap. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. Secure mastery requires independent transfer or later retention evidence; a correct guess or keypad-only choice is capped below secure.
 
-After a normally completed guided lesson, Continuum can send the exact language-matched spoken recap to the caller through Twilio SMS. This is a non-blocking side effect: a messaging failure cannot replace the voice response or undo lesson completion. It never runs for Sandbox turns or safety-forced endings, and duplicate Realtime lifecycle events cannot send it twice.
+After a normally completed guided lesson, Continuum can send a one-segment homework item drawn from the same reviewed pack. The learner replies `HW <assignment code> <choice>`; the signed, MessageSid-idempotent webhook binds that assignment to the receiving phone and correct learner, records homework evidence, and never promotes multiple-choice homework to secure mastery. Messaging remains a non-blocking side effect: failure cannot replace the voice response or undo lesson completion, and Sandbox or safety-forced endings do not issue homework.
 
 Learners can ask what they worked on before. GPT-5.6 receives only that named profile's persisted, curriculum-grounded summaries and returns a short structured narration in the learner's current language mode. The Realtime layer says that narration exactly; it does not invent history from the conversation.
 
@@ -227,6 +248,8 @@ Start the server and open `http://localhost:3000/dashboard` to inspect recent te
 Local development remains zero-config. Before the server is public, run `npm run secrets:init` or set a random `NOMAD_DASHBOARD_TOKEN` of at least 24 characters; startup fails closed if `NOMAD_OPENAI_WEBHOOK_PUBLIC=true` without it, and the phone preflight includes the same release check. Give a judge a URL such as `https://your-host.example/dashboard#token=YOUR_TOKEN`. The fragment is not sent in the HTTP URL: the page moves it into tab-scoped session storage, removes it from the address bar, and sends it only in the session API's Bearer header. A missing or wrong token returns `401` without opening the learner database. The eval scorecard and clearly synthetic Sample tab contain no learner session data and remain viewable.
 
 The session view also displays the latest reasoning trace, recorded Responses and Realtime usage, measured GPT-5.6 request latency, and an evidence-based cost estimate. Usage is stored by session with the provider response ID and separate text, cached-text, input-audio, cached-audio, and output-audio token counts. Cost uses exact-model rates dated 2026-07-17 for `gpt-5.6-luna` and `gpt-realtime-2.1-mini`; an unknown route is shown as unpriced instead of borrowing another model's rate. The Eval gate also shows the latest saved GPT-5.6 learner/teacher/evaluator report when one exists; absence is labeled plainly rather than presented as a pass.
+
+The protected **Outcomes** tab groups proof into access, reliability, and learning. It reports missed-call conversion, keypad fallback, cross-phone resume, drop recovery, scheduled dialing, homework, transfer, retention, hints, and strategy switching only from recorded events. The tab labels the evidence scope as empty, synthetic, live, or mixed; it never presents a fixture as field impact.
 
 The **Sample** tab ships a 33-second Spanish-English code-switching exhibit with a click-to-seek synced transcript. It is labeled as a curated synthetic fixture, not presented as a child or live-call recording. The manifest accepts arbitrary language tags and is separate from the teaching engine. The checked-in audio uses local es-MX system voices because the current restricted project key lacks the `api.model.audio.request` scope. After enabling that scope, regenerate with `npm run sample:audio`; use `NOMAD_SAMPLE_AUDIO_BACKEND=system npm run sample:audio` for the zero-credit fallback.
 
@@ -261,7 +284,7 @@ Human decisions stayed explicit: the builder corrected the product from a Hingli
 1. Pass the real carrier gate: signed public webhook, Twilio voice routing and SIP trunk, G.711 clarity, interruption, disconnect/redial, latency, and dashboard-access checks.
 2. Review, compile, independently verify, and spot-check the four pending subject packs before making them callable.
 3. Run a supervised pilot only after local curriculum/safety review, consent and assent, an enforced retention policy, emergency procedures, and an independent learning-measurement plan exist.
-4. Add access channels in measured order: missed-call callback first, then complementary WhatsApp/text. Camera homework, DTMF fallback, pronunciation work, and noise hardening follow only after the core voice path is stable.
+4. Validate the implemented access ladder in measured order: missed-call callback, DTMF identity/quiz/feedback, SMS controls and homework, scheduled callbacks, exact drop recovery, and guardian voice controls. WhatsApp and camera homework are outside the submission scope.
 5. Expand deployment data—not engine branches—to additional local numbers, countries, grades, subjects, teacher workflows, cohorts, and locally tested language patterns.
 
 This is sequencing, not a capability claim. The checked-in deployment currently exposes reviewed Math plus Curious Sandbox.

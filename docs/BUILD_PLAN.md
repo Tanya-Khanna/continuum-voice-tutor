@@ -1,4 +1,81 @@
-# CONTINUUM — FINAL BUILD PLAN (v5 · STATUS-MARKED)
+# CONTINUUM — THE CALL IS THE CLASSROOM (v6 · CURRENT AUTHORITY)
+
+> Continuum is not designed to replace school or teachers. It extends high-quality tutoring to the hours, places, languages, and devices conventional digital education cannot reach.
+
+**Primary tagline:** The connection may drop. The learning continues.
+**Supporting line:** Any phone. Any language. A tutor who comes back tomorrow.
+
+## Current product contract
+
+Continuum is a persistent, multilingual tutor delivered through ordinary phone calls, keypad input, and short SMS. The learner needs no smartphone, app, camera, internet, email address, or personal device. The conversation is the classroom: lessons, Socratic questions, explanations, stories, worked examples, hint ladders, quizzes, flashcards, teach-back, transfer, reflection, homework, study plans, and retrieval calls are rendered for voice first.
+
+The deployment ladder is missed-call callback, toll-free access, sponsored minutes, or direct dial. Calls are not claimed to be universally free. Child deployments require prior guardian enrollment; adult judges may use an explicitly enabled self-request demo. Every proactive call requires consent, respects quiet hours, and can be stopped immediately.
+
+The trusted tutoring loop is:
+
+`RECALL → DIAGNOSE → CHOOSE METHOD → TEACH → PRACTICE → TEACH-BACK → TRANSFER → REFLECT → SAVE → SCHEDULE REVIEW`
+
+GPT-5.6 proposes structured pedagogical decisions. Application code validates them, enforces curriculum and safety policy, renders one speakable question at a time, persists the exact pending activity before speech, and controls state transitions. A correct guess is never secure mastery. Keypad-only success is capped at developing. Curious Sandbox and Curiosity Trails never change guided mastery.
+
+Continuum remembers what helps a learner learn and forgets what it does not need. It may retain curriculum progress, misconceptions, homework, helpful methods, language preferences, schedules, and explicitly approved goals or interests. It does not retain raw audio by default or infer sensitive psychological, family, caste, religious, or economic profiles.
+
+## Locked submission scope
+
+- Ordinary phone calls, Realtime SIP, DTMF, and short SMS are the complete learner classroom.
+- Missed-call callback is submission-core; direct calls are not advertised as free.
+- Portable identity is a six-digit learner code with separate guardian authorization.
+- Math fractions is the deepest proof-of-learning journey.
+- Five Grade 6 starter units remain the release target, but only human-approved, compiled, verified, spot-checked, frozen packs may appear in the public menu.
+- Learner feedback, reflection, drop recovery, cross-phone resume, homework, recurring calls, guardian voice controls, memory controls, and access/reliability/learning metrics are core.
+- Ask Anything is multi-turn and may create a learner-approved Curiosity Trail, never formal mastery.
+- Human escalation is a tested decision contract, not a claimed live support network.
+- Educator summaries are a permissioned deployment contract, not a dashboard.
+- Synthetic evidence must always be labeled synthetic.
+
+Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-companion behavior, large educator dashboards, unreviewed language claims, or decorative animation before the core is stable.
+
+## Implementation ledger — July 18
+
+### Implemented and automated
+
+- Structured `LearningActivity`, `PedagogyDecision`, `LearningEvidence`, learner feedback, reflection, safe mastery, Curiosity Trail, educational profile, human-support, educator-summary, study-plan, SMS-command, callback-job, and product-metric contracts.
+- Explicit strategy switching after failed or learner-reported unhelpful teaching; speech and DTMF teaching feedback; reviewed transfer choices; DTMF-only mastery cap.
+- Portable salted learner identity, three-attempt and cross-source throttling, shared-phone privacy, and signed cross-phone resume.
+- Atomic pending-question persistence, pause-on-drop, pause SMS callback, same-phone and cross-phone resume, and no state advance on unclear audio.
+- Signed missed-call webhook with first-verb `<Reject reason="busy">`, deduplication, allowlists, quiet hours, rate limits, encrypted callback destination, outbound Twilio callback, and signed Realtime identity relay.
+- Signed, idempotent SMS controls for start, stop, pause, resume, time, days, progress, memory, and two-step deletion.
+- One-segment reviewed homework assignments with recipient-bound codes, signed/idempotent SMS replies, learner evidence, and an explicit no-secure-mastery cap for multiple-choice work.
+- Consent-gated recurring study plans and due-job locking; one dial per scheduled slot with no immediate application retry.
+- Low-literacy guardian keypad controls for progress, time, pause/resume, and two-step deletion.
+- Access/reliability/learning metric ledger and protected metrics API.
+- Mobile-first public landing page with no learner web classroom.
+- Three-, five-, and ten-minute lesson state, with duration-specific activity targets.
+- Offline demo, deterministic evaluator, strict TypeScript, and automated unit/integration tests remain zero-credit runnable.
+
+### Still gated before a public claim
+
+- A second measured carrier call must prove the corrected onboarding and teaching state machine.
+- Live missed-call callback, DTMF code, reviewed quiz, feedback, drop SMS, same/cross-phone resume, homework reply, schedule, no-answer, and guardian menu require carrier smoke tests.
+- Science, English, History, and Geography source briefs require human approval, compilation, independent verification, builder spot-check, and freeze. Until then the public guided menu must expose Math only.
+- Carrier status callbacks and priced usage receipts must be added before claiming measured call-completion or cost-per-lesson values.
+- English, Hindi-English, Spanish-English, and French-English must be described only as named tested adult-speaker patterns after the actual carrier matrix passes.
+- Demo recording, YouTube upload, Devpost team acceptance, human-written submission copy, `/feedback` Session ID, clean-clone proof, and final repository sharing remain human submission gates.
+
+## Execution order
+
+1. Finish the flagship Math journey, voice/DTMF feedback, duration choices, homework SMS, and deterministic judge journey.
+2. Prove portable identity, exact drop recovery, missed-call callback, schedules, guardians, and deletion on the carrier.
+3. Human-review and freeze the four pending curriculum packs; hide every pack that misses the gate.
+4. Run five consecutive golden judge journeys, freeze features, record the three-minute demo, and complete clean-clone verification.
+5. Human-rewrite Devpost copy, retrieve `/feedback`, publish/share the repository, and submit by noon PT on July 21.
+
+---
+
+# ARCHIVED V5 PLAN — HISTORICAL CONTEXT ONLY, DO NOT IMPLEMENT
+
+The material below records prior research and status receipts. Any reference to WhatsApp, camera input, or the older scope is superseded by v6 above.
+
+# CONTINUUM — FINAL BUILD PLAN (v5 · ARCHIVED)
 
 > **📋 STATUS AUDIT — Friday July 17, late night (verified against repo `Tanya-Khanna/nomad-ai` @ `3e11e8b`,
 > 55 commits, by independent clone + test run: 115/115 tests, 25/25 deterministic eval, REPL + resume verified live).**

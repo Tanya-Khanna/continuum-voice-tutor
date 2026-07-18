@@ -8,6 +8,24 @@ import {
 } from "./teaching.js";
 import type { StoredModelUsage } from "./usage.js";
 import type { StoredSandboxTurn } from "./sandbox.js";
+import type {
+  CuriosityTrail,
+  LearnerEducationProfile,
+  LearningEvidence,
+  PedagogyDecision,
+  TeachingFeedback,
+} from "./classroom.js";
+import { LessonDurationMinutesSchema } from "./classroom.js";
+import type {
+  LearnerAccessCode,
+  LearnerCodeAttempt,
+} from "./portable-identity.js";
+import type { CallbackJob } from "./callback.js";
+import type { GuardianAuthorization } from "./guardian.js";
+import type { StudyPlan } from "./study-plan.js";
+import type { SmsReceipt } from "./sms-control.js";
+import type { ProductMetricEvent } from "./product-metrics.js";
+import type { HomeworkAssignment } from "./homework.js";
 
 export const LearnerProfileSchema = z.object({
   id: z.string().min(1),
@@ -47,6 +65,7 @@ export const LessonSessionSchema = z.object({
   placementTotal: z.number().int().nonnegative().default(0),
   placementEvidence: z.array(z.string()).default([]),
   anchorObject: AnchorObjectSchema.nullable().default(null),
+  durationMinutes: LessonDurationMinutesSchema.default(5),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -87,5 +106,62 @@ export interface LearningRepository {
   listSandboxTurns(sessionId: string): StoredSandboxTurn[];
   appendUsage(usage: StoredModelUsage): void;
   listUsage(sessionId: string): StoredModelUsage[];
+  appendLearningEvidence(evidence: LearningEvidence): void;
+  listLearningEvidence(learnerId: string, limit?: number): LearningEvidence[];
+  appendTeachingFeedback(feedback: TeachingFeedback): void;
+  listTeachingFeedback(learnerId: string, limit?: number): TeachingFeedback[];
+  appendPedagogyDecision(decision: PedagogyDecision): void;
+  listPedagogyDecisions(sessionId: string): PedagogyDecision[];
+  saveEducationProfile(profile: LearnerEducationProfile): void;
+  findEducationProfile(learnerId: string): LearnerEducationProfile | undefined;
+  saveCuriosityTrail(trail: CuriosityTrail): void;
+  listCuriosityTrails(learnerId: string): CuriosityTrail[];
+  saveLearnerAccessCode(record: LearnerAccessCode): void;
+  findLearnerAccessCode(learnerId: string): LearnerAccessCode | undefined;
+  findLearnerAccessCodeByFingerprint(
+    codeFingerprint: string,
+  ): LearnerAccessCode | undefined;
+  appendLearnerCodeAttempt(attempt: LearnerCodeAttempt): void;
+  countRecentLearnerCodeFailures(options: {
+    sourcePhoneHash: string;
+    codeFingerprint: string;
+    since: string;
+  }): number;
+  saveCallbackJob(job: CallbackJob): void;
+  findCallbackJobBySourceCallSid(sourceCallSid: string): CallbackJob | undefined;
+  findRecentCallbackJob(options: {
+    callerPhoneHash: string;
+    since: string;
+  }): CallbackJob | undefined;
+  countCallbackJobsSince(since: string, callerPhoneHash?: string): number;
+  claimCallbackJob(options: {
+    id: string;
+    claimToken: string;
+    claimExpiresAt: string;
+    now: string;
+  }): CallbackJob | undefined;
+  saveGuardianAuthorization(authorization: GuardianAuthorization): void;
+  findGuardianAuthorization(learnerId: string): GuardianAuthorization | undefined;
+  findGuardianAuthorizationByFingerprint(
+    codeFingerprint: string,
+  ): GuardianAuthorization | undefined;
+  saveStudyPlan(plan: StudyPlan): void;
+  findStudyPlan(learnerId: string): StudyPlan | undefined;
+  claimDueStudyPlans(options: {
+    now: string;
+    claimToken: string;
+    claimExpiresAt: string;
+    limit: number;
+  }): StudyPlan[];
+  reserveSmsMessage(messageSid: string, createdAt: string): boolean;
+  completeSmsMessage(receipt: SmsReceipt): void;
+  findSmsReceipt(messageSid: string): SmsReceipt | undefined;
+  hasRecentDeletionRequest(learnerId: string, since: string): boolean;
+  deleteLearnerData(learnerId: string): void;
+  appendProductMetric(event: ProductMetricEvent): void;
+  listProductMetrics(limit?: number): ProductMetricEvent[];
+  saveHomeworkAssignment(assignment: HomeworkAssignment): void;
+  findHomeworkAssignmentByCode(code: string): HomeworkAssignment | undefined;
+  listHomeworkAssignments(learnerId: string): HomeworkAssignment[];
   close(): void;
 }

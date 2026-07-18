@@ -5,6 +5,17 @@ export const SandboxRequestSchema = z.object({
   learnerId: z.string().min(1),
   learnerQuestion: z.string().min(1).max(2_000),
   requestedLanguageMode: LanguageModeSchema.default("auto"),
+  previousTurns: z
+    .array(
+      z.object({
+        learnerQuestion: z.string().min(1).max(2_000),
+        spokenResponse: z.string().min(1).max(2_000),
+        followUpQuestion: z.string().min(1).max(500),
+        certainty: z.enum(["low", "medium", "high"]),
+      }),
+    )
+    .max(6)
+    .default([]),
 });
 
 export const SandboxTurnSchema = z.object({
@@ -30,4 +41,3 @@ export const StoredSandboxTurnSchema = z.object({
 export type SandboxRequest = z.infer<typeof SandboxRequestSchema>;
 export type SandboxTurn = z.infer<typeof SandboxTurnSchema>;
 export type StoredSandboxTurn = z.infer<typeof StoredSandboxTurnSchema>;
-
