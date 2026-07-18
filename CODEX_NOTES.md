@@ -490,3 +490,14 @@
 - Pinned the current official major lines, `actions/checkout@v6` and `actions/setup-node@v6`, after checking their 2026 release pages rather than copying older workflow examples. Node remains fixed to the repository's supported major, 22.
 - Added the Release gate badge and documented that CI repeats the compiled-server smoke, 113 tests, 25-case deterministic eval, synthetic seed, and exact resume proof.
 - The first GitHub-hosted push run, `29570390805`, completed green in 42 seconds on commit `578f797`; every workflow step passed without repository secrets.
+
+## 2026-07-17 — Official midweek reminder reconciliation
+
+- Reconciled the user-provided Build Week halfway reminder against the source-of-truth plan instead of appending it verbatim. Existing coverage—demo sequence, continuous Codex usage, `/feedback`, repository recipients, README requirements, and frequent commits—was retained once.
+- Added the missing free-tier/model guidance: no future credit distribution is assumed, GPT-5.6 is required meaningfully rather than exclusively, Codex and API balances remain separate, and focused batching plus cheaper exploratory work preserves limits.
+- Added an explicit human-authorship gate for the Devpost description, code comprehension, project naming, and demo script. `docs/SUBMISSION_COPY.md` is now unmistakably a drafting aid that the builder must rewrite in her own voice.
+- Added an actionable submission-now checklist covering Devpost draft creation, accepted team invitations, public YouTube verification, `/feedback` retrieval, private-repository sharing, a calendar reminder if access is deferred, final field review, and a saved confirmation screenshot.
+- Confirmed through GitHub that `Tanya-Khanna/nomad-ai` is currently private, so both official repository-access recipients remain an open human action rather than a checked claim.
+- Preserved the absolute July 21, 5:00 PM PT cutoff while flagging the source conflict: the official reminder calls it Monday and the copied plan called it Tuesday. The plan now requires checking the live Devpost countdown and treats noon PT on July 21 as the internal deadline.
+- Removed three conflicting legacy instructions: weekday labels from the date-based schedule, “spend credits freely,” and “ready-to-paste” AI submission copy. The plan now uses absolute dates, finite-credit discipline, and an explicit human rewrite gate; `docs/SUBMISSION_COPY.md` carries the same boundary.
+- Reworded the historical D0 and credit-risk entries so the source-of-truth plan no longer expects another distribution or calls the already-funded $5 API runtime “unfunded.”

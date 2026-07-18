@@ -4,14 +4,16 @@
 > judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
 > (Deep research receipts & citations: NOMAD_FEATURES.md. Provenance: IDEAS.md. Rules: HACKATHON_INSTRUCTIONS.md.)
 >
-> **Deadline: Tuesday, July 21, 5:00 PM PT.** Today: Thursday July 16. Build: Fri–Mon. Submit Tue by noon PT.
+> **Deadline control: July 21, 5:00 PM PT.** The official midweek reminder labels July 21 as Monday, while the
+> copied plan previously labeled it Tuesday. The absolute date/time agrees and controls: verify the live Devpost
+> countdown now, target submission by noon PT on July 21, and do not assume an extra Tuesday buffer.
 > **Goal: 1st place, Education track ($15,000), ~30k participants.**
 
 ---
 
 # 1 · THE PRODUCT
 
-> *(Product name: "Nomad" is a WORKING TITLE — builder will rename before submission; it's a find-and-replace.)*
+> *(Product name: "Nomad" is a WORKING TITLE — the builder must personally accept or replace it before submission.)*
 
 **A GLOBAL product with one proven deployment.** An adaptive multilingual tutor that works on **any phone,
 anywhere**. Call a normal number — from a $15 feature phone, no smartphone, no app, no data — and a Socratic
@@ -79,7 +81,7 @@ is India — the hardest test we could pick. Tomorrow the same phone rings in La
 **One sentence:** *A patient, personal tutor for every child on Earth who owns nothing but a phone — any phone,
 any language. If it can make a call or open WhatsApp, school is open.*
 
-Everything else in this document is just the machinery to make that sentence true by Tuesday.
+Everything else in this document is just the machinery to make that sentence true by the July 21 deadline.
 
 # 2 · JUDGING CRITERIA, WORD BY WORD → ENGINEERING RESPONSE
 
@@ -324,16 +326,82 @@ Grades beyond 6 · language-specific engine branches · native apps · WhatsApp 
 accounts/payments · school management · live web search mid-call · real deployment with children · complex auth ·
 custom noise DSP · toll-free provisioning · managed voice platforms (Vapi/Retell/Bland).
 
+# 4.5 · OFFICIAL MIDWEEK CHECKPOINT (RECONCILED JUL 17)
+
+This section incorporates the Build Week halfway reminder without duplicating or weakening the product gates above.
+Unknown external state remains unchecked; Codex must not infer Devpost, YouTube, collaborator, or account status.
+
+## Where the project should be now
+
+- ✅ **Core software works:** clean-clone production smoke, 113/113 tests, 25/25 deterministic cases, synthetic
+  seed, and exact resume are green locally and in GitHub Actions. The real carrier leg remains a separate open gate.
+- 🔲 **Primary Codex `/feedback` Session ID:** the main build thread exists and Codex has been used throughout;
+  run `/feedback`, copy the submission-specific Session ID, and store it in the final submission fields.
+- ✅ **Rough demo plan exists:** §6 and `docs/DEMO_AND_JUDGE_RUNBOOK.md` define the three-minute shot order.
+  Recording, public YouTube upload, and URL verification remain open.
+- ✅ **Code repository exists:** `Tanya-Khanna/nomad-ai` is on `main` with a green release gate. It is currently
+  **private**, so the invitation/share requirement below is still open.
+
+## Credits and model usage — official reminder rules
+
+- All distributed hackathon credits are already out; do not plan around receiving more. Free participation is
+  valid, free users can use GPT-5.6 Terra in Codex, and previously received Codex credits can extend usage for
+  models available to the account.
+- Build Week does **not** require GPT-5.6 for every task. It requires meaningful GPT-5.6 use somewhere in the
+  project. Nomad already has a citable role for GPT-5.6 in structured teaching, curriculum compilation and
+  verification, and agent evaluation; use smaller/cheaper models for disposable exploration and routine work.
+- Keep Codex-credit accounting separate from the builder-funded OpenAI API balance. The current project has $5
+  prepaid API credit; deterministic development remains offline and no additional hackathon API credit is assumed.
+- Batch related Codex work into focused sessions instead of leaving sessions idle, front-load throwaway exploration
+  into cheaper models, reserve GPT-5.6 for submission-relevant reasoning, and commit at every meaningful milestone
+  so a rate-limit reset cannot erase progress.
+
+## Human-authorship and comprehension gate
+
+- **Devpost prose:** `docs/SUBMISSION_COPY.md` is a fact-checked drafting aid, not paste-ready authorship. The builder
+  must rewrite the final project description in her own voice, verify every claim, and remove phrasing she would not
+  naturally use.
+- **Code understanding:** before submission, the builder must be able to explain the Realtime/SIP bridge, structured
+  teaching boundary, frozen curriculum, persistence/resume path, safety guards, eval evidence, and one failure that
+  changed the implementation. Do not submit code the builder cannot explain.
+- **Project name:** Codex may generate options, but the builder personally accepts or replaces “Nomad” after a
+  ten-minute naming pass. The final name is a human product decision, not an AI default.
+- **Demo voiceover:** an AI-generated voice is explicitly allowed. The script still requires human editing and must
+  describe only behavior visible in the recorded build.
+- Continue using Codex through build, verification, and submission, and use it to improve README structure while
+  keeping the builder responsible for accuracy and final wording.
+
+## Submission checklist — start now, not deadline night
+
+- 🔲 Start the Devpost submission now; save a draft and verify that it remains editable until the live cutoff.
+- ✅ Project builds and runs as documented; rerun `npm run verify:fresh` from the final commit.
+- 🔲 Add every team member to the Devpost submission and confirm each invitation is **accepted before the deadline**.
+  A sent invitation is not sufficient, and members cannot be added after submissions close.
+- 🔲 Record or finish the demo, upload it to YouTube as a **public** video, open the URL while signed out, and check
+  its audio, duration, title, and visibility.
+- 🔲 Run `/feedback` in the primary Codex build thread and copy the returned Session ID into Devpost.
+- 🔲 Because the repository is private, share it with `testing@devpost.com` and
+  `build-week-event@openai.com` before the cutoff, then verify access. If sharing is deliberately deferred, set a
+  calendar reminder well before noon PT on July 21; do not rely on memory.
+- ✅ README includes reproducible setup plus honest documentation of Codex and GPT-5.6 usage. Recheck the final URLs,
+  phone claim, subject scope, and language-scope wording after deployment.
+- 🔲 Submit by the internal noon PT target, reopen the submission to verify every field, and save a confirmation
+  screenshot. The 5:00 PM PT window is emergency buffer, not planned work time.
+
+Optional support, never a delivery dependency: try the Devpost Hackathons Plugin in Codex if it is available, use
+the OpenAI Discord `#build-week-chat` when blocked, or join a Build Week event for focused build time. Do not let
+plugin/community exploration displace the phone, video, `/feedback`, access, or submission gates.
+
 # 5 · SCHEDULE (gates are law)
 
-**⚠️ D0 — TONIGHT (Thu), 10 minutes, no code (triggered by Devpost forum finding, July 16):** The $100 Build Week
-credits are CODEX credits — they extend Codex usage, do NOT upgrade model access, and per forum reports do NOT
-apply to the API. Verify: ① your ChatGPT plan tier (Sol in Codex reportedly needs Pro+; **Terra/Luna ARE GPT-5.6
+**⚠️ D0 — INITIAL CREDIT CHECK (recorded July 16; no code):** Any Build Week credits already received are Codex
+credits—they extend eligible Codex usage, do not upgrade model access, and do not apply to the API. No further
+credit distribution is expected. Verify: ① your ChatGPT plan tier (Sol in Codex reportedly needs Pro+; **Terra/Luna ARE GPT-5.6
 and fully satisfy the rules** — the "Sol is mandatory" forum claim is wrong) ② ~~which models Codex's picker actually
 offers you~~ ✅ *(Sol, Terra, and Luna available)* ③ platform.openai.com → Billing: ~~do credits appear on the API
 side?~~ ✅ *(none initially; $5 of prepaid API credit added Jul 17 — Codex credits are separate)* ~~Payment method~~ ✅. **Use budget alerts and keep auto-recharge off** *(project budgets are soft alerts, not hard caps)* ④ Realtime
 API access on your API account. Consequences flow to routing (Terra-only mode if Sol gated) — the architecture
-absorbs every outcome; the point is knowing TONIGHT, not Friday noon.
+absorbs every outcome; the checkpoint exists to prevent runtime funding assumptions.
 
 ## 💰 API BUDGET: $5 INITIAL PREPAID CREDIT · ADD UP TO $5 MORE ONLY IF NEEDED
 
@@ -343,26 +411,27 @@ latency, UX feel, and demos ② every live test call has a purpose ③ cost/call
 
 | Day | Purpose | Budget |
 |---|---|---|
-| D1 Fri | pipeline bring-up + latency tests (~12 live min) | $3 |
-| D2 Sat | gate-test calls (teaching iterated in text first) | $4 |
-| D3 Sun | compiler runs + ~~25-case eval (text)~~ ✅ + 2–3 live smoke calls | $3 |
-| D4 Mon | demo takes, montage, WhatsApp tests | $5 |
-| D5 Tue | final verification calls | $1 |
+| D1 Jul 17 | pipeline bring-up + latency tests (~12 live min) | $3 |
+| D2 Jul 18 | gate-test calls (teaching iterated in text first) | $4 |
+| D3 Jul 19 | compiler runs + ~~25-case eval (text)~~ ✅ + 2–3 live smoke calls | $3 |
+| D4 Jul 20 | demo takes, montage, WhatsApp tests | $5 |
+| D5 Jul 21 | final verification calls | $1 |
 | Jul 22–Aug 5 | **judges' test calls (reserve — do not touch)** | $4 |
 
-**Codex model rule all week (Codex credits are the $100 — spend them freely on the build):** *think with the
-biggest model, type with the smallest.* "Best" below = Sol if your plan has it, else Terra (equally rules-compliant).
+**Codex model rule all week:** distributed credits are finite—batch focused work, close idle sessions, use smaller
+models for disposable exploration, and reserve GPT-5.6 for the decisions and artifacts cited in the submission.
+"Best" below = Sol if the plan exposes it, otherwise Terra; both satisfy the project strategy.
 
 ---
 
-### 🌙 TONIGHT — Thu Jul 16, 10 PM (≤1 hour, then SLEEP)
+### 🌙 JUL 16, 10 PM (≤1 hour, then SLEEP)
 1. (20 min) **D0 checks above**: plan tier → ~~Codex model picker~~ ✅ → ~~API balance/credit-grant check~~ ✅ → ~~payment method + $5 prepaid API credit~~ ✅ *(auto-recharge off)* → Realtime API access.
 2. (15 min) Create accounts if missing: ~~Twilio account created~~ ✅ *(onboarding/verification still in progress; paid upgrade remains deferred per D2 gate)* · ~~GitHub repo created private with MIT license~~ ✅ *([Tanya-Khanna/nomad-ai](https://github.com/Tanya-Khanna/nomad-ai))*.
 3. (10 min) Tell Claude the D0 findings → routing defaults get locked to reality.
 4. (5 min) Skim §1–§5 once. Then sleep — Friday is the most important day of the week.
 - **Codex: not tonight.** No code before the pipe plan is confirmed against D0 findings.
 
-### 📅 FRI Jul 17 — D1: PROVE THE PIPE (Codex: BEST model, HIGH reasoning all day — this is the novel engineering)
+### 📅 JUL 17 — D1: PROVE THE PIPE (Codex: BEST model, HIGH reasoning all day — this is the novel engineering)
 **Morning (~9 AM):**
 - ~~Open THE main Codex session (this becomes the `/feedback` session — everything core happens here). First prompt: point it at this file + repo init + AGENTS.md + CODEX_NOTES.md skeleton.~~ ✅
 - Access checks in practice: ~~first live structured-output API call to GPT-5.6 Luna~~ ✅ *(Jul 17; correct misconception diagnosis returned)*; Terra/Sol smoke checks; ~~Realtime session hello-world~~ ✅ *(Jul 17; text-only Realtime Mini selected the live `start_lesson` tool)*; voice catalog listen-through (pick the warm voice; note accent options).
@@ -387,7 +456,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - **Exit: a real phone conversation with an AI exists. Latency number written down.**
 - **📦 Features landing today:** F1 zero-data dial-in · F7 GSM-native (inherited after carrier proof) · ~~F8 server-side inference~~ ✅ · F9 G.711/SIP · F10 realtime pipeline · ~~F12 VAD+barge-in configuration and guards~~ ✅ *(real-phone tuning open)* · ~~F15-voice configuration (warm `marin`, 0.8 speed, Nomad persona)~~ ✅ *(real-phone listening open)* · F19 accent check (real-phone listen-through)
 
-### 📅 SAT Jul 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
+### 📅 JUL 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
 **Morning:**
 - ~~Two-layer teaching engine: Realtime sideband tool bridge → structured GPT-5.6 teaching turn → exact spoken response, with schema {learner_id, concept, learner_answer, diagnosis, language_mode, next_strategy, mastery_status, mastery_evidence, next_question}~~ ✅ *(Jul 17; deterministic integration coverage plus live Realtime Mini tool-selection proof; end-to-end phone/audio remains gated on Twilio)*; Luna/Terra↔Sol routing (or Terra-only per D0); latency choreography wiring.
 - ~~Quick TEXT loop harness (pre-REPL) so all teaching iteration today is text-first (cheap).~~ ✅ *(built early as `npm run chat` / `make chat`; offline by default)*
@@ -400,7 +469,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
 - **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing~~ ✅ · ~~F13/F50 neutral preamble + engine-latency telemetry~~ ✅ *(real phone measurement remains)* · ~~F14 drop recovery + resume machinery~~ ✅ · ~~F21-flagship fractions pack~~ ✅ · ~~F23 Socratic method~~ ✅ · ~~F16 universal code-switching (live model gate)~~ ✅ · ~~F17/F31 pack-driven concept bridging + vocabulary~~ ✅ · ~~F25 auditory analogies~~ ✅ · ~~F26/F27 micro-lessons + verbal checks~~ ✅ *(phone timing remains)* · ~~F28 short-form structure~~ ✅ · ~~F52 computed rational-comparison truth~~ ✅ · ~~F40 enforced voice-math formatting~~ ✅ · ~~F34 enforced radio turn-taking~~ ✅ · ~~F35 judgment-free tone~~ ✅ · ~~F36 adaptive pacing~~ ✅ · ~~G4 curriculum-configured explore → check → recap lesson arc~~ ✅ · ~~F41 learner DB + resume~~ ✅ · ~~G1 shared-phone named profiles~~ ✅ · ~~F54/F29 persisted semantic placement + adaptive start~~ ✅ · ~~F56 uncertainty honesty~~ ✅ · ~~F48 auditable think-aloud diagnosis~~ ✅
 
-### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
+### 📅 JUL 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
 - ~~Curriculum Compiler scaffold: provenance-bearing reviewed source brief → GPT-5.6 Terra original draft → independent verifier → create-only frozen pack; pending/approved review states, exact-source receipts, and four official NCERT/CIET draft briefs for Science, English, History, and Geography are now wired~~ ✅. Live runs remain open until the builder reviews each draft; post-generation spot-check remains mandatory before each freeze.
 - ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
@@ -414,21 +483,21 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
 - **📦 Features landing today:** ~~F38/F39 Curriculum Compiler + G3 originality rule~~ ✅ · ~~F37 frozen-pack grounding (formalized)~~ ✅ · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · ~~F32-flavor real-world flagship grounding~~ ✅ · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · ~~F15 persona/product name: Nomad~~ ✅
 
-### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
+### 📅 JUL 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
 - ~~Dashboard complete: mirror view (live call transcript), eval-results page, anonymized IDs, cost/call, and universal code-switched sample recording + synced transcript~~ ✅.
 - ~~Opt-in language-matched SMS recap to the originating caller~~ ✅ + optional parent number · per-number rate limiting.
 **Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. Stop the moment anything core wobbles.
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6, all beats incl. sandbox flash + language montage — spot-check montage languages in text first). Multiple takes; pick the best; upload unlisted.
-- ✍️ ~~README architecture/Codex/limitations sections plus ready-to-paste Devpost description, local judge path,
+- ✍️ ~~README architecture/Codex/limitations sections plus fact-checked Devpost drafting material, local judge path,
   gated final phone paragraph, claim-by-claim release ledger, and primary-source impact/pedagogy evidence with
   explicit overlap/sample-size caveats~~ ✅. Final phone/dashboard/video URLs and the real-number Judge Experience
   card remain release-time work. Distill CODEX_NOTES → README §6.
 - **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
 - **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · ~~G9 honest limitations + G2 consent/retention documentation~~ ✅ · ~~§4.3 roadmap features (README mentions)~~ ✅
 
-### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
+### 📅 JUL 21 — D5: SHIP (hard cutoff 5:00 PM PT / 8:00 PM ET; official weekday labels conflict; target noon PT)
 **Morning:**
 - Final stability pass: 2 live verification calls ($1) · `make eval` one last time · ~~repeatable secret-free REPL fresh-clone gate (`npm run verify:fresh`: archive committed HEAD → lockfile install → compiled production smoke → 113/113 tests → 25/25 eval → seed the synthetic Ravi fixture → prove exact paused-lesson resume), enforced again by a read-only GitHub Actions gate on `main` and pull requests; first hosted run green in 42 seconds~~ ✅. Live calls remain gated on the external phone leg.
 - Video → public on YouTube. Repo → public (MIT) or share with testing@devpost.com + build-week-event@openai.com.
@@ -436,7 +505,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **By noon PT:**
 - Devpost form: Education category · description · video URL · repo URL · `/feedback` Session ID · Judge Experience testing instructions (phone number front and center). **SUBMIT.** Screenshot the confirmation.
 **After:**
-- Afternoon = buffer only. Keep phone line + dashboard live through **Aug 5** (the $4 judge reserve exists for this). Don't touch the deployed system except for outages.
+- Post-submission hours = buffer only. Keep phone line + dashboard live through **Aug 5** (the $4 judge reserve exists for this). Don't touch the deployed system except for outages.
 
 **Iron rules:** live call = critical path — nothing from D3–D4 starts before the D2 gate passes · stretch never
 jeopardizes stability (a flawless 6-feature demo beats a broken 20-feature one) · text-first iteration, voice for
@@ -447,7 +516,7 @@ D1: F1, F7, F8, F9, F10, F12, F15-voice, F19 (8) · D2: F13/F50, F14, F16, F17/F
 F28, F34, F35, F36, F40, F41, F42, F48, F52, F54/F29, F56, G1, G4 (21) · D3: F18, F20, F21-full, F22, F24,
 F32-flavor, F37, F38/F39+G3, F41-query, F45-skeleton, F47, F51, F15-persona, REPL (14) · D4: F43-lite, F44+G7,
 F45-complete, F46, G2, G6, G8, G9 + stretch F3/F4/F5/F6/F55/F59 + roadmap mentions (rest) · D5: ships, adds nothing.
-If a feature slips its day, it moves DOWN the stretch ladder or into the roadmap — never into Tuesday.
+If a feature slips its day, it moves DOWN the stretch ladder or into the roadmap — never into deadline day.
 
 # 6 · DEMO VIDEO (<3 min · public YouTube · voiceover REQUIRED: what we built + how Codex + how GPT-5.6)
 
@@ -536,14 +605,14 @@ Record against the real system (rehearse the script, never fake the tech). No co
 stated plainly and honestly: reviewed Grade 6 Math plus Curious Sandbox today; a gated compiler and catalog for future
 reviewed subjects; an engine without a fixed subject or language-pair branch; and named tested multilingual patterns,
 not every language or accent. Then tell the 9-beat story in prose → evidence stack → Codex/GPT-5.6 summary → gated
-judge invitation.
+judge invitation. This is a content outline only; the builder writes the final description in her own voice.
 
 # 9 · RISK REGISTER
 
 | Risk | Mitigation | Fallback |
 |---|---|---|
 | GPT-5.6 realtime variant unavailable on credits | D1 morning check | Two-layer arch: available realtime voice model + GPT-5.6 brain — still Stage-One compliant |
-| **Credits are Codex-only; API runtime unfunded** (Devpost forum + OpenAI support reply, July 16) | D0 check tonight; hard API spend cap; ~$30–80 own-budget runtime reserve | Trim eval-run frequency; Luna/Terra-only routing; REPL/WhatsApp demos burn fewer realtime minutes |
+| **Codex credits do not fund API runtime; no further distribution expected** | D0 is recorded; $5 prepaid API balance, alerts, auto-recharge off, deterministic loops offline | Trim paid eval frequency; Luna/Terra-only routing; preserve Realtime credit for carrier proof and demo |
 | **Sol gated behind Pro plan** | Terra/Luna ARE GPT-5.6 — rules fully satisfied without Sol ("Sol is mandatory" forum claim is wrong) | Terra-only routing (already designed); README states tiering honestly ("Sol where available") |
 | SIP connector unavailable/flaky | D1 check | Twilio Media Streams ↔ own WS server (more code = more Criterion-1 credit) |
 | Latency reads as broken | Preambles + Socratic floor-holding + rehearsed demo conditions | WhatsApp async path shows full intelligence, zero latency pressure |
@@ -551,7 +620,7 @@ judge invitation.
 | Compiler packs mediocre | Verifier pass + spot-checks; fractions hand-built regardless | Affected subjects → flavored sandbox |
 | Judge's call hits an edge case | 24-case eval; rate limiting; graceful recovery everywhere | Dashboard transcript shows even failure handled gracefully |
 | Credit burn | Routing discipline + cost dashboard + headroom reserve | Terra-only mode |
-| Anything unfinished Tuesday | Video + README done MONDAY | Tuesday is buffer, not build |
+| Anything unfinished on deadline day | Video + README done before July 21 | The 5:00 PM window is buffer, not build |
 
 ---
 

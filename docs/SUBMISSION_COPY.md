@@ -1,7 +1,9 @@
-# Submission copy and claims ledger
+# Submission drafting material and claims ledger
 
-This file is the ready-to-paste submission draft. Bracketed values remain blocked
-until the corresponding release gate passes. Do not delete a bracket by guessing.
+This file is fact-checked drafting material, not text to submit unchanged. The
+builder must rewrite the final description in her own voice and understand every
+claim. Bracketed values remain blocked until the corresponding release gate
+passes; do not delete a bracket by guessing.
 
 ## Title and one-line pitch
 
@@ -68,7 +70,7 @@ curriculum, source/reviewer provenance, subject-scoped placement and exact resum
 trusted turn validation, and reproducible release evidence. The README contains
 the sourced comparison and does not infer undocumented limitations of those products.
 
-## Final phone paragraph — paste only after every phone gate passes
+## Final phone paragraph — adapt only after every phone gate passes
 
 Call Nomad at **[PUBLIC PHONE NUMBER]**. Choose Math and say: “One-fourth is
 bigger because four is bigger.” Nomad will teach rather than reveal the answer.
