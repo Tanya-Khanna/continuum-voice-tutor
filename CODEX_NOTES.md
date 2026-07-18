@@ -508,3 +508,9 @@
 - Updated learner-facing prompts, CLI output, Mission Control, safety and operator documentation, the build plan, and submission drafting material so the tutor introduces itself consistently as Continuum.
 - Renamed the private npm package to `continuum`. Kept `NOMAD_` environment variables, the `Tanya-Khanna/nomad-ai` repository slug, database paths, and internal fixture discriminators as compatibility identifiers for this build; changing those now would risk existing secret configuration, persisted state, and external links without changing the product experience.
 - Added regression checks for the Realtime call identity and Mission Control brand. Strict TypeScript and 115/115 automated tests pass in the working tree; the committed-archive release gate is rerun after the rename commit.
+
+## 2026-07-17 — Gated public landing-page milestone
+
+- Tanya chose to add a public Continuum landing page to the build plan. The required minimum is a fast, mobile-first judge entry point with the tagline, call/learn/resume story, verified release-state CTA, and links to the demo, Mission Control, repository, safety notes, and testing instructions.
+- The landing page is explicitly downstream of the real-phone gate. A call-now claim and public number remain blocked until 11/11 configuration and the real-carrier behavior checks pass.
+- GSAP is limited to one optional continuity animation plus restrained reveals with `prefers-reduced-motion`. Audio is optional, user-triggered, captioned, controllable, and never tied to scrolling or autoplay. Both are dropped before they can delay the phone path, video, or submission.

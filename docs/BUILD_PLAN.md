@@ -149,7 +149,10 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 5.5 **The multilingual invitation:** invite judges to try a language pattern they speak, while naming the patterns
    actually tested. Describe arbitrary language tags and code-switching as an open architecture—not proof of every
    language, accent, or noisy phone condition.
-6. **Zero friction:** no repo clone, no login, no sandbox code. A phone number and a dashboard URL. Live through Aug 5.
+6. **Zero friction:** no repo clone, no login, no sandbox code. The public Continuum landing page puts the verified
+   phone number first, explains call → learn → call back and continue, and links to the judge dashboard. The phone
+   CTA stays visibly gated until the real carrier checks pass. Keep the landing page, phone number, and dashboard
+   live through Aug 5.
 
 # 4 · COMPLETE FEATURE MANIFEST (the confirmed scope — build exactly this)
 
@@ -287,6 +290,19 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   clearly labeled synthetic Spanish-English sample recording with click-to-seek synced transcript; optional Bearer
   protection keeps real session data behind a judge token, passes it via a non-request URL fragment, and fails
   public-webhook startup closed when the token is absent~~ ✅.
+- **F60 Public judge landing page** — build only after the real-phone D2 gate. The required first version is a fast,
+  mobile-first public page with the Continuum name and tagline, a three-step **Call → Learn → Call back and
+  continue** explanation, one honest continuity visual, and clear links to the verified phone number, demo video,
+  Mission Control, repository, safety/privacy notes, and testing instructions. The **Call Continuum** CTA must not
+  claim availability or expose a number until 11/11 configuration plus the real-carrier clarity, latency,
+  barge-in, unclear-audio, and redial-resume checks pass. The page must not contain the dashboard token or learner
+  data.
+  - **Motion polish, optional:** one restrained GSAP signature sequence in which a line or waveform disconnects and
+    resumes from the same point, plus subtle section reveals. No animation may obscure content, delay the CTA,
+    cause horizontal overflow, or run when `prefers-reduced-motion` is enabled.
+  - **Audio polish, optional and last:** a captioned/transcribed **Hear Continuum teach** control may play a short
+    approved sample only after an explicit click or tap, with pause/stop and mute controls. No autoplay audio and
+    no scroll-triggered sound effects. The page must remain complete without GSAP, sound, or JavaScript animation.
 - **F46 Child-safety guardrails** — ~~untrusted-input boundary, prompt-injection resistance, contact/address redaction before model + persistence, graceful off-topic/unsafe handling, repeated-abuse ending, deterministic + live evals, and documented deployment consent/retention limitations (G2)~~ ✅. *(Supervised prototype only; local emergency-language review and production retention enforcement remain pre-pilot requirements.)*
 - **G6 Abuse guard** — ~~HMAC-keyed per-caller sliding-window rate limit, concurrent-call protection, webhook replay idempotency, graceful repeated-abuse disengagement, and two jailbreak cases in the frozen eval~~ ✅.
 - **F51 Eval harness** — simulated-learner agent × evaluator agent (both GPT-5.6 — the multi-agent story). **24 cases:**
@@ -379,6 +395,8 @@ Unknown external state remains unchecked; Codex must not infer Devpost, YouTube,
   A sent invitation is not sufficient, and members cannot be added after submissions close.
 - 🔲 Record or finish the demo, upload it to YouTube as a **public** video, open the URL while signed out, and check
   its audio, duration, title, and visibility.
+- 🔲 If F60 ships, open the landing page signed out on desktop and mobile; verify the phone CTA matches the actual
+  carrier gate, every judge link works, reduced-motion behavior works, and no sound plays without a user action.
 - 🔲 Run `/feedback` in the primary Codex build thread and copy the returned Session ID into Devpost.
 - 🔲 Because the repository is private, share it with `testing@devpost.com` and
   `build-week-event@openai.com` before the cutoff, then verify access. If sharing is deliberately deferred, set a
@@ -487,15 +505,20 @@ models for disposable exploration, and reserve GPT-5.6 for the decisions and art
 **Morning:**
 - ~~Dashboard complete: mirror view (live call transcript), eval-results page, anonymized IDs, cost/call, and universal code-switched sample recording + synced transcript~~ ✅.
 - ~~Opt-in language-matched SMS recap to the originating caller~~ ✅ + optional parent number · per-number rate limiting.
-**Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. Stop the moment anything core wobbles.
+- **After the real-phone gate:** build the F60 landing-page minimum, verify it signed out on desktop and mobile, and
+  confirm its call CTA reflects the actual carrier release state. Record the demo before optional visual polish.
+**Afternoon — polish then stretch, ONLY while stable:** one accessible GSAP continuity animation → optional
+user-triggered captioned teaching sample → §4.2 WhatsApp voice notes → missed-call callback → WhatsApp text →
+homework camera → DTMF → vocal cues. Stop the moment anything core wobbles; omit GSAP and sound before delaying
+the phone path, demo recording, or submission.
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6, all beats incl. sandbox flash + language montage — spot-check montage languages in text first). Multiple takes; pick the best; upload unlisted.
 - ✍️ ~~README architecture/Codex/limitations sections plus fact-checked Devpost drafting material, local judge path,
   gated final phone paragraph, claim-by-claim release ledger, and primary-source impact/pedagogy evidence with
   explicit overlap/sample-size caveats~~ ✅. Final phone/dashboard/video URLs and the real-number Judge Experience
   card remain release-time work. Distill CODEX_NOTES → README §6.
-- **Exit: video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
-- **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · ~~G9 honest limitations + G2 consent/retention documentation~~ ✅ · ~~§4.3 roadmap features (README mentions)~~ ✅
+- **Exit: phone gate passed · landing-page minimum live · video uploaded · README done · system stable. Nothing ships tomorrow that isn't done tonight.**
+- **📦 Features landing today:** ~~F45 mirror, eval-results, synthetic code-switched sample, cost/call F43-lite, and anonymized IDs G2~~ ✅ · ~~F44 caller SMS recap + G7 language-matched~~ ✅ · G8 parent number · ~~G6 rate limiting + graceful disengage~~ ✅ · ~~F46 child-safety (verified end-to-end + documented)~~ ✅ · F60 landing-page minimum, then optional accessible GSAP/audio polish · **stretch bench:** F4 WhatsApp voice → F3 missed-call → F5 WhatsApp text → F6 homework camera → F59 DTMF → F55 vocal cues · ~~G9 honest limitations + G2 consent/retention documentation~~ ✅ · ~~§4.3 roadmap features (README mentions)~~ ✅
 
 ### 📅 JUL 21 — D5: SHIP (hard cutoff 5:00 PM PT / 8:00 PM ET; official weekday labels conflict; target noon PT)
 **Morning:**
@@ -503,7 +526,7 @@ models for disposable exploration, and reserve GPT-5.6 for the decisions and art
 - Video → public on YouTube. Repo → public (MIT) or share with testing@devpost.com + build-week-event@openai.com.
 - In the main Codex session: run `/feedback`, copy the Session ID.
 **By noon PT:**
-- Devpost form: Education category · description · video URL · repo URL · `/feedback` Session ID · Judge Experience testing instructions (phone number front and center). **SUBMIT.** Screenshot the confirmation.
+- Devpost form: Education category · description · landing-page URL · video URL · repo URL · `/feedback` Session ID · Judge Experience testing instructions (verified phone number front and center). **SUBMIT.** Screenshot the confirmation.
 **After:**
 - Post-submission hours = buffer only. Keep phone line + dashboard live through **Aug 5** (the $4 judge reserve exists for this). Don't touch the deployed system except for outages.
 
@@ -515,7 +538,7 @@ truth · commit at every milestone · CODEX_NOTES 10 min every evening · all co
 D1: F1, F7, F8, F9, F10, F12, F15-voice, F19 (8) · D2: F13/F50, F14, F16, F17/F31, F21-flagship, F23, F25, F26/F27,
 F28, F34, F35, F36, F40, F41, F42, F48, F52, F54/F29, F56, G1, G4 (21) · D3: F18, F20, F21-full, F22, F24,
 F32-flavor, F37, F38/F39+G3, F41-query, F45-skeleton, F47, F51, F15-persona, REPL (14) · D4: F43-lite, F44+G7,
-F45-complete, F46, G2, G6, G8, G9 + stretch F3/F4/F5/F6/F55/F59 + roadmap mentions (rest) · D5: ships, adds nothing.
+F45-complete, F46, F60, G2, G6, G8, G9 + stretch F3/F4/F5/F6/F55/F59 + roadmap mentions (rest) · D5: ships, adds nothing.
 If a feature slips its day, it moves DOWN the stretch ladder or into the roadmap — never into deadline day.
 
 # 6 · DEMO VIDEO (<3 min · public YouTube · voiceover REQUIRED: what we built + how Codex + how GPT-5.6)
@@ -561,7 +584,9 @@ Record against the real system (rehearse the script, never fake the tech). No co
 # 8 · SUBMISSION PACKAGE
 
 **README (11 sections):**
-1. Hero: product + tagline + **THE PHONE NUMBER** ("it will teach you — call it") + dashboard link + architecture diagram.
+1. Hero: product + tagline + **THE VERIFIED PHONE NUMBER** ("it will teach you — call it") + public landing-page
+   link + dashboard link + architecture diagram. If carrier proof is still open, show the limitation instead of a
+   call-now claim.
 2. Why: three audiences · GSMA 3.1B usage gap · separate ITU 2.6B offline estimate, never added · UNESCO projected
    44M teacher deficit by 2030 · preliminary Rori benchmark (~1 yr schooling gain @ ~$5/child), never inherited as
    a Continuum outcome.
@@ -619,6 +644,7 @@ judge invitation. This is a content outline only; the builder writes the final d
 | D2 gate fails | Binary gate, Saturday evening | Grading copilot (IDEAS.md #1), 3 days runway |
 | Compiler packs mediocre | Verifier pass + spot-checks; fractions hand-built regardless | Affected subjects → flavored sandbox |
 | Judge's call hits an edge case | 24-case eval; rate limiting; graceful recovery everywhere | Dashboard transcript shows even failure handled gracefully |
+| Landing-page polish steals critical-path time | Ship a static, mobile-first F60 minimum only after the phone gate; time-box GSAP and audio | Omit all animation and sound; keep the clear HTML page |
 | Credit burn | Routing discipline + cost dashboard + headroom reserve | Terra-only mode |
 | Anything unfinished on deadline day | Video + README done before July 21 | The 5:00 PM window is buffer, not build |
 
