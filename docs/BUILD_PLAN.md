@@ -9,6 +9,14 @@
 > briefs → compile → freeze ③ landing-page minimum ④ Hinglish sample recording ⑤ demo video ⑥ human rewrite of
 > submission copy ⑦ submit.**
 
+> **🚀 DEPLOYMENT UPDATE — Saturday July 18:** commit `31a8988` is live at
+> [continuum-production-8971.up.railway.app](https://continuum-production-8971.up.railway.app). Railway built the
+> checked-in Dockerfile, attached a persistent `/data` volume, and passed public health, Mission Control,
+> unauthorized-access, authenticated-session, readiness, and writable-SQLite checks. The startup process prepares
+> the root-mounted volume and then drops to the unprivileged Node user. This closes the hosting prerequisite only:
+> phone readiness remains 4/11 until the OpenAI project/webhook and Twilio number/routing/trunk are configured and
+> the real-carrier gate passes.
+
 > **This is the only document Codex needs.** Everything is in here: product, judging-criteria engineering,
 > judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
 > (Deep research receipts & citations: NOMAD_FEATURES.md. Provenance: IDEAS.md. Rules: HACKATHON_INSTRUCTIONS.md.)
@@ -378,7 +386,7 @@ truth · commit at every milestone · CODEX_NOTES 10 min every evening · all co
 **Everything still open clusters into six human-or-external workstreams:**
 1. **📞 THE PHONE LEG** — F1, F7, F9, F10, F12, F13/50-live, F14-live, F15-live, F19 all unblock together when
    preflight goes 4/11 → 10/11 → one smoke call → 11/11 → real-carrier checks (PHONE_SETUP.md has the sequence;
-   requires: public HTTPS deploy, OpenAI project/webhook, Twilio upgrade + number + trunk)
+   requires: ~~public HTTPS deploy~~ ✅, OpenAI project/webhook, Twilio upgrade + number + trunk)
 2. **📚 PACK REVIEW** — F21-full + F22: review 4 source-briefs (~15 min each) → compile → verify → freeze
 3. **🎙️ HINGLISH SAMPLE** — your voice, replaces synthetic Spanish-English exhibit
 4. **🎬 DEMO VIDEO + human rewrite** of Devpost copy (authorship gate)
