@@ -1,49 +1,56 @@
-# CONTINUUM (fka Nomad AI) — FINAL BUILD PLAN (v5 · STATUS-MARKED)
+# CONTINUUM — FINAL BUILD PLAN (v5 · STATUS-MARKED)
 
 > **📋 STATUS AUDIT — Friday July 17, late night (verified against repo `Tanya-Khanna/nomad-ai` @ `3e11e8b`,
 > 55 commits, by independent clone + test run: 115/115 tests, 25/25 deterministic eval, REPL + resume verified live).**
+> This evidence snapshot remains tied to `3e11e8b`; later plan-only commits do not expand what was technically
+> verified. Re-run the clean-clone gate after the next implementation change.
 > Legend: ~~struck~~ ✅ = completely done and verified · ⏳ = partially done (note says what remains) · unmarked = not started.
 > **The remaining critical path: ① the real phone leg (preflight 4/11 → PHONE_SETUP.md) ② human review of 4 subject
-> briefs → compile → freeze ③ Hinglish sample recording ④ demo video ⑤ human rewrite of submission copy ⑥ submit.**
+> briefs → compile → freeze ③ landing-page minimum ④ Hinglish sample recording ⑤ demo video ⑥ human rewrite of
+> submission copy ⑦ submit.**
 
 > **This is the only document Codex needs.** Everything is in here: product, judging-criteria engineering,
 > judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
 > (Deep research receipts & citations: NOMAD_FEATURES.md. Provenance: IDEAS.md. Rules: HACKATHON_INSTRUCTIONS.md.)
 >
-> **Deadline: Tuesday, July 21, 5:00 PM PT.** Today: Thursday July 16. Build: Fri–Mon. Submit Tue by noon PT.
+> **Deadline control: July 21, 5:00 PM PT.** The official reminder and calendar weekday labels conflict, so the
+> absolute date/time controls. Verify the live Devpost countdown and target submission by noon PT on July 21.
 > **Goal: 1st place, Education track ($15,000), ~30k participants.**
 
 ---
 
 # 1 · THE PRODUCT
 
-> *(Product name: "Nomad" is a WORKING TITLE — builder will rename before submission; it's a find-and-replace.)*
+> **Final product name: Continuum.** Tanya selected the name on July 17 after a human-led naming pass.
 
 **A GLOBAL product with one proven deployment.** An adaptive multilingual tutor that works on **any phone,
 anywhere**. Call a normal number — from a $15 feature phone, no smartphone, no app, no data — and a Socratic
-teacher answers **in whatever language the caller speaks** (the model's native multilingualism is unrestricted:
-Spanish, Swahili, Tamil, Portuguese… answered out of the box). Five Grade 6 subjects taught from **frozen,
-verified curriculum packs** compiled from any country's official syllabus. It diagnoses misconceptions, never
+teacher follows the caller's language or code-switching pattern without a closed engine allowlist. The release
+must distinguish model-supported breadth from the finite language patterns actually tested. The release target is
+five Grade 6 subjects taught from **frozen, verified curriculum packs** compiled from official syllabus sources;
+only subjects that pass the full human-review and freeze gate become callable. It diagnoses misconceptions, never
 dumps answers, **remembers every learner by name** (shared-phone aware), and **resumes mid-lesson after dropped
 calls**. Same brain reachable by WhatsApp voice note.
 
 **The global mechanism (this IS the product, not a roadmap wish):** a deployment =
-`{language pair + national syllabus + GRADE + local phone number}` — one config profile plus one Curriculum
+`{locally tested language patterns + national syllabus + grade + local phone number}` — one config profile plus one Curriculum
 Compiler run. **Three expansion axes, one machine:** new language, new country, new grade — each is a config
 change + a compiler run, never a rebuild. Grade 6 ships first (fractions = the canonical misconception showcase;
 age ~11 = the documented heart of the learning crisis). Off-grade callers are never turned away: the placement
 diagnostic adapts difficulty, and the sandbox teaches any age, any topic.
 **Born global, proven in India first:** the flagship deployment showcased this week is India (Hindi/English/Hinglish,
-NCERT Grade 6) because (a) it's the largest usage-gap population on Earth, (b) a 22-language society is the hardest
-code-switching test — pass it and easier cases follow, and (c) the builder speaks it, so the demo is authentic.
+NCERT Grade 6) because it is a large multilingual deployment context, a 22-language society is a demanding
+code-switching test, and the builder speaks the flagship language pattern, so the demo can be authentic.
 India is deployment #1, not the boundary.
 
 - **Tagline:** *"The connection may drop. The learning continues."*
 - **Framing:** *"Two-way radio for the offline half of the world."*
-- **Three audiences:** (1) the usage gap — cell coverage, no internet (63% of Africans; 2.5–3.4B people offline; ~900M feature phones); (2) low-literacy learners; (3) text-barrier learners (dyslexia) — voice as equalizer.
+- **Three audiences:** (1) the usage gap — GSMA estimates 3.1B people are covered by mobile broadband but do not
+  use it, while ITU separately estimates 2.6B people offline globally (overlapping populations; never add them);
+  (2) low-literacy learners; (3) text-barrier learners (dyslexia) — voice as equalizer.
 - **Positioning:** "Bakame proved learners will call an AI. Viamo proved the channel scales to 22 countries.
   1-800-ChatGPT proved frontier voice AI works over a phone line. **Nobody has put an actual teacher on that line.**
-  Nomad is that teacher." (Never claim channel novelty — always claim the teacher.)
+  Continuum is that teacher." (Never claim channel novelty — always claim the teacher.)
 
 # 1.5 · THE PLAIN-ENGLISH PITCH (use for: Devpost opening, video voiceover, README hero, judge Q&A)
 
@@ -73,19 +80,18 @@ or anything else you're curious about?"* And then it **teaches them. By talking.
 And it's the **same brain behind both** — learn on a call today, ask a follow-up on WhatsApp tonight, and it
 remembers you're Ravi and you were fighting with fractions.
 
-**Who it's for:** the ~3 billion people with phone signal but no real internet — plus kids who can't read well
+**Who it's for:** the 3.1 billion people GSMA estimates are covered by mobile broadband but do not use it — plus kids who can't read well
 yet, and kids for whom reading itself is the barrier. Every learning app ever made assumes a screen, a download,
 and data. This assumes nothing but a dial tone — or a WhatsApp voice note.
 
-**And it's not an India product.** The same teacher answers in Spanish, Swahili, Portuguese, Tamil — whatever
-the caller speaks, out of the box. Bringing it to a new country isn't a rebuild; it's a config file and one
-compiler run on that country's syllabus. The story above happens to star Ravi because our first proven deployment
-is India — the hardest test we could pick. Tomorrow the same phone rings in Lagos, Oaxaca, or Dhaka.
+**And it's not an India-only architecture.** The same teacher can follow model-supported languages and
+code-switching patterns without a language-pair branch. Bringing it to a new country is a config file, reviewed
+curriculum compilation, and local language/accent testing—not a rebuild. India is deployment #1, not the boundary.
 
-**One sentence:** *A patient, personal tutor for every child on Earth who owns nothing but a phone — any phone,
-any language. If it can make a call or open WhatsApp, school is open.*
+**One sentence:** *A patient, personal tutor designed for a child who owns nothing but a phone—across reviewed
+subjects and locally tested, model-supported language patterns. If it can make a call, school is open.*
 
-Everything else in this document is just the machinery to make that sentence true by Tuesday.
+Everything else in this document is the machinery to make that sentence credible by the July 21 deadline.
 
 # 2 · JUDGING CRITERIA, WORD BY WORD → ENGINEERING RESPONSE
 
@@ -115,16 +121,17 @@ onboarding, named memory, lesson arc with recap, SMS follow-up, dashboard, safet
 
 ### Criterion 3 — Potential Impact
 *"**credible, specific** case"* → numbers, named audience, cost math (README evidence stack §8).
-*"**real problem** for a **real audience**"* → the usage-gap learner; UNESCO 17M teacher shortfall.
+*"**real problem** for a **real audience**"* → the usage-gap learner; UNESCO's projected 44M primary/secondary teacher deficit by 2030.
 *"does the solution **actually address** that problem **based on what's demonstrated**"* → **THE key phrase.**
 The demonstration must carry the claim → **the judge personally gets taught** (§3 Judge Experience), the video shows
 a real learner journey end-to-end, and the dashboard proves teaching (mastery evidence), not chatting.
 
 ### Criterion 4 — Quality of the Idea
-*"**creative and novel** … **differ from existing concepts**"* → five-pillar white space, competitor-matrix-proven:
-live call + all subjects + curriculum grounding + Socratic + code-switching — no competitor owns more than two
-(Bakame: English-only/one country · Viamo: info, not teaching · 1-800-ChatGPT: answer machine, US/CA only, no memory ·
-WhatsApp tutors: text, literacy+data required · India voice apps: smartphone required).
+*"**creative and novel** … **differ from existing concepts**"* → never claim channel novelty. Current products
+already demonstrate overlapping phone, voice, multilingual, subject, personalization, and low-bandwidth
+capabilities. Continuum's narrower distinction is the inspectable combination of frozen reviewed packs,
+source/reviewer provenance, per-subject placement and exact resume, trusted turn guards, and reproducible
+deterministic plus paid-agent evidence.
 *"genuine understanding of the problem space"* (site variant) → research-literate package: verified Adesua citation
 (executes its published future-work agenda; 93.75% helpfulness, n=16 caveat), transfer-problem pedagogy as design,
 code-switching as documented open problem (Cameroon paper), honest limitations section, honest competitor credit.
@@ -141,14 +148,17 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
    mastery state flipping. Getting taught, then seeing the brain's reasoning about yourself, is the one-two punch.
 3. **The break-it menu (published in testing instructions):** "Try to make it just give you the answer." ·
    "Hang up mid-lesson; call back." · "Interrupt it mid-sentence." · "Ask: *what have we learned together?*" ·
-   "Try History — make a choice in the story." Every stress test becomes a judge activity that passes.
+   "Try another reviewed subject." Publish a subject-specific stress test only after that pack passes review,
+   compilation, independent verification, spot-checking, freeze, and routing.
 4. **The Hinglish exhibit:** judges can't produce code-switched speech → dashboard hosts a recorded sample Hinglish
    session with synced transcript + the invitation: "try any Hindi word you know — even one."
 5. **English is first-class:** the entire experience works beautifully in pure English (placement diagnostic adapts
    naturally to an adult English caller). Code-switching is the bonus wow, never a gate.
-5.5 **The any-language invitation:** *"Speak to it in YOUR language — Spanish, Portuguese, Mandarin, whatever you
-   grew up with. It will answer."* Judges experience the global claim personally instead of reading it.
-6. **Zero friction:** no repo clone, no login, no sandbox code. A phone number and a dashboard URL. Live through Aug 5.
+5.5 **The multilingual invitation:** invite judges to try a language pattern they speak while naming every pattern
+   actually spot-checked. Describe arbitrary language tags and code-switching as an open architecture—not proof of
+   every language, dialect, accent, or noisy phone condition.
+6. **Zero friction:** no repo clone, no login, no sandbox code. The public landing page puts the verified phone
+   number first, explains call → learn → call back and continue, and links to Mission Control. Live through Aug 5.
 
 # 4 · COMPLETE FEATURE MANIFEST (the confirmed scope — build exactly this)
 
@@ -166,14 +176,22 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - ⏳ **F15 Warm voice, ~20% slower** — ~~voice configured (`6a091f8`) + persona named: **Continuum**~~ ✅ · live listen-through pending.
 
 **Language**
-- ~~**F16 Mid-sentence code-switching** — held fluidly; proven by eval cases (multilingual ×5, Hinglish detection).~~ ✅
+- ~~**F16 Mid-sentence code-switching** — live text-model checks pass for Hindi/English, Spanish/English, and
+  French/English; deterministic multilingual fixtures also pass.~~ ✅ · real G.711 phone-audio proof remains in F19.
 - ~~**F17/F31 Concept bridging + in-context vocabulary** — pack-driven canonical terms with language tags + spoken meanings.~~ ✅
-- ~~**F18 Multi-language architecture** — engine contains NO fixed language list or pair; BCP-47-style tags; universal by design; multilingual eval passing.~~ ✅ *(upgraded beyond plan: no hardcoded hi/en bridge at all)*
+- ~~**F18 Multi-language architecture** — engine contains no fixed language list or pair; arbitrary BCP-47-style
+  tags and code-switch combinations pass through the typed contract.~~ ✅ **Release contract:** publish the tested
+  language-pattern matrix; never turn architectural openness into an identical-quality claim for every language.
 - ⏳ **F19 Accent robustness** — needs builder's-own-voice validation over a real call.
 
 **Teaching (the authored layer: system prompt + curriculum packs)**
 - ~~**F20 Curious Sandbox mode** — Socratic, fact-hedging, no pack; eval-covered (`sandbox.ts`, sandbox hedging cases).~~ ✅
-- ⏳ **F21 Guided Path, five subjects** — ~~Math flagship fractions pack, hand-built + schema-frozen~~ ✅ · **4 subject source-briefs drafted, awaiting HUMAN REVIEW → compile → verify → freeze** (do not claim "five subjects" until then — runbook rule).
+- ⏳ **F21 Guided Path, five subjects** — ~~Math flagship fractions pack, hand-built + schema-frozen~~ ✅ · **Science,
+  English, History, and Geography source briefs are drafted and await HUMAN REVIEW → compile → independently verify
+  → builder spot-check → freeze.** The release target is five genuinely callable guided subjects, each with at least
+  one coherent voice-first starter lesson, placement evidence, misconception handling, and a safe completion path—not
+  empty menu labels or unreviewed flavored Sandbox. If a pack misses its gate, hide that subject and state the
+  smaller verified menu honestly.
 - ⏳ **F22 Voice-menu onboarding** — per-subject routing built (`710a01f`); full five-subject menu gated on the 4 packs.
 - ~~**F23 Strict Socratic method** — enforced by eval ("just tell me" ×2, answer-request handling).~~ ✅
 - ~~**F24 Household experiments + anchor objects** — reviewed safe objects persisted through drops (`c161fa8`); no unreviewed nouns storable.~~ ✅
@@ -185,6 +203,15 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 - ~~**F34 Radio-host turn-taking**.~~ ✅ ~~**F35 Judgment-free tone**.~~ ✅ ~~**F36 Adaptive pacing**.~~ ✅
 - ~~**F40 Voice-native output** — 100% voice-friendly rate on eval.~~ ✅
 - ~~**G4 Lesson arc** — phased with recap + `should_end_session` (`lesson-service.ts`).~~ ✅
+
+**Breadth release contract — this is part of the product, not a roadmap footnote**
+- **Guided Learning:** Math, Science, English, History, and Geography become public only as individually reviewed,
+  frozen packs. Memory, placement, resume, dashboard evidence, and mastery stay isolated per subject.
+- **Curious Sandbox:** accepts broader safe learning questions in the learner's language pattern, but never awards
+  guided-curriculum mastery and must hedge current, local, disputed, or unverifiable claims.
+- **Language:** the learner speaks naturally; there is no engine language picker or closed pair. Public copy names
+  the language/code-switch patterns actually tested in text and over the carrier path, while the architecture
+  remains open to additional model-supported patterns after local review.
 
 **Memory & learner model**
 - ~~**F41 Named continuity + resume + voice-queryable history** — SQLite, HMAC-pseudonymized numbers, exact-question resume (verified), history queries (live-history-run).~~ ✅
@@ -202,6 +229,12 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 **Trust, proof & product surface**
 - ⏳ **F44 SMS recap** — ~~Twilio SMS module + schema + tests~~ ✅ · live send blocked on Twilio upgrade/number; G8 parent registration pending.
 - ⏳ **F45 Mission-control dashboard** — ~~sessions, eval gate, Release tab, token-protected APIs, humanized states, browser-verified desktop+mobile, cost tracking, anonymized IDs~~ ✅ · **sample audio is synthetic Spanish-English — Hinglish recording (builder's voice) pending**; live-call mirror needs the phone leg.
+- **F60 Public judge landing page** — after the real-phone gate, ship a fast mobile-first page with the Continuum
+  name/tagline, Call → Learn → Resume story, the verified subject menu and tested-language matrix, and links to the
+  phone number, demo, Mission Control, repository, safety notes, and testing instructions. The call CTA stays gated
+  until 11/11 configuration and the real-carrier checks pass; the page contains no dashboard token or learner data.
+  Optional polish is one restrained GSAP disconnect→resume sequence with `prefers-reduced-motion`, followed only if
+  time remains by a user-triggered, captioned, controllable teaching sample. No autoplay or scroll-triggered sound.
 - ~~**F46 Child-safety guardrails** — PII redaction, safety evals, SAFETY_PRIVACY.md with consent/retention (G2).~~ ✅
 - ~~**G6 Abuse guard** — call-admission rate limiting + jailbreak eval cases ×2.~~ ✅
 - ~~**F51 Eval harness** — 25-case deterministic suite (25/25, 100% voice-friendly — independently re-verified) + paid
@@ -217,7 +250,7 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 6. **F55 Vocal-cue basics** — react to silence/monosyllables with reassurance or a step back.
 
 ### 4.3 ROADMAP — README mentions ONLY (with citations where noted; zero build time)
-F2 toll-free/local numbers per country · F11 field-grade noise hardening · F15-accents · F18 more language pairs ·
+F2 toll-free/local numbers per country · F11 field-grade noise hardening · F15-accents · F18 more locally tested language patterns ·
 F29 full grade coverage · F30 pronunciation coaching · F32 full scenario curricula (market/commerce, exam prep,
 health basics) · F33-depth all-subject packs beyond Grade 6 · F43 budget enforcement caps · F49 rehearsal mode ·
 F53 collaborative oral storytelling (oral-tradition alignment) · F57 teacher SMS assignments · F58 cohort insights ·
@@ -225,7 +258,7 @@ G5 proactive re-engagement nudges · deep emotional adaptation · canvas compani
 tutoring pattern · living simulations from real-world observation.
 
 ### 4.4 DO NOT BUILD (binding)
-Grades beyond 6 · languages beyond hi/en/hinglish · native apps · WhatsApp as PRIMARY interface · parent
+Grades beyond 6 · language-specific engine branches or untested every-language quality claims · native apps · WhatsApp as PRIMARY interface · parent
 accounts/payments · school management · live web search mid-call · real deployment with children · complex auth ·
 custom noise DSP · toll-free provisioning · managed voice platforms (Vapi/Retell/Bland).
 
@@ -255,8 +288,8 @@ latency, UX feel, and demos ② every live test call has a purpose ③ cost/call
 | D5 Tue | final verification calls | $1 |
 | Jul 22–Aug 5 | **judges' test calls (reserve — do not touch)** | $4 |
 
-**Codex model rule all week (Codex credits are the $100 — spend them freely on the build):** *think with the
-biggest model, type with the smallest.* "Best" below = Sol if your plan has it, else Terra (equally rules-compliant).
+**Codex model rule all week:** batch focused sessions, use smaller models for disposable exploration, and reserve
+GPT-5.6 for submission-relevant reasoning. "Best" below = Sol if available, else Terra (equally rules-compliant).
 
 ---
 
@@ -297,7 +330,10 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 
 ### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
 **Morning:**
-- Curriculum Compiler: syllabus structure in → ORIGINAL lessons/questions out (G3 rule) → verifier-agent pass. Run for Science, English, History, Geography (Grade 6). Spot-check each pack yourself (~15 min each) → freeze.
+- Curriculum Compiler: syllabus structure in → ORIGINAL lessons/questions out (G3 rule) → verifier-agent pass. Run
+  for Science, English, History, and Geography (Grade 6). Spot-check each pack yourself (~15 min each) → freeze.
+  Reject any pack that lacks a coherent voice-first starter lesson, placement evidence, misconception handling, or
+  safe completion path; never expose an empty or unreviewed subject merely to make the menu look broad.
 - ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
 **Afternoon:**
 - ⏳ Five-subject voice onboarding + flavored-sandbox fallbacks — per-subject routing built (`710a01f`); full menu gated on the 4 reviewed packs.
@@ -313,12 +349,15 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 **Morning:**
 - ~~Dashboard complete: eval-results page, anonymized IDs, cost/call, click-to-seek sample player, Release tab.~~ ✅ · ⏳ live-call mirror view (needs phone leg) · ⏳ **sample is synthetic Spanish-English — record the Hinglish sample in YOUR voice**.
 - ⏳ SMS recap — ~~module + tests~~ ✅, live send needs Twilio upgrade · ~~per-number rate limiting~~ ✅.
+- **After the real-phone gate:** ship the F60 landing-page minimum, verify it signed out on desktop and mobile,
+  confirm the phone CTA matches the carrier release state, and show only the subjects and language patterns that
+  passed their gates. Record the demo before optional GSAP or audio polish.
 **Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. *(none started — correct per gate discipline)*
 **Evening — the submission package (budget ~$5 of live calls):**
 - 🎬 Record the demo video (§6 — all beats). **OPEN.**
 - ✍️ ⏳ README — ~~repo README substantially complete: evidence stack w/ primary citations, honest landscape table, distribution/pilot path, universal architecture, run-it-yourself, safety, limitations, roadmap~~ ✅ · **remaining: real phone number in hero + judge card phone items + YOUR human rewrite of Devpost copy (Codex enforced an authorship gate — SUBMISSION_COPY.md is a draft aid, not paste-ready).**
-- **Exit: video uploaded · README done · system stable.**
-- **📦 Features landing today:** ~~F45 dashboard (sans live mirror) · G6 rate limiting · F46 safety end-to-end · G9 honest limitations · G2 consent/retention docs · §4.3 roadmap mentions~~ **✅ DONE** · ⏳ F44 live SMS + G8 parent number (post-Twilio-upgrade) · **stretch bench untouched: F4 → F3 → F5 → F6 → F59 → F55** · 🎬 video + Hinglish sample + human-rewrite = the open D4 core
+- **Exit: phone gate passed · verified subject menu callable · landing-page minimum live · video uploaded · README done · system stable.**
+- **📦 Features landing today:** ~~F45 dashboard (sans live mirror) · G6 rate limiting · F46 safety end-to-end · G9 honest limitations · G2 consent/retention docs · §4.3 roadmap mentions~~ **✅ DONE** · ⏳ F60 landing-page minimum, then optional accessible GSAP/user-triggered audio polish · ⏳ F44 live SMS + G8 parent number (post-Twilio-upgrade) · **stretch bench untouched: F4 → F3 → F5 → F6 → F59 → F55** · 🎬 video + Hinglish sample + human-rewrite = the open D4 core
 
 ### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
 **Morning:**
@@ -326,7 +365,7 @@ biggest model, type with the smallest.* "Best" below = Sol if your plan has it, 
 - Video → public on YouTube. Repo → public (MIT) or share with testing@devpost.com + build-week-event@openai.com.
 - In the main Codex session: run `/feedback`, copy the Session ID.
 **By noon PT:**
-- Devpost form: Education category · description · video URL · repo URL · `/feedback` Session ID · Judge Experience testing instructions (phone number front and center). **SUBMIT.** Screenshot the confirmation.
+- Devpost form: Education category · description · landing-page URL · video URL · repo URL · `/feedback` Session ID · Judge Experience testing instructions (verified phone number front and center). **SUBMIT.** Screenshot the confirmation.
 **After:**
 - Afternoon = buffer only. Keep phone line + dashboard live through **Aug 5** (the $4 judge reserve exists for this). Don't touch the deployed system except for outages.
 
@@ -336,14 +375,15 @@ truth · commit at every milestone · CODEX_NOTES 10 min every evening · all co
 
 **✅ Coverage checksum — STATUS TALLY (verified Fri night against repo):**
 **~34 of 43 core features fully DONE** (all teaching, memory, integrity, eval, dashboard, safety, docs).
-**Everything still open clusters into exactly five human-or-external tasks:**
+**Everything still open clusters into six human-or-external workstreams:**
 1. **📞 THE PHONE LEG** — F1, F7, F9, F10, F12, F13/50-live, F14-live, F15-live, F19 all unblock together when
    preflight goes 4/11 → 10/11 → one smoke call → 11/11 → real-carrier checks (PHONE_SETUP.md has the sequence;
    requires: public HTTPS deploy, OpenAI project/webhook, Twilio upgrade + number + trunk)
 2. **📚 PACK REVIEW** — F21-full + F22: review 4 source-briefs (~15 min each) → compile → verify → freeze
 3. **🎙️ HINGLISH SAMPLE** — your voice, replaces synthetic Spanish-English exhibit
 4. **🎬 DEMO VIDEO + human rewrite** of Devpost copy (authorship gate)
-5. **📱 POST-UPGRADE** — F44 live SMS + G8 parent number · then stretch bench (F4→F3→F5→F6→F59→F55) only if time
+5. **🌐 PRODUCT SURFACE** — F60 static/mobile-first landing page after the phone gate; GSAP and audio remain optional
+6. **📱 POST-UPGRADE** — F44 live SMS + G8 parent number · then stretch bench (F4→F3→F5→F6→F59→F55) only if time
 If a feature slips, it moves DOWN into stretch/roadmap — never into the final day.
 
 # 6 · DEMO VIDEO (<3 min · public YouTube · voiceover REQUIRED: what we built + how Codex + how GPT-5.6)
@@ -352,7 +392,8 @@ Record against the real system (rehearse the script, never fake the tech). No co
 1. (0:00–0:15) **Mission cold open (voiceover over black, then the phone):** *"A quarter of the world has no real
    internet. Their kids' education ends where the data signal does. But almost everyone has this—"* → $15 feature
    phone fills the frame, no WiFi anywhere → dials a normal number.
-2. (0:15–0:45) Onboarding menu (five subjects) → learner speaks **Hinglish, switching mid-sentence** — tutor flows.
+2. (0:15–0:45) Onboarding menu shows every subject that passed its review/freeze gate (target: five) → learner
+   speaks **Hinglish, switching mid-sentence** — tutor follows the tested pattern.
 3. (0:45–1:05) The misconception: "one-fourth is bigger because four is bigger" → tutor catches it (diagnosis JSON
    flashes on dashboard split-screen).
 4. (1:05–1:25) The pivot: roti analogy instead of repetition; learner interrupts mid-sentence — tutor stops, listens.
@@ -362,23 +403,22 @@ Record against the real system (rehearse the script, never fake the tech). No co
 8. (1:50–2:00) Learner answers correctly → dashboard mastery flips "Needs support" → "Developing."
 8.5 (2:00–2:10) **The sandbox flash (Mode 2):** off-script curiosity — "ek aur sawaal… why do stars twinkle?" —
    tutor answers with a Socratic question back. The kid who lingers after class. Any topic under the sun.
-8.7 (2:10–2:22) **The language montage:** the SAME number dialed again and again — a child's question in Spanish…
-   Swahili… Tamil… Portuguese… the same teacher answers in each. Fast cuts, real calls. On-screen text: *"One
-   number. Any language."* (Rule: only include languages spot-checked for output quality before filming; 3–4
-   languages is plenty — this proves the claim, it doesn't inventory it.)
+8.7 (2:10–2:22) **The language montage:** the same number receives questions in two or three language patterns that
+   passed recorded carrier spot checks. Label each pattern. On-screen text: *"One architecture. Locally tested
+   language patterns."* A finite montage proves those examples, not every language, dialect, accent, or condition.
 9. (2:22–2:55) WhatsApp voice-note encore (if built) → voiceover over architecture diagram covering, in order:
    **the three audiences in one line** ("No screen, no text, no app — so it works for the 3 billion without
    internet, for learners who can't yet read, and for kids for whom text itself is the barrier") → **the global
-   line** ("It already speaks dozens of languages — a new country is a config file and one compiler run on its
-   syllabus. India is deployment #1, not the boundary") → **how Codex built it** (telephony bridge, compiler,
+   line** ("Its engine has no hard-coded subject or language pair. Each deployment still needs reviewed curriculum
+   and local language testing. India is deployment #1, not the boundary") → **how Codex built it** (telephony bridge, compiler,
    eval harness — one main session) and **how GPT-5.6 powers it** (teaching-engine JSON, Luna/Terra/Sol routing,
-   compiler, simulated-classroom QA) → judge invitation: "call the number in our README — speak any language —
-   it will teach YOU" → tagline card: *"The connection may drop. The learning continues."*
+   compiler, simulated-classroom QA) → judge invitation: "call the number in our README — try a language pattern
+   you speak" → tagline card: *"The connection may drop. The learning continues."*
 
 # 7 · CODEX PROCESS (submission-critical — also scored under Criterion 1)
 
 - ⏳ **ONE main Codex session** → run `/feedback` and copy the Session ID **on ship day** (the one human step left here).
-- ~~Dated commits at every milestone~~ ✅ *(55 commits across the Submission Period, all descriptive)*.
+- ~~Dated commits at every milestone~~ ✅ *(57 commits through the independent status-audit commit, all descriptive)*.
 - ~~**CODEX_NOTES.md live during the build**~~ ✅ *(exemplary — milestone-by-milestone with verification evidence)*.
 - ~~**AGENTS.md** in repo root.~~ ✅
 - ~~Use Codex skillfully and visibly: plan → implement → review → eval-driven iteration.~~ ✅ *(+ CI release gate — beyond plan)*
@@ -394,25 +434,24 @@ Record against the real system (rehearse the script, never fake the tech). No co
 > (authorship gate) · repo sharing with testing@devpost.com + build-week-event@openai.com · `/feedback` ID.**
 
 **README (11 sections):**
-1. Hero: product + tagline + **THE PHONE NUMBER** ("it will teach you — call it") + dashboard link + architecture diagram.
-2. Why: three audiences · 63% usage-gap · 2.5–3.4B offline · ~900M feature phones · UNESCO 17M teacher shortfall ·
-   Rori benchmark (~1 yr schooling gain @ ~$5/child) · rural-India voice adoption (12% MAU organic).
-2.5 **Distribution & adoption path (the "who hands the child the number?" answer):** learner-direct digital
-   acquisition FAILS in these markets (documented in the rural-India 2G deployment — adoption came via teachers,
-   NGOs, and in-person onboarding). So the go-to-market is institution-first: (a) teachers/schools distribute the
-   number and receive SMS recaps (the teacher is the trust channel, not the app store); (b) NGO/state-education
-   pilots — concrete next step: one district, one grade, ~200 learners, measured on INDEPENDENT tests (the transfer
-   bar), with a state education department or NGO network as partner; (c) carrier partnerships for zero-cost
-   calling at scale (Viamo precedent: 22 countries). Missed-call callback + SMS keep the learner side free and
-   familiar. Distribution isn't an afterthought to the product — the phone number IS distributable by a teacher
-   with a chalkboard, which no app ever was.
-3. What's different: five-pillar matrix vs Bakame / Viamo AVA / 1-800-ChatGPT / WhatsApp tutors / India voice apps
-   (honest, sourced) + pre-emptive Q&A ("Isn't this 1-800-ChatGPT?" → answer machine vs teacher: Socratic,
-   curriculum-grounded, remembers you, works where you live, speaks your mix. "Isn't this Bakame?" → English-only
-   conversation practice vs all-subject curriculum-grounded teaching).
+1. Hero: product + tagline + **THE VERIFIED PHONE NUMBER** ("it will teach you — call it") + landing-page link +
+   dashboard link + architecture diagram. If carrier proof is open, show the limitation instead of a call-now claim.
+2. Why: three audiences · GSMA 3.1B mobile-internet usage gap · separate ITU 2.6B offline estimate, never added ·
+   UNESCO projected 44M primary/secondary teacher deficit by 2030 · preliminary Rori benchmark (~1 yr schooling
+   gain @ ~$5/child), attributed with its year-one limitation.
+2.5 **Distribution & adoption path (the "who hands the child the number?" answer):** do not assume learner-direct
+   digital acquisition. The proposed path is institution-first: (a) teachers/schools distribute the number after
+   local review, consent, and learner assent; (b) an NGO/state-education pilot starts with one district, one grade,
+   and roughly 200 learners measured on independent tests plus attendance, feedback, subgroup access, failures, and
+   deletion/retention compliance; (c) carrier partnerships are explored only after the carrier and learning gates
+   pass. Missed-call callback and teacher/parent messaging remain later consent-sensitive channels.
+3. What's different: sourced comparison crediting Bakame, Viamo AVA, 1-800-ChatGPT, Rori, and Callee Me for the
+   overlapping capabilities they document. Differentiate Continuum on the inspectable combination of frozen
+   reviewed packs/provenance, per-subject placement/resume, trusted turn guards, and reproducible evidence—not on
+   unsupported claims that competitors lack languages, subjects, personalization, memory, or basic-phone access.
 4. Research grounding: Adesua verified citation (executes its published future-work agenda; 93.75% helpfulness,
    **n=16 caveat stated honestly**) · transfer problem (+0.73 local vs +0.13 independent effect sizes; 17%-worse
-   exam finding) → Nomad's context-anchored design answer · Cameroon paper (code-switching = documented open problem).
+   exam finding) → Continuum's context-anchored design answer · Cameroon paper (code-switching = documented open problem).
 5. How it works: two-layer architecture · Curriculum Compiler + G3 originality rule · named learner memory ·
    eval harness with results table (24/24) · honest cost/call math + scale path (carrier partnerships, Viamo precedent).
 6. **How we built it with Codex** (scored under BOTH Technical Implementation and Quality of the Idea — per
@@ -424,8 +463,9 @@ Record against the real system (rehearse the script, never fake the tech). No co
    - **Local text-mode REPL** (`make chat`): the full GPT-5.6 teaching engine in the terminal — no telephony
      needed. Judge types as the learner; sees Socratic turns + live diagnosis JSON. One command to meet the tutor.
    - **Eval suite** (`make eval`): runs all 25 scripted cases, prints the scorecard.
-   - **Sample data shipped in-repo:** frozen fractions pack + one compiler-generated pack, seeded demo learner
-     ("Ravi", mid-lesson state — so resume/callback behavior is testable immediately), sample call transcript.
+   - **Sample data shipped in-repo:** one hand-authored frozen fractions pack, four pending source briefs that are
+     not callable until approved and compiled, a synthetic seeded learner ("Ravi", paused mid-lesson), and a
+     clearly labeled synthetic Spanish-English audio/transcript fixture.
    - Full telephony setup guide (Twilio number + SIP trunk) for complete reproduction, marked optional.
 8. Safety & privacy: child-safety behavior, anonymized IDs, retention, deployment consent flow (G2).
 9. **Honest limitations:** deaf/HoH excluded by voice-only (inverse of the dyslexia strength) · ASR limits under
@@ -435,9 +475,9 @@ Record against the real system (rehearse the script, never fake the tech). No co
 11. License (MIT) · credits · full source list (from NOMAD_FEATURES.md).
 
 **Devpost description:** capability-first ("An adaptive multilingual tutor that works on any phone") → breadth
-claims stated plainly and honestly: *"Ask it anything under the sun — five subjects with full curriculum depth,
-everything else a genuine Socratic conversation. Speaks whatever the model speaks; validated for Hinglish; a new
-country is a config profile and a compiler run."* → the 9-beat story in prose → five pillars → evidence stack →
+claims stated plainly and honestly: *"Guided learning across every subject that passed its review gate (target:
+Math, Science, English, History, and Geography), plus a Curious Sandbox for broader safe questions. Its engine has
+no fixed language pair; the submission names the language patterns actually tested."* → the 9-beat story in prose → evidence stack →
 Codex/GPT-5.6 summary → the judge invitation.
 
 # 9 · RISK REGISTER
@@ -445,7 +485,7 @@ Codex/GPT-5.6 summary → the judge invitation.
 | Risk | Mitigation | Fallback |
 |---|---|---|
 | GPT-5.6 realtime variant unavailable on credits | D1 morning check | Two-layer arch: available realtime voice model + GPT-5.6 brain — still Stage-One compliant |
-| **Credits are Codex-only; API runtime unfunded** (Devpost forum + OpenAI support reply, July 16) | D0 check tonight; hard API spend cap; ~$30–80 own-budget runtime reserve | Trim eval-run frequency; Luna/Terra-only routing; REPL/WhatsApp demos burn fewer realtime minutes |
+| **Codex credits do not fund API runtime; no further distribution expected** | $5 prepaid API balance, alerts, auto-recharge off, deterministic loops offline | Add at most $5 if needed; trim paid evals and preserve Realtime credit for carrier proof/demo |
 | **Sol gated behind Pro plan** | Terra/Luna ARE GPT-5.6 — rules fully satisfied without Sol ("Sol is mandatory" forum claim is wrong) | Terra-only routing (already designed); README states tiering honestly ("Sol where available") |
 | SIP connector unavailable/flaky | D1 check | Twilio Media Streams ↔ own WS server (more code = more Criterion-1 credit) |
 | Latency reads as broken | Preambles + Socratic floor-holding + rehearsed demo conditions | WhatsApp async path shows full intelligence, zero latency pressure |
@@ -453,7 +493,7 @@ Codex/GPT-5.6 summary → the judge invitation.
 | Compiler packs mediocre | Verifier pass + spot-checks; fractions hand-built regardless | Affected subjects → flavored sandbox |
 | Judge's call hits an edge case | 24-case eval; rate limiting; graceful recovery everywhere | Dashboard transcript shows even failure handled gracefully |
 | Credit burn | Routing discipline + cost dashboard + headroom reserve | Terra-only mode |
-| Anything unfinished Tuesday | Video + README done MONDAY | Tuesday is buffer, not build |
+| Anything unfinished on July 21 | Video + README done before the absolute deadline | The final submission window is buffer, not planned build time |
 
 ---
 

@@ -514,3 +514,10 @@
 - Tanya chose to add a public Continuum landing page to the build plan. The required minimum is a fast, mobile-first judge entry point with the tagline, call/learn/resume story, verified release-state CTA, and links to the demo, Mission Control, repository, safety notes, and testing instructions.
 - The landing page is explicitly downstream of the real-phone gate. A call-now claim and public number remain blocked until 11/11 configuration and the real-carrier behavior checks pass.
 - GSAP is limited to one optional continuity animation plus restrained reveals with `prefers-reduced-motion`. Audio is optional, user-triggered, captioned, controllable, and never tied to scrolling or autoplay. Both are dropped before they can delay the phone path, video, or submission.
+
+## 2026-07-18 — Reconciled independent v5 status audit
+
+- Fast-forwarded to Tanya's pushed `93d623a` status-marked build-plan audit and preserved its verified done/partial/open ledger.
+- Made the breadth commitment explicit: the release target is five genuinely callable guided subjects—Math, Science, English, History, and Geography—plus Curious Sandbox for broader safe questions. Each additional subject must pass human source review, compilation, independent verification, builder spot-checking, freeze, and a coherent voice-first starter-lesson gate; empty labels are forbidden.
+- Preserved the open multilingual architecture while separating it from proof: there is no fixed engine language pair, but public claims must name the text and carrier language/code-switch patterns actually tested. Local curriculum, language, accent, and phone-condition testing remain deployment gates.
+- Restored the F60 landing-page milestone lost because the audit was based on the pre-F60 commit, and corrected stale regressions in the audit copy: Continuum is final, impact figures use the sourced GSMA/ITU/UNESCO values, competitor differentiation avoids disproven exclusivity claims, the $5 API balance is acknowledged, and current sample/pack status is not overstated.
