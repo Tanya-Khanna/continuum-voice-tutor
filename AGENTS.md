@@ -1,4 +1,4 @@
-# NOMAD AI — Agent Guide
+# CONTINUUM — Agent Guide
 
 ## Source of truth
 
@@ -8,7 +8,7 @@
 
 ## Product invariant
 
-Nomad is a multilingual, voice-first Socratic tutor for learners who may have only a basic phone. The flagship deployment is India, but the architecture must remain country, language, and grade configurable.
+Continuum is a multilingual, voice-first Socratic tutor for learners who may have only a basic phone. The flagship deployment is India, but the architecture must remain country, language, and grade configurable.
 
 India, fractions, and Hindi/English code-switching may appear only in deployment packs, fixtures, or entrypoint defaults. Core domain, teaching, persistence, and model-adapter modules must not contain country, subject, concept, or closed language assumptions.
 

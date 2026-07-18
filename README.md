@@ -1,16 +1,18 @@
-# Nomad AI
+# Continuum
 
 [![Release gate](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml/badge.svg)](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml)
 
 > The connection may drop. The learning continues.
 
-Nomad is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated on an OpenAI project/webhook with a public signed-delivery path plus Twilio credentials, a voice-ready number, and the SIP trunk.
+Continuum is a multilingual Socratic tutor designed for learners who may have only a basic phone. The current build combines an OpenAI Realtime SIP conversation layer with a server-side GPT-5.6 teaching engine and durable learner state. The real phone leg remains gated on an OpenAI project/webhook with a public signed-delivery path plus Twilio credentials, a voice-ready number, and the SIP trunk.
+
+The product was renamed from its working title on July 17. Existing `NOMAD_` environment variables, the `nomad-ai` repository slug, and persisted database paths remain compatibility identifiers for this build; learner-facing copy and the tutor identity use **Continuum**.
 
 ```mermaid
 flowchart LR
     Caller["Any phone / G.711 call"] --> Twilio["Twilio number + SIP trunk"]
     Twilio --> Realtime["OpenAI Realtime voice layer"]
-    Realtime <-->|"sideband tools"| Server["Nomad server"]
+    Realtime <-->|"sideband tools"| Server["Continuum server"]
     Server --> Catalog["Validated subject catalog"]
     Catalog --> Packs["Frozen reviewed curriculum packs"]
     Server <-->|"structured teaching turns"| GPT["GPT-5.6 teaching engine"]
@@ -24,32 +26,32 @@ Realtime owns listening, speech, interruption, and tool choice. GPT-5.6 owns dia
 
 The access gap is large, but two commonly quoted populations are different and must not be added together. The ITU estimated **2.6 billion people were offline in 2024**, including 1.8 billion rural residents, while four in five people over age ten owned a mobile phone. GSMA separately estimated a **3.1 billion-person mobile-internet usage gap**: people covered by mobile broadband but not using it, with affordability and digital literacy among the main barriers. These are motivation for a voice channel, not proof that every offline learner has affordable calling access. ([ITU Facts and Figures 2024](https://www.itu.int/en/mediacentre/Pages/PR-2024-11-27-facts-and-figures.aspx), [GSMA State of Mobile Internet Connectivity 2024](https://www.gsma.com/newsroom/press-release/new-gsma-report-shows-mobile-internet-connectivity-continues-to-grow-globally-but-barriers-for-3-45-billion-unconnected-people-remain/))
 
-UNESCO's 2024 global report projected a deficit of **44 million primary and secondary teachers by 2030**. Nomad is therefore framed as supervised learning support and teacher capacity—not a substitute for qualified teachers. ([UNESCO Global Report on Teachers](https://www.unesco.org/en/articles/global-report-teachers-addressing-teacher-shortages-and-transforming-profession))
+UNESCO's 2024 global report projected a deficit of **44 million primary and secondary teachers by 2030**. Continuum is therefore framed as supervised learning support and teacher capacity—not a substitute for qualified teachers. ([UNESCO Global Report on Teachers](https://www.unesco.org/en/articles/global-report-teachers-addressing-teacher-shortages-and-transforming-profession))
 
-The pedagogy is intentionally not “ChatGPT on a phone.” A field experiment with nearly 1,000 high-school math students found that unrestricted GPT-4 improved supported practice but produced a 17% reduction in grades after access was removed; a tutor design using teacher-authored hints largely mitigated the negative learning effect. That result motivates Nomad's refusal to dump answers, evidence-based diagnosis, hints, and independent checks. ([Bastani et al., *Generative AI Without Guardrails Can Harm Learning*](https://hamsabastani.github.io/education_llm.pdf))
+The pedagogy is intentionally not “ChatGPT on a phone.” A field experiment with nearly 1,000 high-school math students found that unrestricted GPT-4 improved supported practice but produced a 17% reduction in grades after access was removed; a tutor design using teacher-authored hints largely mitigated the negative learning effect. That result motivates Continuum's refusal to dump answers, evidence-based diagnosis, hints, and independent checks. ([Bastani et al., *Generative AI Without Guardrails Can Harm Learning*](https://hamsabastani.github.io/education_llm.pdf))
 
-Early low-bandwidth tutoring work is promising but still preliminary. A Ghana study of roughly 500 students reported a 0.36 effect size for the WhatsApp-based Rori math tutor—described as about an extra year of learning—at an estimated marginal cost near $5 per student, while explicitly cautioning that the result covered only year one. Adesua's six-month Ghana feasibility deployment reported 56 active users and 93.75% helpfulness, but that percentage came from only 16 ratings. Nomad treats both as evidence to run a real supervised pilot, not as outcomes it can inherit. ([Stanford SCALE / Rori study](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana), [Adesua feasibility study](https://arxiv.org/abs/2605.15376))
+Early low-bandwidth tutoring work is promising but still preliminary. A Ghana study of roughly 500 students reported a 0.36 effect size for the WhatsApp-based Rori math tutor—described as about an extra year of learning—at an estimated marginal cost near $5 per student, while explicitly cautioning that the result covered only year one. Adesua's six-month Ghana feasibility deployment reported 56 active users and 93.75% helpfulness, but that percentage came from only 16 ratings. Continuum treats both as evidence to run a real supervised pilot, not as outcomes it can inherit. ([Stanford SCALE / Rori study](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana), [Adesua feasibility study](https://arxiv.org/abs/2605.15376))
 
-Code-switching is likewise a teaching behavior rather than a locale toggle. SIGDIAL research describes educational code-switching as important but underexplored in LLM tutors and reports benefits from strategic, pedagogy-driven switching. Nomad preserves the learner's language pattern while keeping curriculum terms and teaching decisions pack-grounded. ([Liu, Yin, and Chen, SIGDIAL 2024](https://aclanthology.org/2024.sigdial-1.43/))
+Code-switching is likewise a teaching behavior rather than a locale toggle. SIGDIAL research describes educational code-switching as important but underexplored in LLM tutors and reports benefits from strategic, pedagogy-driven switching. Continuum preserves the learner's language pattern while keeping curriculum terms and teaching decisions pack-grounded. ([Liu, Yin, and Chen, SIGDIAL 2024](https://aclanthology.org/2024.sigdial-1.43/))
 
 ## Distribution and pilot path
 
-Nomad's first distribution path is institution-led, not an assumption that a child will discover a phone number online. A school or NGO reviews the local curriculum and safety policy, obtains responsible-adult consent and learner assent, shares a local number in person, and helps the learner make the first call using a nickname.
+Continuum's first distribution path is institution-led, not an assumption that a child will discover a phone number online. A school or NGO reviews the local curriculum and safety policy, obtains responsible-adult consent and learner assent, shares a local number in person, and helps the learner make the first call using a nickname.
 
-The proposed first pilot is one district, one grade, and roughly 200 learners. It should measure independent pre/post assessment—not tutor-session performance alone—along with attendance, completion, teacher and learner feedback, language/access subgroups, failure reports, and compliance with an agreed deletion and retention policy. Teachers remain responsible for instruction; Nomad supplies additional practice and auditable evidence.
+The proposed first pilot is one district, one grade, and roughly 200 learners. It should measure independent pre/post assessment—not tutor-session performance alone—along with attendance, completion, teacher and learner feedback, language/access subgroups, failure reports, and compliance with an agreed deletion and retention policy. Teachers remain responsible for instruction; Continuum supplies additional practice and auditable evidence.
 
 Only after the carrier and learning gates pass should the project pursue a school, NGO, state-education, or carrier partner. Missed-call callback, teacher assignments, parent recaps, and cohort reporting are later consent-sensitive channels, not shipped capabilities.
 
 ## Landscape and differentiation
 
-Nomad does not claim to invent voice AI, phone access, multilingual tutoring, or personalization. Current products already demonstrate substantial parts of that landscape. The distinction is the inspectable combination this repository can prove:
+Continuum does not claim to invent voice AI, phone access, multilingual tutoring, or personalization. Current products already demonstrate substantial parts of that landscape. The distinction is the inspectable combination this repository can prove:
 
-| Product | What its official material demonstrates | Nomad's narrower distinction |
+| Product | What its official material demonstrates | Continuum's narrower distinction |
 |---|---|---|
 | [Bakame](https://bakame.online/) | Feature-phone learning programs with lessons, quizzes, personalized voice conversations, localization/accent support, dashboards, and institutional deployments | Open frozen-pack schema and compiler, source/reviewer provenance, per-subject placement/resume, trusted turn guards, and reproducible deterministic plus paid-agent gates |
 | [Viamo AVA](https://viamo.io/ask-viamo-anything-ai/) | Voice access from a basic non-internet phone, in local languages, to open-ended information across education, health, agriculture, and other domains | A deliberately narrower reviewed-school state machine with pack-defined misconceptions, placement, mastery evidence, retrieval, and no live web lookup during lessons |
 | [1-800-ChatGPT](https://help.openai.com/en/articles/10193193-1-800-chatgpt-calling-and-messaging-chatgpt-with-your-phone) | Experimental account-free ChatGPT calls from U.S. or Canadian numbers, with a documented monthly free-call allowance | Deployment-owned curriculum, sibling-safe named state, subject-scoped history, trusted pack validation, and an auditable release gate; the carrier path is not called live until it passes |
-| [Rori](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana) | A WhatsApp/low-bandwidth Math intervention with promising preliminary randomized evidence | Standard-call architecture, configurable reviewed subjects, and exact continuity; Nomad does not inherit Rori's measured learning outcome |
+| [Rori](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana) | A WhatsApp/low-bandwidth Math intervention with promising preliminary randomized evidence | Standard-call architecture, configurable reviewed subjects, and exact continuity; Continuum does not inherit Rori's measured learning outcome |
 | [Callee Me](https://callee.me/) | A parent-controlled phone tutor for children, multiple subjects, and many languages | Source-visible curriculum provenance, human approval receipts, explicit configured-versus-tested claims, and checked-in evaluation evidence |
 
 The contribution is therefore an inspectable curriculum-and-continuity system built around the voice channel—not novelty of the channel itself.
@@ -60,7 +62,7 @@ The teaching engine contains no subject, country, grade, or language list. A dep
 
 Academic vocabulary is pack-driven too. Every concept declares reviewed canonical terms, the language each term belongs to, a short spoken meaning, and informal learner expressions used only by the offline test adapter. In live teaching, GPT-5.6 can preserve a learner's own phrase, connect it briefly to the reviewed curriculum term, and continue in the learner's current language pattern. The engine contains no Hindi-to-English—or any other fixed language-pair—bridge.
 
-Physical anchor activities are also curriculum data rather than engine branches. A learner can say they are holding a reviewed household object such as paper, a flatbread, a leaf, or—in another subject pack—a balloon. Nomad stores only the pack's generic `objectName`, carries it through a dropped call, and supplies it to the next teaching decision. The model cannot persist an unreviewed noun, owner, brand, location, or personal detail; physical manipulation must use the pack's reviewed safe prompt.
+Physical anchor activities are also curriculum data rather than engine branches. A learner can say they are holding a reviewed household object such as paper, a flatbread, a leaf, or—in another subject pack—a balloon. Continuum stores only the pack's generic `objectName`, carries it through a dropped call, and supplies it to the next teaching decision. The model cannot persist an unreviewed noun, owner, brand, location, or personal detail; physical manipulation must use the pack's reviewed safe prompt.
 
 Set `NOMAD_CURRICULUM_PATH` to any schema-valid compiled pack to run a one-subject deployment. For multiple callable subjects, leave that variable blank and set `NOMAD_CURRICULUM_PATHS` to an ordered JSON array. Use `builtin:india-ncert-grade-6-fractions` for the checked-in flagship, followed by reviewed frozen pack files:
 
@@ -105,7 +107,7 @@ With a multi-pack catalog, add `--subject Science` (or another exact catalog sub
 
 Try: `One fourth is bigger because four is bigger than three.`
 
-Type `exit` to simulate a dropped call. Run the same command again and Nomad resumes the saved question. The phone number is hashed before storage, and multiple names can safely share it.
+Type `exit` to simulate a dropped call. Run the same command again and Continuum resumes the saved question. The phone number is hashed before storage, and multiple names can safely share it.
 
 For a judge-ready paused flagship Math lesson without typing the setup turn, seed the clearly synthetic Ravi fixture and run the printed resume command:
 
@@ -194,11 +196,11 @@ configuration gate to 11/11; the number still remains private until G.711
 clarity, latency, barge-in, unclear-audio recovery, and redial resume pass on the
 carrier path.
 
-For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Nomad accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
+For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Continuum accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
 
-The call-accept payload explicitly enables OpenAI server VAD with automatic response creation and `interrupt_response: true`, so new learner speech can cancel ongoing Nomad audio instead of forcing the caller to wait. Threshold, prefix padding, and silence duration are bounded environment settings. The checked-in 0.5 / 300 ms / 650 ms values are provisional development policy, not a claim of field tuning; adjust them only after measuring missed speech, pause-cutoffs, and barge-in on the real Twilio phone leg.
+The call-accept payload explicitly enables OpenAI server VAD with automatic response creation and `interrupt_response: true`, so new learner speech can cancel ongoing Continuum audio instead of forcing the caller to wait. Threshold, prefix padding, and silence duration are bounded environment settings. The checked-in 0.5 / 300 ms / 650 ms values are provisional development policy, not a claim of field tuning; adjust them only after measuring missed speech, pause-cutoffs, and barge-in on the real Twilio phone leg.
 
-Nomad's default Realtime voice is `marin` at a 0.8 playback multiplier, with explicit warm, calm, patient, unhurried delivery instructions. Both voice and speed are deployment settings, and speed is bounded to the documented 0.25–1.5 range. The multiplier changes playback rate; the prompt separately shapes cadence, following OpenAI's [Realtime prompting guidance](https://developers.openai.com/api/docs/guides/realtime-models-prompting#speed-instructions). These are configuration receipts, not a claim that the voice has already been tuned over an actual G.711 phone call.
+Continuum's default Realtime voice is `marin` at a 0.8 playback multiplier, with explicit warm, calm, patient, unhurried delivery instructions. Both voice and speed are deployment settings, and speed is bounded to the documented 0.25–1.5 range. The multiplier changes playback rate; the prompt separately shapes cadence, following OpenAI's [Realtime prompting guidance](https://developers.openai.com/api/docs/guides/realtime-models-prompting#speed-instructions). These are configuration receipts, not a claim that the voice has already been tuned over an actual G.711 phone call.
 
 If speech is missing, clipped, or too unclear to transcribe faithfully, the Realtime layer must call `recover_unclear_audio` instead of guessing or sending partial text to a teaching tool. The server returns the correct pending identity, menu, placement, guided-lesson, or Sandbox prompt and localizes only the neutral retry lead. This path makes no teaching-model request and does not change lesson progress, mastery, or Sandbox history.
 
@@ -212,7 +214,7 @@ Voice formatting is enforced after generation, not left to prompt wording. Befor
 
 The lesson arc is deployment-configured. The first pack uses eight teaching turns with explicit explore, independent-check, and recap phases. An immediate redial resumes the exact interrupted question; a later return starts with retrieval practice, including after a completed lesson. The server also prevents any model from marking mastery secure until it has observed at least two reasoning turns.
 
-After a normally completed guided lesson, Nomad can send the exact language-matched spoken recap to the caller through Twilio SMS. This is a non-blocking side effect: a messaging failure cannot replace the voice response or undo lesson completion. It never runs for Sandbox turns or safety-forced endings, and duplicate Realtime lifecycle events cannot send it twice.
+After a normally completed guided lesson, Continuum can send the exact language-matched spoken recap to the caller through Twilio SMS. This is a non-blocking side effect: a messaging failure cannot replace the voice response or undo lesson completion. It never runs for Sandbox turns or safety-forced endings, and duplicate Realtime lifecycle events cannot send it twice.
 
 Learners can ask what they worked on before. GPT-5.6 receives only that named profile's persisted, curriculum-grounded summaries and returns a short structured narration in the learner's current language mode. The Realtime layer says that narration exactly; it does not invent history from the conversation.
 
@@ -280,8 +282,8 @@ Ready-to-paste Devpost copy, judge instructions, and the claim-by-claim release 
 
 The code is released under the [MIT License](LICENSE), copyright 2026 Tanya Khanna.
 
-- OpenAI supplies the [GPT-5.6 model family](https://developers.openai.com/api/docs/models), [Realtime API](https://developers.openai.com/api/docs/models/gpt-realtime), Responses API, and Codex development environment. Nomad's server—not the voice model—owns the trusted curriculum and persistence boundaries.
-- Twilio is the planned phone-number, voice-routing, SIP-trunk, and optional SMS infrastructure. It does not supply Nomad's teaching decisions.
+- OpenAI supplies the [GPT-5.6 model family](https://developers.openai.com/api/docs/models), [Realtime API](https://developers.openai.com/api/docs/models/gpt-realtime), Responses API, and Codex development environment. Continuum's server—not the voice model—owns the trusted curriculum and persistence boundaries.
+- Twilio is the planned phone-number, voice-routing, SIP-trunk, and optional SMS infrastructure. It does not supply Continuum's teaching decisions.
 - The runtime uses Node.js, TypeScript, SQLite through `better-sqlite3`, Zod, and `ws`; exact versions and transitive licenses are pinned in `package-lock.json`.
 - The flagship fractions pack is original, hand-authored prototype content described as NCERT-aligned. It is not an official NCERT product and implies no endorsement. Pending, unapproved briefs cite CIET/NCERT ePathshala pages for [Science](https://epathshala.nic.in/topicc.php?id=0677CH06), [English](https://epathshala.nic.in/topic.php?id=0673CH01), [History](https://epathshala.nic.in/topicc.php?id=0681CH04), and [Geography](https://epathshala.nic.in/topicc.php?id=0681CH01).
 - Research receipts used in the product rationale are the [ITU 2024 connectivity release](https://www.itu.int/en/mediacentre/Pages/PR-2024-11-27-facts-and-figures.aspx), [GSMA 2024 connectivity release](https://www.gsma.com/newsroom/press-release/new-gsma-report-shows-mobile-internet-connectivity-continues-to-grow-globally-but-barriers-for-3-45-billion-unconnected-people-remain/), [UNESCO teacher report](https://www.unesco.org/en/articles/global-report-teachers-addressing-teacher-shortages-and-transforming-profession), [Bastani et al.](https://hamsabastani.github.io/education_llm.pdf), [Rori study](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana), [Adesua feasibility study](https://arxiv.org/abs/2605.15376), and [SIGDIAL code-switching paper](https://aclanthology.org/2024.sigdial-1.43/).

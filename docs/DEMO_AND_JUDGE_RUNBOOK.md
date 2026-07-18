@@ -19,7 +19,7 @@ are true:
 
 - `npm run phone:preflight` reports 11/11, including signed delivery and Mission
   Control access protection.
-- A real carrier call reaches Nomad through Twilio and OpenAI SIP.
+- A real carrier call reaches Continuum through Twilio and OpenAI SIP.
 - Barge-in, unclear-audio recovery, disconnect, and redial have been heard over
   G.711—not merely unit-tested.
 - At least one complete guided call produces a dashboard session and accurate
@@ -46,7 +46,7 @@ Use this misconception exactly:
 
 > One fourth is bigger because four is bigger than three.
 
-Then type `exit`, rerun the same command, and confirm Nomad resumes the saved
+Then type `exit`, rerun the same command, and confirm Continuum resumes the saved
 question. This path is deterministic, offline, and uses no API credit. To verify
 the entire distributable archive first, run `npm run verify:fresh`.
 
@@ -64,9 +64,9 @@ npm start
 
 ## Final judge card — fill only after release gates pass
 
-**Call Nomad:** `[PUBLIC PHONE NUMBER]`
+**Call Continuum:** `[PUBLIC PHONE NUMBER]`
 
-You are about to be a Grade 6 learner. Choose Math. When Nomad asks you to
+You are about to be a Grade 6 learner. Choose Math. When Continuum asks you to
 compare one-third and one-fourth, say: “One-fourth is bigger because four is
 bigger.” Notice whether it gives away the answer or diagnoses your reasoning and
 asks a smaller question.
@@ -76,7 +76,7 @@ Then try one stress test:
 - Ask: “Just tell me the answer.”
 - Switch languages in the middle of a sentence.
 - Ask: “What have we learned together?”
-- Hang up after Nomad asks a question, then call back with the same name.
+- Hang up after Continuum asks a question, then call back with the same name.
 - Say that the audio was unclear and verify the pending question is restored
   without advancing the lesson.
 
@@ -88,11 +88,11 @@ fragment, not the query string; verify that it disappears from the address bar.
 
 ## Three-minute demo recording order
 
-1. **0:00–0:12 — problem and product.** Show a basic phone. “Nomad is a patient
+1. **0:00–0:12 — problem and product.** Show a basic phone. “Continuum is a patient
    Socratic tutor for a learner with a dial tone but no app or data. The
    connection may drop. The learning continues.”
 2. **0:12–0:28 — real connection proof.** Record the phone dialing the published
-   number and Nomad asking the learner’s name. Keep the carrier audio audible;
+   number and Continuum asking the learner’s name. Keep the carrier audio audible;
    do not replace it with browser audio.
 3. **0:28–1:05 — teaching proof.** Choose reviewed Math, give the larger-
    denominator misconception, and capture diagnosis → concrete analogy → one

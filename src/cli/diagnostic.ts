@@ -24,8 +24,8 @@ async function main(): Promise<void> {
   const placementQuestions = curriculumPack.placementDiagnostic.questions;
   let questionIndex = 0;
 
-  output.write("Nomad AI — three-question placement diagnostic\n\n");
-  output.write(`Nomad: ${placementQuestions[questionIndex]!.prompt}\nYou: `);
+  output.write("Continuum — three-question placement diagnostic\n\n");
+  output.write(`Continuum: ${placementQuestions[questionIndex]!.prompt}\nYou: `);
 
   try {
     for await (const answer of terminal) {
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
 
       const nextQuestion = placementQuestions[questionIndex];
       if (!nextQuestion) break;
-      output.write(`Nomad: ${nextQuestion.prompt}\nYou: `);
+      output.write(`Continuum: ${nextQuestion.prompt}\nYou: `);
     }
   } finally {
     terminal.close();

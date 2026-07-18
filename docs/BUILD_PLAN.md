@@ -1,4 +1,4 @@
-# NOMAD AI — FINAL BUILD PLAN (v4 · SELF-CONTAINED CODEX HANDOVER)
+# CONTINUUM — FINAL BUILD PLAN (v4 · SELF-CONTAINED CODEX HANDOVER)
 
 > **This is the only document Codex needs.** Everything is in here: product, judging-criteria engineering,
 > judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
@@ -13,7 +13,8 @@
 
 # 1 · THE PRODUCT
 
-> *(Product name: "Nomad" is a WORKING TITLE — the builder must personally accept or replace it before submission.)*
+> **Final product name: Continuum.** Tanya selected the name on July 17 after a human-led naming pass.
+> **Tagline:** *"The connection may drop. The learning continues."*
 
 **A GLOBAL product with one proven deployment.** An adaptive multilingual tutor that works on **any phone,
 anywhere**. Call a normal number — from a $15 feature phone, no smartphone, no app, no data — and a Socratic
@@ -34,12 +35,11 @@ NCERT Grade 6) because (a) it is a large multilingual deployment context, (b) a 
 code-switching test — pass it and easier cases follow, and (c) the builder speaks it, so the demo is authentic.
 India is deployment #1, not the boundary.
 
-- **Tagline:** *"The connection may drop. The learning continues."*
 - **Framing:** *"Two-way radio for the offline half of the world."*
 - **Three audiences:** (1) the usage gap — GSMA estimates 3.1B people are covered by mobile broadband but do not use it, including a 60% usage gap in Sub-Saharan Africa; ITU separately estimates 2.6B people offline globally (overlapping populations; never add them); (2) low-literacy learners; (3) text-barrier learners (dyslexia) — voice as equalizer.
 - **Positioning:** "Bakame proved learners will call an AI. Viamo proved the channel scales to 22 countries.
   1-800-ChatGPT proved frontier voice AI works over a phone line. **Nobody has put an actual teacher on that line.**
-  Nomad is that teacher." (Never claim channel novelty — always claim the teacher.)
+  Continuum is that teacher." (Never claim channel novelty — always claim the teacher.)
 
 # 1.5 · THE PLAIN-ENGLISH PITCH (use for: Devpost opening, video voiceover, README hero, judge Q&A)
 
@@ -121,7 +121,7 @@ a real learner journey end-to-end, and the dashboard proves teaching (mastery ev
 material shows substantial overlap: Bakame documents multilingual feature-phone lessons, quizzes, personalization,
 and dashboards; Viamo AVA offers local-language voice information on basic phones; Callee Me markets a multilingual,
 multi-subject phone tutor; 1-800-ChatGPT provides account-free experimental calls; and Rori has preliminary
-WhatsApp/low-bandwidth Math evidence. Nomad's narrower distinction is the inspectable combination of frozen reviewed
+WhatsApp/low-bandwidth Math evidence. Continuum's narrower distinction is the inspectable combination of frozen reviewed
 packs, source/reviewer provenance, per-subject placement and exact resume, trusted turn guards, and reproducible
 deterministic plus paid-agent gates.
 *"genuine understanding of the problem space"* (site variant) → research-literate package: verified Adesua citation
@@ -175,7 +175,7 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
   prompt without calling the teaching engine or advancing persisted state; call close pauses the exact session and
   phone plus normalized learner name resumes the pending question on redial~~ ✅. Real-carrier packet loss and noisy
   G.711 behavior still require the Twilio/SIP phone leg.
-- **F15 Warm voice, ~20% slower** — ~~Nomad is the disclosed tutor persona; the SIP accept payload uses the
+- **F15 Warm voice, ~20% slower** — ~~Continuum is the disclosed tutor persona; the SIP accept payload uses the
   configurable `marin` voice, a bounded 0.8 playback multiplier, and explicit warm, calm, patient, unhurried
   delivery instructions without real-person cosplay~~ ✅. Final voice choice, perceived pace, and accent behavior
   still require listening over the real G.711 phone leg; alternate accents remain roadmap.
@@ -333,7 +333,7 @@ Unknown external state remains unchecked; Codex must not infer Devpost, YouTube,
 
 ## Where the project should be now
 
-- ✅ **Core software works:** clean-clone production smoke, 113/113 tests, 25/25 deterministic cases, synthetic
+- ✅ **Core software works:** clean-clone production smoke, 115/115 tests, 25/25 deterministic cases, synthetic
   seed, and exact resume are green locally and in GitHub Actions. The real carrier leg remains a separate open gate.
 - 🔲 **Primary Codex `/feedback` Session ID:** the main build thread exists and Codex has been used throughout;
   run `/feedback`, copy the submission-specific Session ID, and store it in the final submission fields.
@@ -348,7 +348,7 @@ Unknown external state remains unchecked; Codex must not infer Devpost, YouTube,
   valid, free users can use GPT-5.6 Terra in Codex, and previously received Codex credits can extend usage for
   models available to the account.
 - Build Week does **not** require GPT-5.6 for every task. It requires meaningful GPT-5.6 use somewhere in the
-  project. Nomad already has a citable role for GPT-5.6 in structured teaching, curriculum compilation and
+  project. Continuum already has a citable role for GPT-5.6 in structured teaching, curriculum compilation and
   verification, and agent evaluation; use smaller/cheaper models for disposable exploration and routine work.
 - Keep Codex-credit accounting separate from the builder-funded OpenAI API balance. The current project has $5
   prepaid API credit; deterministic development remains offline and no additional hackathon API credit is assumed.
@@ -364,8 +364,8 @@ Unknown external state remains unchecked; Codex must not infer Devpost, YouTube,
 - **Code understanding:** before submission, the builder must be able to explain the Realtime/SIP bridge, structured
   teaching boundary, frozen curriculum, persistence/resume path, safety guards, eval evidence, and one failure that
   changed the implementation. Do not submit code the builder cannot explain.
-- **Project name:** Codex may generate options, but the builder personally accepts or replaces “Nomad” after a
-  ten-minute naming pass. The final name is a human product decision, not an AI default.
+- ✅ **Project name:** Tanya personally selected **Continuum** on July 17 after considering alternatives. This is a
+  human product decision; Codex's role is limited to critique and implementation of the rename.
 - **Demo voiceover:** an AI-generated voice is explicitly allowed. The script still requires human editing and must
   describe only behavior visible in the recorded build.
 - Continue using Codex through build, verification, and submission, and use it to improve README structure while
@@ -454,7 +454,7 @@ models for disposable exploration, and reserve GPT-5.6 for the decisions and art
 - Minimal conversation loop with prompt v0 (Socratic + Hinglish sketch). Call it from your own phone; talk to it; note everything that feels wrong.
 - Commit milestones (≥3 today). CODEX_NOTES: 10 min.
 - **Exit: a real phone conversation with an AI exists. Latency number written down.**
-- **📦 Features landing today:** F1 zero-data dial-in · F7 GSM-native (inherited after carrier proof) · ~~F8 server-side inference~~ ✅ · F9 G.711/SIP · F10 realtime pipeline · ~~F12 VAD+barge-in configuration and guards~~ ✅ *(real-phone tuning open)* · ~~F15-voice configuration (warm `marin`, 0.8 speed, Nomad persona)~~ ✅ *(real-phone listening open)* · F19 accent check (real-phone listen-through)
+- **📦 Features landing today:** F1 zero-data dial-in · F7 GSM-native (inherited after carrier proof) · ~~F8 server-side inference~~ ✅ · F9 G.711/SIP · F10 realtime pipeline · ~~F12 VAD+barge-in configuration and guards~~ ✅ *(real-phone tuning open)* · ~~F15-voice configuration (warm `marin`, 0.8 speed, Continuum persona)~~ ✅ *(real-phone listening open)* · F19 accent check (real-phone listen-through)
 
 ### 📅 JUL 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
 **Morning:**
@@ -481,7 +481,7 @@ models for disposable exploration, and reserve GPT-5.6 for the decisions and art
 - ~~Dashboard skeleton plus deterministic eval-results view and evidence-based per-call token/cost accounting (auto-refreshing anonymized sessions, transcript, diagnosis, mastery evidence, language, strategy, per-turn model route, raw Responses/Realtime usage, and exact-model dated rates)~~ ✅.
 - **Decisions due today: tutor persona name + product name** (video is tomorrow; the name gets spoken aloud).
 - **Exit: five subjects callable · ~~eval 25/25 green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard skeleton live~~ ✅.**
-- **📦 Features landing today:** ~~F38/F39 Curriculum Compiler + G3 originality rule~~ ✅ · ~~F37 frozen-pack grounding (formalized)~~ ✅ · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · ~~F32-flavor real-world flagship grounding~~ ✅ · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · ~~F15 persona/product name: Nomad~~ ✅
+- **📦 Features landing today:** ~~F38/F39 Curriculum Compiler + G3 originality rule~~ ✅ · ~~F37 frozen-pack grounding (formalized)~~ ✅ · ~~F20 universal Curious Sandbox mode~~ ✅ · F21-full five subjects + flavored fallbacks · ~~F22 deployment-subject/Sandbox voice onboarding~~ ✅ *(five-pack expansion remains)* · ~~F24 safe persistent experiments + anchor objects~~ ✅ · ~~F32-flavor real-world flagship grounding~~ ✅ · ~~F47 callback loop~~ ✅ · ~~F41-query voice-queryable history~~ ✅ · ~~F18 universal language-mode config + live code-switching smoke gate~~ ✅ · ~~F51 deterministic eval harness (25 cases)~~ ✅ · ~~§7.5 REPL (`make chat`)~~ ✅ · ~~F45-skeleton dashboard~~ ✅ · ~~F15 persona/product name: Continuum~~ ✅
 
 ### 📅 JUL 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
@@ -499,7 +499,7 @@ models for disposable exploration, and reserve GPT-5.6 for the decisions and art
 
 ### 📅 JUL 21 — D5: SHIP (hard cutoff 5:00 PM PT / 8:00 PM ET; official weekday labels conflict; target noon PT)
 **Morning:**
-- Final stability pass: 2 live verification calls ($1) · `make eval` one last time · ~~repeatable secret-free REPL fresh-clone gate (`npm run verify:fresh`: archive committed HEAD → lockfile install → compiled production smoke → 113/113 tests → 25/25 eval → seed the synthetic Ravi fixture → prove exact paused-lesson resume), enforced again by a read-only GitHub Actions gate on `main` and pull requests; first hosted run green in 42 seconds~~ ✅. Live calls remain gated on the external phone leg.
+- Final stability pass: 2 live verification calls ($1) · `make eval` one last time · ~~repeatable secret-free REPL fresh-clone gate (`npm run verify:fresh`: archive committed HEAD → lockfile install → compiled production smoke → 115/115 tests → 25/25 eval → seed the synthetic Ravi fixture → prove exact paused-lesson resume), enforced again by a read-only GitHub Actions gate on `main` and pull requests; first hosted run green in 42 seconds~~ ✅. Live calls remain gated on the external phone leg.
 - Video → public on YouTube. Repo → public (MIT) or share with testing@devpost.com + build-week-event@openai.com.
 - In the main Codex session: run `/feedback`, copy the Session ID.
 **By noon PT:**
@@ -564,7 +564,7 @@ Record against the real system (rehearse the script, never fake the tech). No co
 1. Hero: product + tagline + **THE PHONE NUMBER** ("it will teach you — call it") + dashboard link + architecture diagram.
 2. Why: three audiences · GSMA 3.1B usage gap · separate ITU 2.6B offline estimate, never added · UNESCO projected
    44M teacher deficit by 2030 · preliminary Rori benchmark (~1 yr schooling gain @ ~$5/child), never inherited as
-   a Nomad outcome.
+   a Continuum outcome.
 2.5 **Distribution & adoption path (the "who hands the child the number?" answer):** learner-direct digital
    acquisition is not assumed. The proposed path is institution-first: (a) teachers/schools distribute the number
    after local review, consent, and learner assent; (b) a school/NGO/state-education pilot starts with one district,
@@ -572,12 +572,12 @@ Record against the real system (rehearse the script, never fake the tech). No co
    failures, and deletion/retention compliance; (c) carrier partnership is explored only after the carrier and
    learning gates pass. Missed-call callback and teacher/parent messaging remain later consent-sensitive channels.
 3. What's different: sourced matrix crediting Bakame, Viamo AVA, 1-800-ChatGPT, Rori, and Callee Me for the
-   overlapping capabilities they actually document. Nomad differentiates on an inspectable combination: frozen
+   overlapping capabilities they actually document. Continuum differentiates on an inspectable combination: frozen
    reviewed packs and provenance, per-subject placement/resume, trusted turn guards, and reproducible evidence—not
    on unsupported claims that others lack languages, subjects, personalization, memory, or basic-phone access.
 4. Research grounding: Adesua verified citation (executes its published future-work agenda; 93.75% helpfulness,
    **n=16 caveat stated honestly**) · transfer problem (+0.73 local vs +0.13 independent effect sizes; 17%-worse
-   exam finding) → Nomad's context-anchored design answer · Cameroon paper (code-switching = documented open problem).
+   exam finding) → Continuum's context-anchored design answer · Cameroon paper (code-switching = documented open problem).
 5. How it works: two-layer architecture · Curriculum Compiler + G3 originality rule · named learner memory ·
    eval harness with results table (24/24) · honest cost/call math + scale path (carrier partnerships, Viamo precedent).
 6. **How we built it with Codex** (scored under BOTH Technical Implementation and Quality of the Idea — per

@@ -3,7 +3,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nomad Mission Control</title>
+  <title>Continuum Mission Control</title>
   <style>
     :root {
       color-scheme: dark;
@@ -71,7 +71,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .turn { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; margin-bottom: 22px; }
     .turn-no { color: var(--muted); padding-top: 3px; }
     .bubble { border-left: 2px solid var(--blue); padding-left: 14px; }
-    .bubble.nomad { border-color: var(--lime); margin-top: 12px; }
+    .bubble.continuum { border-color: var(--lime); margin-top: 12px; }
     .speaker { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
     .analysis { padding: 22px; }
     .card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 13px; padding: 15px; margin-bottom: 13px; }
@@ -131,7 +131,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
   <main class="shell">
     <header>
       <div>
-        <div class="eyebrow">Nomad AI / Mission Control</div>
+        <div class="eyebrow">Continuum / Mission Control</div>
         <h1>The learning continues.</h1>
       </div>
       <div class="header-tools">
@@ -242,8 +242,8 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         const row = text('div', '', 'turn'); row.append(text('div', String(turn.sequence).padStart(2, '0'), 'turn-no'));
         const content = text('div', '');
         const learner = text('div', '', 'bubble'); learner.append(text('div', 'Learner · ' + (turn.mode === 'guided' ? 'Guided' : 'Curious Sandbox'), 'speaker')); learner.append(text('div', turn.learner_answer));
-        const nomad = text('div', '', 'bubble nomad'); nomad.append(text('div', 'Nomad', 'speaker')); nomad.append(text('div', turn.spoken_response));
-        content.append(learner, nomad); row.append(content); transcript.append(row);
+        const continuum = text('div', '', 'bubble continuum'); continuum.append(text('div', 'Continuum', 'speaker')); continuum.append(text('div', turn.spoken_response));
+        content.append(learner, continuum); row.append(content); transcript.append(row);
       }
       const analysis = text('aside', '', 'analysis'); analysis.append(text('div', 'Teaching intelligence', 'section-label'));
       addCard(analysis, 'Latest diagnosis', latest?.diagnosis ?? session.last_diagnosis);

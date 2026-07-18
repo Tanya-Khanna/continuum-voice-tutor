@@ -167,7 +167,7 @@ export const server = createServer(async (request, response) => {
         response.writeHead(401, {
           "Content-Type": "application/json",
           "Cache-Control": "no-store",
-          "WWW-Authenticate": 'Bearer realm="Nomad Mission Control"',
+          "WWW-Authenticate": 'Bearer realm="Continuum Mission Control"',
           "X-Content-Type-Options": "nosniff",
         });
         response.end(JSON.stringify({ error: "dashboard_access_required" }));
@@ -199,7 +199,7 @@ export const server = createServer(async (request, response) => {
         response.writeHead(401, {
           "Content-Type": "application/json",
           "Cache-Control": "no-store",
-          "WWW-Authenticate": 'Bearer realm="Nomad Mission Control"',
+          "WWW-Authenticate": 'Bearer realm="Continuum Mission Control"',
           "X-Content-Type-Options": "nosniff",
         });
         response.end(JSON.stringify({ error: "dashboard_access_required" }));
@@ -382,6 +382,6 @@ export const server = createServer(async (request, response) => {
 
 server.listen(environment.PORT, environment.HOST, () => {
   console.log(
-    `Nomad server listening on http://${environment.HOST}:${environment.PORT}`,
+    `Continuum server listening on http://${environment.HOST}:${environment.PORT}`,
   );
 });

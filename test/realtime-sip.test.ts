@@ -65,6 +65,10 @@ describe("Realtime SIP boundary", () => {
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "warm, calm, patient",
     );
+    expect(buildRealtimeAcceptPayload().instructions).toContain(
+      "Continuum's realtime conversation layer",
+    );
+    expect(buildRealtimeAcceptPayload().instructions).not.toContain("Nomad");
   });
 
   it("keeps barge-in enabled when tuning server VAD", () => {

@@ -70,7 +70,7 @@
 
 ## 2026-07-16 — Universal-product correction
 
-- Builder clarified that Nomad is a universal product; India, Hinglish, and fractions are only deployment #1.
+- Builder clarified that Continuum is a universal product; India, Hinglish, and fractions are only deployment #1.
 - Removed the closed English/Hindi/Hinglish language enum. Model-facing state now accepts arbitrary BCP-47-style language tags and code-switching combinations.
 - Moved all fraction questions, answer signals, misconceptions, analogies, evidence rules, and response scaffolds out of the engine and into the India fractions curriculum pack.
 - Added a generic curriculum teaching engine that resolves behavior entirely from the selected pack.
@@ -129,7 +129,7 @@
 ## 2026-07-17 — Mission-control dashboard skeleton
 
 - Added an auto-refreshing local dashboard at `/dashboard` with a JSON data surface at `/api/dashboard/sessions`.
-- The dashboard shows recent sessions, learner/Nomad transcript pairs, diagnosis, mastery evidence, next strategy, language mode, and the actual model route recorded for each turn.
+- The dashboard shows recent sessions, learner/Continuum transcript pairs, diagnosis, mastery evidence, next strategy, language mode, and the actual model route recorded for each turn.
 - Added a SQLite migration for per-turn model-route provenance; existing databases receive `unknown` for historical rows without losing data.
 - Learners are represented by a one-way short reference derived from the internal learner ID. The dashboard snapshot excludes names, raw caller numbers, and phone hashes.
 - Kept this local-only for now. It must not be exposed with real learner data until the planned consent, retention, and access-control work lands.
@@ -208,7 +208,7 @@
 ## 2026-07-17 — Universal code-switched sample exhibit
 
 - Added a reusable sample-session manifest whose language modes use the same arbitrary BCP-47-style tags as live teaching.
-- Created a 33-second Spanish-English Socratic misconception-and-transfer fixture with distinct synthetic learner and Nomad voices.
+- Created a 33-second Spanish-English Socratic misconception-and-transfer fixture with distinct synthetic learner and Continuum voices.
 - Labeled the exhibit explicitly as curated synthetic audio, not a child or live-call recording.
 - Added a dashboard Sample tab with native audio controls, active-line synchronization, and click-to-seek transcript rows.
 - Added a byte-range-capable audio endpoint so browser playback and seeking work reliably.
@@ -352,7 +352,7 @@
 - Verified from current official Realtime prompting guidance and the installed SDK contract that output `speed` is a playback multiplier from 0.25 to 1.5, while vocal pacing should also be instructed because post-processing alone does not shape cadence.
 - Added `OPENAI_REALTIME_SPEED`, bounded at startup and defaulting to 0.8, to the actual SIP call-accept `audio.output` payload alongside the configurable `marin` voice.
 - Added a provider-neutral delivery contract: warm, calm, patient, unhurried, clear pauses, and never theatrical, patronizing, or sleepy. Authoritative tool words remain unchanged.
-- Nomad remains the disclosed product/tutor persona rather than imitating a real person. Perceived pace, voice fit, and accent behavior remain real-phone listening tasks after the Twilio/SIP leg is available.
+- Continuum remains the disclosed product/tutor persona rather than imitating a real person. Perceived pace, voice fit, and accent behavior remain real-phone listening tasks after the Twilio/SIP leg is available.
 - Verification: exact accept-payload assertions, lower/upper speed bounds, invalid-speed rejection, warm-delivery prompt assertion, and strict TypeScript pass.
 
 ## 2026-07-17 — Full paid agent-suite reliability pass
@@ -433,7 +433,7 @@
 - Replaced the stale 17-million-teacher-shortage plan figure with UNESCO's 44-million primary/secondary teacher deficit projection for 2030.
 - Added direct ITU and GSMA receipts for 2.6 billion people offline and the separate 3.1 billion mobile-internet usage gap. The README explicitly forbids adding these overlapping populations or treating coverage as proof of affordable calls.
 - Grounded strict Socratic guardrails in the nearly 1,000-student Bastani et al. field experiment: unrestricted GPT-4 hurt unaided grades after practice access was removed, while hint-based safeguards largely mitigated that effect.
-- Added preliminary Rori and Adesua receipts with their limitations intact: Rori's roughly 500-student year-one study and estimated marginal cost cannot be inherited by Nomad; Adesua's 93.75% helpfulness came from only 16 ratings.
+- Added preliminary Rori and Adesua receipts with their limitations intact: Rori's roughly 500-student year-one study and estimated marginal cost cannot be inherited by Continuum; Adesua's 93.75% helpfulness came from only 16 ratings.
 - Added the peer-reviewed SIGDIAL code-switching tutoring paper as a design receipt without turning selected model checks into a universal quality claim.
 
 ## 2026-07-17 — Current landscape and complete README handoff
@@ -449,7 +449,7 @@
 - The visual pass found deterministic category labels colliding with the PASS column and 24 successful agent rationales overwhelming the scorecard. Evaluation columns now wrap safely, successful rationales are collapsed behind an accessible `details` control, and any failure remains immediately visible.
 - Seeded the reproducible paused Ravi lesson and inspected the full teaching trace at desktop and phone widths. Raw learner-state enums are now human-readable (`Needs Support`, `Ask Reasoning`, `Foundational`, `Paused`) while exact language tags and model routes remain untouched for auditing; neither layout has horizontal overflow.
 - Re-ran the committed-HEAD clean-clone gate after the browser fixes: 107/107 tests, 25/25 deterministic cases, synthetic paused-state seed, exact resume, and a zero-vulnerability lockfile install all passed without local secrets or prior state.
-- Reconciled the schedule ledger with already-shipped flagship grounding, the Nomad persona, honest-limitations and consent/retention documentation, and roadmap coverage. The secret-safe phone preflight remains 3/11; every open check requires OpenAI project/webhook or Twilio/deployment configuration rather than more local teaching-engine code.
+- Reconciled the schedule ledger with already-shipped flagship grounding, the Continuum persona, honest-limitations and consent/retention documentation, and roadmap coverage. The secret-safe phone preflight remains 3/11; every open check requires OpenAI project/webhook or Twilio/deployment configuration rather than more local teaching-engine code.
 
 ## 2026-07-17 — Secret-safe dashboard readiness
 
@@ -501,3 +501,10 @@
 - Preserved the absolute July 21, 5:00 PM PT cutoff while flagging the source conflict: the official reminder calls it Monday and the copied plan called it Tuesday. The plan now requires checking the live Devpost countdown and treats noon PT on July 21 as the internal deadline.
 - Removed three conflicting legacy instructions: weekday labels from the date-based schedule, “spend credits freely,” and “ready-to-paste” AI submission copy. The plan now uses absolute dates, finite-credit discipline, and an explicit human rewrite gate; `docs/SUBMISSION_COPY.md` carries the same boundary.
 - Reworded the historical D0 and credit-risk entries so the source-of-truth plan no longer expects another distribution or calls the already-funded $5 API runtime “unfunded.”
+
+# 2026-07-17 — Human-selected Continuum brand
+
+- Tanya chose **Continuum** as the final product name after a human-led naming pass. The selected tagline is **“The connection may drop. The learning continues.”**
+- Updated learner-facing prompts, CLI output, Mission Control, safety and operator documentation, the build plan, and submission drafting material so the tutor introduces itself consistently as Continuum.
+- Renamed the private npm package to `continuum`. Kept `NOMAD_` environment variables, the `Tanya-Khanna/nomad-ai` repository slug, database paths, and internal fixture discriminators as compatibility identifiers for this build; changing those now would risk existing secret configuration, persisted state, and external links without changing the product experience.
+- Added regression checks for the Realtime call identity and Mission Control brand. Strict TypeScript and 115/115 automated tests pass in the working tree; the committed-archive release gate is rerun after the rename commit.

@@ -1,6 +1,6 @@
 # Production deployment contract
 
-Nomad ships a host-neutral Node.js build and container. The deployment must
+Continuum ships a host-neutral Node.js build and container. The deployment must
 provide stable public HTTPS because OpenAI sends signed inbound-call events to
 `POST /webhooks/openai`; a changing local tunnel is useful for development but
 is a fragile judge endpoint.
@@ -19,8 +19,8 @@ and ranged sample audio. It makes no OpenAI or Twilio request.
 Docker is optional. Where it is available:
 
 ```bash
-docker build -t nomad-ai .
-docker run --rm -p 3000:3000 --env-file .env nomad-ai
+docker build -t continuum .
+docker run --rm -p 3000:3000 --env-file .env continuum
 ```
 
 The image runs as the unprivileged `node` user, includes a health check, and does
@@ -34,10 +34,10 @@ image.
 - Start: `npm run start:prod`
 - Node: 22 or newer
 - Health path: `/health`
-- Public port: use the host-provided `PORT`; Nomad binds `HOST=0.0.0.0` by
+- Public port: use the host-provided `PORT`; Continuum binds `HOST=0.0.0.0` by
   default.
 - HTTPS: terminate TLS at the hosting provider or reverse proxy and forward to
-  Nomad over its private port.
+  Continuum over its private port.
 - Webhook path: preserve `/webhooks/openai` exactly.
 
 Use the ignored `.env` only for local development. In a hosted deployment, save
@@ -54,7 +54,7 @@ persistent disk and set:
 NOMAD_DATABASE_PATH=/data/nomad.db
 ```
 
-The process user must be able to create and update that file. Use a single Nomad
+The process user must be able to create and update that file. Use a single Continuum
 server instance for this hackathon SQLite deployment; multiple replicas must not
 write separate local database files. Back up the disk before a release migration
 and apply the retention/deletion policy in `docs/SAFETY_PRIVACY.md` before real

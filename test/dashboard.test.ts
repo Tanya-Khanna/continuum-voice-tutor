@@ -8,6 +8,12 @@ import { StoredModelUsageSchema } from "../src/domain/usage.js";
 import { DASHBOARD_HTML } from "../src/dashboard/page.js";
 
 describe("mission-control snapshot", () => {
+  it("uses the Continuum brand in learner-visible Mission Control copy", () => {
+    expect(DASHBOARD_HTML).toContain("<title>Continuum Mission Control</title>");
+    expect(DASHBOARD_HTML).toContain("Continuum / Mission Control");
+    expect(DASHBOARD_HTML).not.toContain("Nomad");
+  });
+
   it("keeps a judge token out of the request URL and sends it only as authorization", () => {
     expect(DASHBOARD_HTML).toContain("window.location.hash.slice(1)");
     expect(DASHBOARD_HTML).toContain("window.sessionStorage");

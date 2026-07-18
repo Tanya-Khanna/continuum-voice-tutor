@@ -7,7 +7,7 @@ passes; do not delete a bracket by guessing.
 
 ## Title and one-line pitch
 
-**Nomad AI — The connection may drop. The learning continues.**
+**Continuum — The connection may drop. The learning continues.**
 
 An adaptive multilingual Socratic tutor that a learner can call from any phone,
 with frozen curriculum, named memory, and exact lesson resume after a dropped
@@ -15,9 +15,9 @@ connection.
 
 ## Devpost description — truthful pre-release draft
 
-Nomad is a patient teacher designed for a learner who may have a basic phone but
+Continuum is a patient teacher designed for a learner who may have a basic phone but
 no app, laptop, or reliable data. The learner says the name they use, chooses a
-reviewed subject or Curious Sandbox, and answers aloud. Nomad does not behave like
+reviewed subject or Curious Sandbox, and answers aloud. Continuum does not behave like
 an answer machine: GPT-5.6 diagnoses the learner's reasoning, chooses a smaller
 question, analogy, or retrieval check, and returns one short voice-native teaching
 turn. If the connection drops, phone identity plus learner name restores the exact
@@ -27,7 +27,7 @@ The access mismatch is concrete: ITU estimated 2.6 billion people were offline
 in 2024, while GSMA separately counted a 3.1 billion-person usage gap—people
 covered by mobile broadband but not using it. Those groups overlap and are not
 added together. UNESCO projects a 44 million primary/secondary teacher deficit by
-2030, so Nomad is designed to extend supervised learning support, not replace
+2030, so Continuum is designed to extend supervised learning support, not replace
 teachers. Direct source links and caveats are in the README.
 
 The system separates voice from teaching. OpenAI Realtime handles listening,
@@ -50,7 +50,7 @@ Codex built the telephony bridge, state machine, curriculum compiler, evaluation
 harness, dashboard, tests, privacy gates, and documentation in one continuous task
 with inspectable milestone commits. GPT-5.6 powers live teaching, curriculum
 compilation/verification, and a separate simulated-learner/evaluator suite. The
-current evidence is 113/113 automated tests, 25/25 deterministic teaching cases,
+current evidence is 115/115 automated tests, 25/25 deterministic teaching cases,
 and a historical complete 24/24 paid agent run. The repository's clean-clone gate
 installs from the lockfile, runs every zero-credit check, seeds a synthetic paused
 lesson, and proves exact resume without local secrets or prior state.
@@ -60,20 +60,20 @@ the documented G.711, barge-in, disconnect, redial, and latency checks, use the
 repository's complete offline judge path and do not describe browser or terminal
 audio as a live phone call.
 
-Nomad does not claim to invent voice AI or phone access. [Bakame](https://bakame.online/),
+Continuum does not claim to invent voice AI or phone access. [Bakame](https://bakame.online/),
 [Viamo AVA](https://viamo.io/ask-viamo-anything-ai/),
 [1-800-ChatGPT](https://help.openai.com/en/articles/10193193-1-800-chatgpt-calling-and-messaging-chatgpt-with-your-phone),
 [Rori](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana),
 and [Callee Me](https://callee.me/) each prove important parts of the landscape.
-Nomad's narrower contribution is an inspectable combination of frozen reviewed
+Continuum's narrower contribution is an inspectable combination of frozen reviewed
 curriculum, source/reviewer provenance, subject-scoped placement and exact resume,
 trusted turn validation, and reproducible release evidence. The README contains
 the sourced comparison and does not infer undocumented limitations of those products.
 
 ## Final phone paragraph — adapt only after every phone gate passes
 
-Call Nomad at **[PUBLIC PHONE NUMBER]**. Choose Math and say: “One-fourth is
-bigger because four is bigger.” Nomad will teach rather than reveal the answer.
+Call Continuum at **[PUBLIC PHONE NUMBER]**. Choose Math and say: “One-fourth is
+bigger because four is bigger.” Continuum will teach rather than reveal the answer.
 Then hang up after its next question and call back with the same name to test exact
 resume. Open **[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]** to inspect the
 anonymized teaching trace from your own call.
@@ -115,7 +115,7 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 
 | Claim | Current evidence | Publication rule |
 |---|---|---|
-| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 113/113 tests; 25/25 deterministic gate | Safe now |
+| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 115/115 tests; 25/25 deterministic gate | Safe now |
 | GPT-5.6 at the teaching core | Structured Responses teacher plus 24/24 historical paid agent suite | Safe now; capture the saved scorecard before submission |
 | Universal product architecture | Open language tags; pack/catalog routing; no language-pair or subject branch | Say “universal architecture,” not “every language proven” |
 | Multilingual/code-switching behavior | Selected live Hindi/English, Spanish/English, French/English checks plus deterministic fixtures | Name tested patterns; do not claim every accent/noise condition |
@@ -128,9 +128,9 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 | Cost per call | Exact-model API token estimate in Mission Control | Label as API estimate, not total carrier/unit economics |
 | 2.6B offline / 3.1B usage gap | Separate ITU and GSMA 2024 estimates | Never add them; the populations overlap and neither proves affordable calling |
 | 44M teacher deficit | UNESCO 2024 projection for primary and secondary teachers needed by 2030 | Say “projected deficit,” not current vacancies |
-| Rori effect and ~$5 marginal cost | Preliminary year-one Ghana study of roughly 500 students | Attribute to Rori; Nomad cannot inherit the outcome |
+| Rori effect and ~$5 marginal cost | Preliminary year-one Ghana study of roughly 500 students | Attribute to Rori; Continuum cannot inherit the outcome |
 | Adesua 93.75% helpfulness | Six-month feasibility deployment; only 16 ratings | Always state n=16 and preliminary scope |
-| Socratic guardrails protect learning | Nearly 1,000-student math field experiment; unrestricted AI harmed unaided grades, hint safeguards mitigated | Use as design motivation, not a Nomad learning-outcome claim |
+| Socratic guardrails protect learning | Nearly 1,000-student math field experiment; unrestricted AI harmed unaided grades, hint safeguards mitigated | Use as design motivation, not a Continuum learning-outcome claim |
 | Child-ready deployment | Safety behavior and privacy checklist exist | Never claim; supervised prototype until local review/consent/retention pass |
 | “No competitor does this” | Current official pages show substantial overlap, especially Bakame and Callee Me | Never claim; describe the narrower inspectable combination |
 

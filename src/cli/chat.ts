@@ -68,13 +68,13 @@ async function main(): Promise<void> {
   );
   const terminal = createInterface({ input, output });
 
-  output.write(`Nomad AI — ${curriculumPack.id}\n`);
+  output.write(`Continuum — ${curriculumPack.id}\n`);
   output.write(`Subject: ${curriculumOption.subject}\n`);
   output.write(`Engine: ${environment.TEACHING_ENGINE}\n`);
   output.write(`Learner: ${context.learner.name}\n`);
   output.write(`Session: ${context.resumed ? "resumed" : "new"}\n`);
   output.write("Type your answer, or type exit to simulate a dropped call.\n\n");
-  output.write(`Nomad: ${context.greeting}\n`);
+  output.write(`Continuum: ${context.greeting}\n`);
   output.write("You: ");
 
   try {
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
 
       const result = await lessonService.respond(context, learnerAnswer);
       context = result.context;
-      output.write(`Nomad: ${result.turn.spoken_response}\n`);
+      output.write(`Continuum: ${result.turn.spoken_response}\n`);
       output.write(
         `  [${result.turn.mastery_status}; ${result.turn.next_strategy}; ${result.turn.language_mode}]\n`,
       );

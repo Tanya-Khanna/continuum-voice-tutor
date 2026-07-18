@@ -5,7 +5,7 @@ const report = buildPhoneReadinessReport(loadEnvironment());
 if (process.argv.includes("--json")) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  console.log(`Nomad phone readiness: ${report.readyCount}/${report.totalCount}`);
+  console.log(`Continuum phone readiness: ${report.readyCount}/${report.totalCount}`);
   for (const check of report.checks) {
     console.log(`${check.ready ? "PASS" : "OPEN"} ${check.label}`);
     if (!check.ready) console.log(`  ${check.nextAction}`);

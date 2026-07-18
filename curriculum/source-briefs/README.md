@@ -1,7 +1,7 @@
 # Curriculum source briefs
 
 These files are build-time scope contracts, not curriculum packs. Drafts under
-`drafts/` are intentionally marked `pending`; Nomad will validate their shape but
+`drafts/` are intentionally marked `pending`; Continuum will validate their shape but
 will refuse to spend model credit compiling them.
 
 Check a draft without using the API:

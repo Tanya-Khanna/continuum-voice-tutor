@@ -195,7 +195,7 @@ export function buildRealtimeOpeningEvent(): RealtimeClientEvent {
     type: "response.create",
     response: {
       instructions:
-        "Warmly introduce yourself as Nomad in one short sentence, then ask only what name the learner wants you to use. Do not start teaching yet.",
+        "Warmly introduce yourself as Continuum in one short sentence, then ask only what name the learner wants you to use. Do not start teaching yet.",
     },
   };
 }

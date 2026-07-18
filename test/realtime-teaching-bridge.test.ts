@@ -5,6 +5,7 @@ import { LessonService } from "../src/lesson/lesson-service.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 import {
   RealtimeTeachingController,
+  buildRealtimeOpeningEvent,
   type RealtimeClientEvent,
   usageFromRealtimeEvent,
 } from "../src/telephony/realtime-teaching-bridge.js";
@@ -33,6 +34,17 @@ function parseToolOutput(event: RealtimeClientEvent): Record<string, unknown> {
 }
 
 describe("Realtime teaching controller", () => {
+  it("introduces the human-selected Continuum identity", () => {
+    expect(buildRealtimeOpeningEvent()).toMatchObject({
+      type: "response.create",
+      response: {
+        instructions: expect.stringContaining(
+          "introduce yourself as Continuum",
+        ),
+      },
+    });
+  });
+
   it("separates Realtime text, cached, and audio usage", () => {
     expect(
       usageFromRealtimeEvent(
