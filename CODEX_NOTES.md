@@ -601,3 +601,9 @@
 - The four additional subject packs remain correctly human-gated. They are not exposed merely to satisfy a breadth claim.
 - No live carrier claim is made yet for the new missed-call, DTMF, feedback, cross-phone, scheduling, or guardian paths. They require the documented smoke matrix and five consecutive golden journeys.
 - Carrier status callbacks and actual Twilio duration/price receipts remain open before measured completion/cost claims. The homework assignment/reply ledger is implemented and automated, but still needs its live carrier smoke.
+
+## 2026-07-20 — Single-number callback deployment
+
+- Locked the no-extra-number constraint: the existing Twilio number becomes callback-only for inbound voice, then originates the teaching callback and remains the SMS sender. Direct answered inbound tutoring is deferred, not treated as a second-number prerequisite.
+- Preserved learner quiet hours while allowing explicitly enabled, unregistered adult hackathon judges to request a callback across time zones; added deterministic coverage for both adult-demo access and enrolled-learner blocking.
+- Updated the current build plan and phone runbook with the reversible trunk-to-webhook routing sequence. Live carrier claims remain gated until the route is enabled and the documented smoke journey passes.

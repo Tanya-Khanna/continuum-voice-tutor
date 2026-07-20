@@ -9,7 +9,7 @@
 
 Continuum is a persistent, multilingual tutor delivered through ordinary phone calls, keypad input, and short SMS. The learner needs no smartphone, app, camera, internet, email address, or personal device. The conversation is the classroom: lessons, Socratic questions, explanations, stories, worked examples, hint ladders, quizzes, flashcards, teach-back, transfer, reflection, homework, study plans, and retrieval calls are rendered for voice first.
 
-The deployment ladder is missed-call callback, toll-free access, sponsored minutes, or direct dial. Calls are not claimed to be universally free. Child deployments require prior guardian enrollment; adult judges may use an explicitly enabled self-request demo. Every proactive call requires consent, respects quiet hours, and can be stopped immediately.
+The deployment ladder is missed-call callback, toll-free access, sponsored minutes, or direct dial. Calls are not claimed to be universally free. The hackathon deployment uses one Twilio number in callback-only mode: an inbound ring is rejected without answering, then the same number calls the learner back and remains the SMS sender. Direct answered inbound tutoring is deferred rather than requiring a second paid number. Child deployments require prior guardian enrollment; adult judges may use an explicitly enabled self-request demo. Every proactive learner call requires consent, respects quiet hours, and can be stopped immediately.
 
 The trusted tutoring loop is:
 
@@ -22,7 +22,7 @@ Continuum remembers what helps a learner learn and forgets what it does not need
 ## Locked submission scope
 
 - Ordinary phone calls, Realtime SIP, DTMF, and short SMS are the complete learner classroom.
-- Missed-call callback is submission-core; direct calls are not advertised as free.
+- Missed-call callback is submission-core. The single hackathon number is callback-only for inbound access and also originates callbacks, scheduled calls, and SMS; direct answered inbound tutoring is not a submission requirement.
 - Portable identity is a six-digit learner code with separate guardian authorization.
 - Math fractions is the deepest proof-of-learning journey.
 - Five Grade 6 starter units remain the release target, but only human-approved, compiled, verified, spot-checked, frozen packs may appear in the public menu.

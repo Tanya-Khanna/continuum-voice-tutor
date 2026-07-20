@@ -11,6 +11,8 @@ import {
   computeTwilioSignature,
   validateTwilioSignature,
 } from "../src/telephony/twilio-signature.js";
+import { hashPhoneNumber } from "../src/domain/identity.js";
+import { LearnerProfileSchema } from "../src/domain/learner.js";
 
 const SECRET = "callback-test-secret-12345";
 const ACCOUNT_SID = `AC${"a".repeat(32)}`;
@@ -85,6 +87,75 @@ describe("missed-call callback access", () => {
       status: "duplicate",
       job: { id: first.job.id },
     });
+    repository.close();
+  });
+
+  it("lets an unregistered adult demo caller test outside learner quiet hours", () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const callbacks = new MissedCallCallbackService({
+      repository,
+      secret: SECRET,
+      phoneHashSecret: "phone-hash-test-secret",
+      allowedPrefixes: ["+91"],
+      timeZone: "Asia/Kolkata",
+      quietStartHour: 21,
+      quietEndHour: 7,
+      perNumberDailyLimit: 3,
+      globalDailyLimit: 100,
+      allowAdultDemo: true,
+      clock: () => new Date("2026-07-18T17:00:00.000Z"),
+      makeId: () => "adult-demo-callback",
+    });
+
+    expect(
+      callbacks.enqueue({
+        CallSid: `CA${"d".repeat(32)}`,
+        From: "+919999900002",
+        To: "+14155550100",
+        CallStatus: "ringing",
+      }),
+    ).toMatchObject({ status: "queued" });
+    repository.close();
+  });
+
+  it("still blocks an enrolled learner during deployment quiet hours", () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const phoneHashSecret = "phone-hash-test-secret";
+    repository.saveLearner(
+      LearnerProfileSchema.parse({
+        id: "quiet-hours-learner",
+        name: "Synthetic learner",
+        phoneHash: hashPhoneNumber("+919999900003", phoneHashSecret),
+        preferredLanguage: "en",
+        currentConcept: "fractions",
+        lastMastery: "needs_support",
+        createdAt: "2026-07-18T12:00:00.000Z",
+        updatedAt: "2026-07-18T12:00:00.000Z",
+      }),
+    );
+    const callbacks = new MissedCallCallbackService({
+      repository,
+      secret: SECRET,
+      phoneHashSecret,
+      allowedPrefixes: ["+91"],
+      timeZone: "Asia/Kolkata",
+      quietStartHour: 21,
+      quietEndHour: 7,
+      perNumberDailyLimit: 3,
+      globalDailyLimit: 100,
+      allowAdultDemo: true,
+      clock: () => new Date("2026-07-18T17:00:00.000Z"),
+      makeId: () => "learner-callback",
+    });
+
+    expect(
+      callbacks.enqueue({
+        CallSid: `CA${"e".repeat(32)}`,
+        From: "+919999900003",
+        To: "+14155550100",
+        CallStatus: "ringing",
+      }),
+    ).toEqual({ status: "blocked", reason: "quiet_hours" });
     repository.close();
   });
 

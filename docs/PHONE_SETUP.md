@@ -60,7 +60,7 @@ documents the project ID, webhook event, SIP target, accept endpoint, and
 sideband connection. Its [webhook guide](https://developers.openai.com/api/docs/guides/webhooks)
 documents SDK signature verification against the raw body.
 
-## 3. Connect the Twilio number and SIP trunk
+## 3. Connect OpenAI SIP and the single Twilio number
 
 Buying or upgrading a number is a paid external action; complete it in the
 Twilio Console only when ready.
@@ -80,11 +80,52 @@ Twilio Console only when ready.
    `;transport=tls`, not `sips:`. Default priority and weight are sufficient for
    this single target.
 5. Leave recording at **Do Not Record**.
-6. Under the trunk's **Numbers** section, associate the voice-capable number.
+6. Use the trunk association only for the first direct-call SIP smoke test. Once
+   signed OpenAI delivery is proven, remove the number from the trunk and switch
+   it to the callback-only routing below.
 
-Continuum is inbound-only for this release, so Twilio termination configuration is
-not required. Set these attestations to `true` only after the corresponding
-Console save succeeds:
+### Hackathon single-number callback mode
+
+Continuum does not require a second paid number. The one owned number performs
+three jobs:
+
+- An incoming voice call posts to
+  `https://YOUR_HOST/webhooks/twilio/missed-call`, receives `<Reject
+  reason="busy">`, and is not answered.
+- The application creates an outbound call from the same number to the caller
+  and bridges that call to the OpenAI SIP target with inline TwiML.
+- Incoming SMS posts to `https://YOUR_HOST/webhooks/twilio/sms`; outbound
+  homework and controls use the same number as sender.
+
+In **Phone Numbers > Manage > Active numbers**, configure the number with:
+
+```text
+Voice webhook (HTTP POST): https://YOUR_HOST/webhooks/twilio/missed-call
+Messaging webhook (HTTP POST): https://YOUR_HOST/webhooks/twilio/sms
+```
+
+Remove the number from the Elastic SIP trunk before setting the Voice webhook;
+the trunk itself and its OpenAI origination URI may remain configured. Direct
+answered inbound tutoring is disabled in this mode. Outbound callback and
+scheduled calls use the Programmable Voice Calls API and inline `<Dial><Sip>`
+TwiML, so the same owned number can remain their caller ID.
+
+Enable these only after the public deployment is healthy and the two webhook
+URLs are configured:
+
+```dotenv
+NOMAD_MISSED_CALL_ENABLED=true
+NOMAD_MISSED_CALL_ADULT_DEMO=true
+NOMAD_SMS_CONTROLS_ENABLED=true
+NOMAD_SCHEDULER_ENABLED=true
+```
+
+The adult-demo switch permits unregistered adult judges to self-request a
+callback outside learner quiet hours. Guardian-enrolled learners remain subject
+to deployment quiet hours.
+
+Set these attestations to `true` only after the corresponding Console save
+succeeds:
 
 ```dotenv
 NOMAD_TWILIO_NUMBER_VOICE_READY=true

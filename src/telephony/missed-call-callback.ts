@@ -200,15 +200,6 @@ export class MissedCallCallbackService {
       return { status: "blocked", reason: "country_not_allowed" };
     }
     const nowDate = this.#clock();
-    if (
-      isQuietHour(
-        localHour(nowDate, this.#timeZone),
-        this.#quietStartHour,
-        this.#quietEndHour,
-      )
-    ) {
-      return { status: "blocked", reason: "quiet_hours" };
-    }
     const callerPhoneHash = hashPhoneNumber(
       payload.From,
       this.#phoneHashSecret,
@@ -217,6 +208,19 @@ export class MissedCallCallbackService {
       this.#repository.listLearnersForPhone(callerPhoneHash).length > 0;
     if (!enrolled && !this.#allowAdultDemo) {
       return { status: "blocked", reason: "guardian_enrollment_required" };
+    }
+    // Quiet hours protect enrolled learner profiles. An explicitly enabled,
+    // unregistered adult demo caller may test from another timezone without
+    // weakening the schedule policy for guardian-enrolled learners.
+    if (
+      enrolled &&
+      isQuietHour(
+        localHour(nowDate, this.#timeZone),
+        this.#quietStartHour,
+        this.#quietEndHour,
+      )
+    ) {
+      return { status: "blocked", reason: "quiet_hours" };
     }
     const duplicateSince = new Date(
       nowDate.getTime() - 10 * 60_000,
