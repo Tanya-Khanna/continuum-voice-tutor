@@ -99,7 +99,7 @@ async function startNewLearner(options: {
     functionCallEvent({
       callId: "save-name",
       name: "start_lesson",
-      arguments: { learner_name: name },
+      arguments: { learner_name: name, source_text: name },
     }),
     send,
   );
@@ -111,7 +111,10 @@ async function startNewLearner(options: {
     functionCallEvent({
       callId: "complete-identity",
       name: "start_lesson",
-      arguments: { learner_name: name },
+      arguments: {
+        learner_name: name,
+        source_text: "No, I do not have a code.",
+      },
     }),
     send,
   );
@@ -169,6 +172,82 @@ describe("open-topic Realtime call path", () => {
       concept: "open-topic",
       curriculumPackId: "continuum-open-topic-v1",
     });
+
+    await controller.close();
+    repository.close();
+  });
+
+  it("locks spoken identity handling to Hindi after keypad selection", async () => {
+    const { repository, controller } = fixture();
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "2" },
+      send,
+    );
+    const languageUpdate = [...sent].reverse().find(
+      (event) => event.type === "session.update",
+    );
+    expect(JSON.stringify(languageUpdate)).toContain(
+      "SELECTED LANGUAGE CONTRACT",
+    );
+    expect(JSON.stringify(languageUpdate)).toContain("Speak only in Hindi");
+    expect(JSON.stringify(languageUpdate)).toContain(
+      "Do not fall back to English",
+    );
+
+    await controller.handleServerEvent(
+      transcription("hindi-name", "मेरा नाम मीना है"),
+      send,
+    );
+    const nameResponse = [...sent].reverse().find(
+      (event) => event.type === "response.create",
+    );
+    expect(JSON.stringify(nameResponse)).toContain(
+      "Output only the function call",
+    );
+    expect(JSON.stringify(nameResponse)).toContain("Speak only in Hindi");
+
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "save-hindi-name",
+        name: "start_lesson",
+        arguments: {
+          learner_name: "Meena",
+          source_text: "मेरा नाम मीना है",
+        },
+      }),
+      send,
+    );
+    const codePrompt = [...sent].reverse().find(
+      (event) => event.type === "response.create",
+    );
+    expect(JSON.stringify(codePrompt)).toContain("Speak only in Hindi");
+    expect(JSON.stringify(codePrompt)).toContain(
+      "Do not fall back to English",
+    );
+
+    await controller.handleServerEvent(
+      transcription("hindi-no-code", "नहीं है"),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "complete-hindi-identity",
+        name: "start_lesson",
+        arguments: { learner_name: "Meena", source_text: "नहीं है" },
+      }),
+      send,
+    );
+    expect(controller.openingStage()).toBe("open_topic");
+    const openPrompt = [...sent].reverse().find(
+      (event) => event.type === "response.create",
+    );
+    expect(JSON.stringify(openPrompt)).toContain("Speak only in Hindi");
+    expect(JSON.stringify(openPrompt)).toContain(
+      "Do not fall back to English",
+    );
 
     await controller.close();
     repository.close();
@@ -328,7 +407,11 @@ describe("open-topic Realtime call path", () => {
       functionCallEvent({
         callId: "save-hindi-name",
         name: "start_lesson",
-        arguments: { learner_name: "Meena", learner_code: "Meena" },
+        arguments: {
+          learner_name: "Meena",
+          source_text: "Meena",
+          learner_code: "Meena",
+        },
       }),
       send,
     );
@@ -347,7 +430,11 @@ describe("open-topic Realtime call path", () => {
       functionCallEvent({
         callId: "complete-hindi-identity",
         name: "start_lesson",
-        arguments: { learner_name: "Meena", learner_code: "" },
+        arguments: {
+          learner_name: "Meena",
+          source_text: "नहीं, मेरे पास कोड नहीं है",
+          learner_code: "",
+        },
       }),
       send,
     );

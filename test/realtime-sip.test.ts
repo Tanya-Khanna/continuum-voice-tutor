@@ -88,6 +88,18 @@ describe("Realtime SIP boundary", () => {
         (tool) => tool.name,
       ),
     ).toContain("teach_open_topic");
+    expect(
+      buildOpenTopicToolUpdate("identity", {
+        languageMode: "hi",
+        displayName: "Hindi",
+      }).session.instructions,
+    ).toContain("Speak only in Hindi");
+    expect(
+      buildOpenTopicToolUpdate("identity", {
+        languageMode: "hi",
+        displayName: "Hindi",
+      }).session.instructions,
+    ).toContain("Do not fall back to English");
   });
 
   it("keeps barge-in enabled when tuning server VAD", () => {

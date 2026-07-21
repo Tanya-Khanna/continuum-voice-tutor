@@ -42,7 +42,7 @@ npm run verify
 - Production TypeScript build.
 - Compiled-server smoke without OpenAI/Twilio credentials.
 
-Current expected counts are **29 test files / 124 tests** and **39/39 deterministic evaluation cases**. Update this guide and README if fresh output changes.
+Current expected counts are **29 test files / 125 tests** and **39/39 deterministic evaluation cases**. Update this guide and README if fresh output changes.
 
 ## 4. Independent exported-tree proof
 

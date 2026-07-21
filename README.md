@@ -203,7 +203,7 @@ This runs formatting hygiene, strict unused-code linting, TypeScript, all determ
 
 Current verified local results:
 
-- **29 test files, 124 automated tests: pass**
+- **29 test files, 125 automated tests: pass**
 - **39 deterministic teaching/safety/privacy cases: pass**
 - **TypeScript, unused-code lint, production build, and production smoke: pass**
 

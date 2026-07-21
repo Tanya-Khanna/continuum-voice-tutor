@@ -27,11 +27,16 @@ export const OPEN_TOPIC_REALTIME_TOOLS = [
     type: "function" as const,
     name: "start_lesson",
     description:
-      "Create a new learner or complete spoken identity in two turns. First send the explicit learner name. After the server asks about a code, send the same name and include learner_code only after explicitly hearing all six digits. Omit learner_code after an explicit no. A code entered by keypad is handled directly by the server.",
+      "Create a new learner or complete spoken identity in two turns. Copy the server-verified transcript exactly into source_text on every call. First extract the explicit learner name; transliteration across scripts is allowed. After the server asks about a code, send the same name and include learner_code only after explicitly hearing all six digits. Omit learner_code after an explicit no. A code entered by keypad is handled directly by the server.",
     parameters: {
       type: "object",
       properties: {
         learner_name: { type: "string" },
+        source_text: {
+          type: "string",
+          description:
+            "Exact server-verified transcript for this identity turn; never paraphrase or translate it.",
+        },
         learner_code: {
           type: "string",
           pattern: "^[0-9]{6}$",
@@ -39,7 +44,7 @@ export const OPEN_TOPIC_REALTIME_TOOLS = [
             "Exactly six explicitly spoken digits. Omit for a name-only turn or an explicit no; never send a blank value, a name, or the word no.",
         },
       },
-      required: ["learner_name"],
+      required: ["learner_name", "source_text"],
       additionalProperties: false,
     },
   },
@@ -246,11 +251,29 @@ export function openTopicToolAllowedAtStage(
   return (TOOL_NAMES_BY_STAGE[stage] as readonly string[]).includes(toolName);
 }
 
-export function buildOpenTopicToolUpdate(stage: OpenTopicRealtimeStage) {
+export interface SelectedRealtimeLanguage {
+  languageMode: string;
+  displayName: string;
+}
+
+export function selectedLanguageInstructions(
+  language?: SelectedRealtimeLanguage,
+): string {
+  if (!language) return OPEN_TOPIC_REALTIME_INSTRUCTIONS;
+  return `${OPEN_TOPIC_REALTIME_INSTRUCTIONS}
+
+SELECTED LANGUAGE CONTRACT: The learner explicitly selected ${language.displayName} (${language.languageMode}). Speak only in ${language.displayName}. Do not fall back to English unless English is the selected language. Understand code-switching in learner input, and preserve necessary names, digits, or technical terms, but keep every acknowledgement, identity prompt, recovery prompt, explanation, and question in ${language.displayName}. This contract remains active until the call ends.`;
+}
+
+export function buildOpenTopicToolUpdate(
+  stage: OpenTopicRealtimeStage,
+  language?: SelectedRealtimeLanguage,
+) {
   const names = new Set<string>(TOOL_NAMES_BY_STAGE[stage]);
   return {
     type: "session.update" as const,
     session: {
+      instructions: selectedLanguageInstructions(language),
       tools: OPEN_TOPIC_REALTIME_TOOLS.filter((tool) => names.has(tool.name)),
       tool_choice: "auto" as const,
     },
@@ -262,7 +285,7 @@ Your only jobs are faithful listening, natural multilingual speech, turn-taking,
 
 The server speaks the language menu first. Never ask for a name in English before language selection. Call select_language only for an explicit spoken choice, or after star and a spoken unlisted language. Never infer language from silence, noise, location, name, phone number, or accent.
 
-After language selection, a returning learner may enter a six-digit code plus pound; the server completes that keypad identity directly, so follow the resulting open-topic stage and add nothing. Otherwise ask only the learner's preferred name and call start_lesson. The server will separately ask whether they have a six-digit learner code. Wait. If the learner explicitly says no, call start_lesson again with the same name and omit learner_code. If they speak a complete code, include it. Never send a blank learner_code or turn a name, silence, or partial digits into “no code.”
+After language selection, remain in the explicitly selected language for the rest of the call. Never fall back to English unless English was selected. A returning learner may enter a six-digit code plus pound; the server completes that keypad identity directly, so follow the resulting open-topic stage and add nothing. Otherwise the server asks for the learner's preferred name. On every identity transcript, call start_lesson immediately and output no audio or conversational text before the tool result. Copy the exact server-verified transcript into source_text without translating or paraphrasing it; learner_name may transliterate a name across scripts. The server will separately ask whether they have a six-digit learner code. Wait. If the learner explicitly says no, call start_lesson again with the same name and omit learner_code. If they speak a complete code, include it. Never send a blank learner_code or turn a name, silence, or partial digits into “no code.”
 
 After identity, the server asks “What would you like to learn?” or resumes the exact unfinished question. There is no subject menu, grade setup, curriculum choice, Guided mode, Curious Sandbox, or duration menu. Do not introduce any of them.
 

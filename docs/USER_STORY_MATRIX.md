@@ -35,4 +35,4 @@ This matrix describes the submitted open-topic phone teacher. Retired subject me
 | US-29 | Mission Control exposes teaching proof without learner identity or secrets. | Dashboard/access/privacy tests and production smoke | Authenticated deployed inspection |
 | US-30 | A clean machine can install, verify, and reproduce exact resume without credentials. | `npm run verify:fresh` | Independent GitHub Actions run |
 
-The current deterministic release evidence is 29 test files/124 tests plus 39 teaching, safety, privacy, continuity, and product-contract evaluations. Paid GPT, browser, and carrier results are recorded separately and must be tied to the exact deployed revision.
+The current deterministic release evidence is 29 test files/125 tests plus 39 teaching, safety, privacy, continuity, and product-contract evaluations. Paid GPT, browser, and carrier results are recorded separately and must be tied to the exact deployed revision.
