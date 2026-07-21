@@ -50,15 +50,16 @@ Codex built the telephony bridge, state machine, curriculum compiler, evaluation
 harness, dashboard, tests, privacy gates, and documentation in one continuous task
 with inspectable milestone commits. GPT-5.6 powers live teaching, curriculum
 compilation/verification, and a separate simulated-learner/evaluator suite. The
-current evidence is 115/115 automated tests, 25/25 deterministic teaching cases,
+current evidence is 179/179 automated tests, 25/25 deterministic teaching cases,
 and a historical complete 24/24 paid agent run. The repository's clean-clone gate
 installs from the lockfile, runs every zero-credit check, seeds a synthetic paused
 lesson, and proves exact resume without local secrets or prior state.
 
-The real carrier-call release gate is still open. Until the Twilio/SIP path passes
-the documented G.711, barge-in, disconnect, redial, and latency checks, use the
-repository's complete offline judge path and do not describe browser or terminal
-audio as a live phone call.
+The deployed Twilio/OpenAI SIP configuration is 11/11 and the first real call
+exposed an onboarding-state bug that is now regression-tested and deployed. The
+single-number missed-call callback, DTMF, SMS, scheduled-call, drop/recovery, and
+guardian matrix still requires the final measured pass; until it does, distinguish
+implemented behavior from carrier-proven behavior.
 
 Continuum does not claim to invent voice AI or phone access. [Bakame](https://bakame.online/),
 [Viamo AVA](https://viamo.io/ask-viamo-anything-ai/),
@@ -115,17 +116,17 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 
 | Claim | Current evidence | Publication rule |
 |---|---|---|
-| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 115/115 tests; 25/25 deterministic gate | Safe now |
+| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 179/179 tests; 25/25 deterministic gate | Safe now |
 | GPT-5.6 at the teaching core | Structured Responses teacher plus 24/24 historical paid agent suite | Safe now; capture the saved scorecard before submission |
 | Universal product architecture | Open language tags; pack/catalog routing; no language-pair or subject branch | Say “universal architecture,” not “every language proven” |
 | Multilingual/code-switching behavior | Selected live Hindi/English, Spanish/English, French/English checks plus deterministic fixtures | Name tested patterns; do not claim every accent/noise condition |
 | Five guided subjects | Runtime can route any reviewed catalog; only Math is reviewed and callable | Blocked until four packs pass human review and freeze |
-| Works over a normal phone | SIP/Realtime server path is implemented; two-stage setup is documented | Blocked until signed delivery, 11/11 preflight, and real G.711 call checks pass |
+| Works over a normal phone | Signed SIP delivery, 11/11 configuration, and one measured carrier call; callback-only access is deployed | Publish only after the final callback/DTMF/SMS/recovery matrix passes |
 | Drop and exact resume | Service, Realtime close, tests, and clean-clone paused fixture | Safe for software behavior; call it carrier-proven only after redial test |
-| Live judge dashboard | Token-protected session API and local HTTP smoke | Blocked on deployed URL, token, retention decision, and release smoke |
-| SMS recap | Opt-in, exactly-once code and tests | Say implemented; call it live only after Twilio delivery and consent test |
-| WhatsApp, homework camera, parent SMS | Not shipped | Roadmap only |
-| Cost per call | Exact-model API token estimate in Mission Control | Label as API estimate, not total carrier/unit economics |
+| Live judge dashboard | Token-protected deployed Mission Control plus local HTTP smoke | Safe after the final revision and judge fragment URL are verified |
+| SMS recap, homework, and controls | Signed/idempotent implementation and automated tests | Say implemented; call each live only after Twilio delivery and consent tests |
+| WhatsApp and homework camera | Not shipped | Outside submission scope |
+| Cost per lesson | Exact-model estimate plus Twilio call/SMS lifecycle and price receipts | Publish only observed settled receipts; never generalize one demo cost |
 | 2.6B offline / 3.1B usage gap | Separate ITU and GSMA 2024 estimates | Never add them; the populations overlap and neither proves affordable calling |
 | 44M teacher deficit | UNESCO 2024 projection for primary and secondary teachers needed by 2030 | Say “projected deficit,” not current vacancies |
 | Rori effect and ~$5 marginal cost | Preliminary year-one Ghana study of roughly 500 students | Attribute to Rori; Continuum cannot inherit the outcome |
@@ -139,7 +140,7 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 - Category: Education
 - Repository: `https://github.com/Tanya-Khanna/nomad-ai`
 - Public phone number: `[PENDING SIGNED DELIVERY + 11/11 + CARRIER GATE]`
-- Dashboard URL: `[PENDING PROTECTED DEPLOYMENT]`
+- Dashboard URL: `https://continuum-production-8971.up.railway.app/dashboard#token=<judge-token>`
 - Public demo video: `[PENDING REAL-PHONE RECORDING]`
 - Main Codex feedback/session ID: `[PENDING FINAL /feedback ACTION]`
 - Deployed commit: `[PENDING RELEASE COMMIT]`

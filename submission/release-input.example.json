@@ -1,0 +1,26 @@
+{
+  "publicPhoneApproved": false,
+  "dashboardJudgeUrlPrepared": false,
+  "demoVideoUrl": null,
+  "codexFeedbackSessionId": null,
+  "devpostTeamAccepted": false,
+  "repositorySharedOrPublic": false,
+  "humanSubmissionCopyRewritten": false,
+  "carrierTests": {
+    "missedCallCallback": false,
+    "englishLesson": false,
+    "hindiEnglishLesson": false,
+    "spanishEnglishAdultTest": false,
+    "frenchEnglishAdultTest": false,
+    "dtmfLearnerCode": false,
+    "dtmfQuizAndFeedback": false,
+    "dropAndPauseSms": false,
+    "samePhoneResume": false,
+    "crossPhoneResume": false,
+    "homeworkReply": false,
+    "scheduledLesson": false,
+    "missedScheduledLesson": false,
+    "guardianVoiceControls": false
+  },
+  "consecutiveGoldenJudgeJourneys": 0
+}

@@ -89,7 +89,9 @@ export const TwilioMessageStatusWebhookSchema = z.object({
     "failed",
     "canceled",
   ]),
-  NumSegments: z.coerce.number().int().positive().optional(),
+  // Twilio may report zero while a message is still queued, before the final
+  // segment count is known.
+  NumSegments: z.coerce.number().int().nonnegative().optional(),
   ErrorCode: z.coerce.number().int().nonnegative().optional(),
 });
 

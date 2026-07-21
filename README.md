@@ -41,7 +41,7 @@ Realtime owns listening, speech, interruption, and tool choice. GPT-5.6 owns dia
 
 The checked-in public guided menu contains only the human-reviewed Math pack. Science, English, History, and Geography stay hidden until their official-source briefs pass human approval, compilation, independent verification, builder spot-checking, and freeze.
 
-See the [v6 build plan](docs/BUILD_PLAN.md), [32-story proof matrix](docs/USER_STORY_MATRIX.md), and [demo/judge runbook](docs/DEMO_AND_JUDGE_RUNBOOK.md) for the exact automated, carrier, curriculum-review, and submission gates.
+See the [v6 build plan](docs/BUILD_PLAN.md), [32-story proof matrix](docs/USER_STORY_MATRIX.md), [five-subject release guide](docs/CURRICULUM_RELEASE.md), and [final acceptance runbook](docs/FINAL_ACCEPTANCE_RUNBOOK.md) for the exact automated, carrier, curriculum-review, and submission gates.
 
 ## Why this access and teaching model
 
@@ -107,7 +107,7 @@ The offline language detector is deliberately a configurable test adapter; it do
 
 ## Curriculum compiler
 
-`npm run curriculum:compile -- --source reviewed-source.json --out frozen-pack.json` runs a build-time GPT-5.6 Terra compiler followed by an independent verifier pass. The source brief must include official-source URLs, reviewed themes, bounded required concepts, local-context notes, and explicit originality requirements. Source prose is used only for scope; learner-facing questions and explanations must be original.
+`npm run curriculum:compile -- --source reviewed-source.json --out candidate-pack.json` runs a build-time GPT-5.6 Terra compiler followed by an independent verifier pass. The source brief must include official-source URLs, reviewed themes, bounded required concepts, local-context notes, and explicit originality requirements. Source prose is used only for scope; learner-facing questions and explanations must be original.
 
 Four pending India Grade 6 briefs for Science, English, History, and Geography live under `curriculum/source-briefs/drafts`. They point to official NCERT/CIET ePathshala resources and encode subject-specific voice teaching ideas, but they are deliberately not approved curriculum. Check one without using API credit:
 
@@ -117,7 +117,7 @@ npm run curriculum:brief:check -- --source curriculum/source-briefs/drafts/india
 
 The checker validates draft structure and exits with status 2 while review is pending. The paid compiler fails before its first model request unless a named, dated human approval receipt covers the exact set of source URLs. That receipt is preserved in compiled-pack provenance alongside compiler and verifier model routes.
 
-The compiler writes nothing unless the approved source brief, generated pack schema, required vocabulary, and independent verifier all pass. Output is create-only and never fetched or changed during a live lesson. The review checklist and receipt shape are documented in [`curriculum/source-briefs/README.md`](curriculum/source-briefs/README.md); do not approve a brief without opening every listed official source.
+The compiler writes nothing unless the approved source brief, generated pack schema, required vocabulary, and independent verifier all pass. It creates a candidate and digest-bound verification receipt, not a public pack. `npm run curriculum:freeze` requires a second explicit human spot-check and produces a create-only frozen pack plus release receipt. `npm run curriculum:release:check` validates the complete five-pack chain and prints the exact catalog setting only when all five pass. Live lessons load frozen packs only. The full commands are in [`docs/CURRICULUM_RELEASE.md`](docs/CURRICULUM_RELEASE.md); do not approve a brief without opening every listed official source.
 
 Source briefs may provide `requiredVocabulary`. Trusted application code checks concept ID, canonical term, term language, and reviewed spoken meaning exactly after compilation and before verification; a model cannot silently replace a required curriculum term with a plausible alternative.
 
@@ -219,11 +219,12 @@ npm run phone:preflight
 The initializer rotates only a missing/development-default phone HMAC secret and fills only a missing/blank dashboard token. It refuses to overwrite a configured token—even a weak one—preserves every other `.env` line, sets owner-only file permissions, and never prints generated values. The preflight reports booleans and next actions only—never keys, tokens, project IDs, webhook secrets, or phone numbers. Three operator attestations remain false until a human has actually verified the public signed webhook, Twilio voice routing, and SIP trunk; possession of credentials alone is not reported as readiness.
 
 Follow the exact [real-phone setup and release guide](docs/PHONE_SETUP.md). The
-preflight permits exactly one evidence-gathering call at 10/11 when signed public
-webhook delivery is the only open check. A verified signed delivery advances the
-configuration gate to 11/11; the number still remains private until G.711
-clarity, latency, barge-in, unclear-audio recovery, and redial resume pass on the
-carrier path.
+deployed configuration has reached 11/11 and one real carrier call exposed a
+state-machine bug that is now regression-tested. The number still remains private
+until the callback, G.711 clarity, DTMF, SMS, scheduling, guardian controls,
+latency, barge-in, unclear-audio recovery, and exact redial/cross-phone resume
+matrix in [`docs/FINAL_ACCEPTANCE_RUNBOOK.md`](docs/FINAL_ACCEPTANCE_RUNBOOK.md)
+passes.
 
 For an incoming call, OpenAI sends the signed `realtime.call.incoming` webhook to `/webhooks/openai`. Continuum accepts the SIP call, extracts the caller identity from the SIP `From` header, and opens a sideband WebSocket to that exact Realtime call.
 
@@ -281,7 +282,7 @@ Human decisions stayed explicit: the builder corrected the product from a Hingli
 
 ## Honest limitations
 
-- The current repository proves the complete local teaching/state path, but the real Twilio → SIP → Realtime carrier leg has not yet passed the release gate.
+- The current repository proves the complete local teaching/state path and 11/11 carrier configuration, but the single-number callback/DTMF/SMS/scheduling matrix has not yet passed the final measured release gate.
 - Math is the only reviewed callable subject. Science, English, History, and Geography have official-source draft briefs but remain human-gated; the product must not claim five live subjects yet.
 - The architecture accepts arbitrary language tags and the live model passed selected Hindi/English, Spanish/English, and French/English checks. That is not proof of every language, accent, or noisy G.711 connection.
 - Mission Control's shared Bearer token is appropriate for controlled hackathon judging, not institutional role-based access. SQLite retention is still an explicit pre-pilot policy gap.
@@ -289,7 +290,7 @@ Human decisions stayed explicit: the builder corrected the product from a Hingli
 
 ## Roadmap, in gate order
 
-1. Pass the real carrier gate: signed public webhook, Twilio voice routing and SIP trunk, G.711 clarity, interruption, disconnect/redial, latency, and dashboard-access checks.
+1. Pass the remaining real-carrier behavior gate: callback, G.711 clarity, DTMF, SMS, scheduling, guardian controls, interruption, exact resume, latency, and settled cost receipts.
 2. Review, compile, independently verify, and spot-check the four pending subject packs before making them callable.
 3. Run a supervised pilot only after local curriculum/safety review, consent and assent, an enforced retention policy, emergency procedures, and an independent learning-measurement plan exist.
 4. Validate the implemented access ladder in measured order: missed-call callback, DTMF identity/quiz/feedback, SMS controls and homework, scheduled callbacks, exact drop recovery, and guardian voice controls. WhatsApp and camera homework are outside the submission scope.

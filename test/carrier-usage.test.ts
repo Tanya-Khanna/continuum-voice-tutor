@@ -8,10 +8,21 @@ import {
   markCarrierCallQueued,
 } from "../src/telephony/carrier-usage.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
+import { TwilioMessageStatusWebhookSchema } from "../src/domain/carrier-usage.js";
 
 const CALL_SID = `CA${"a".repeat(32)}`;
 
 describe("carrier usage receipts", () => {
+  it("accepts Twilio's temporary zero segment count", () => {
+    expect(
+      TwilioMessageStatusWebhookSchema.parse({
+        MessageSid: `SM${"c".repeat(32)}`,
+        MessageStatus: "queued",
+        NumSegments: "0",
+      }).NumSegments,
+    ).toBe(0);
+  });
+
   it("persists a receipt and ignores out-of-order status callbacks", () => {
     const repository = new SqliteLearningRepository(":memory:");
     const created = createCarrierCallReceipt({

@@ -466,6 +466,17 @@ export const server = createServer(async (request, response) => {
             environment.OPENAI_API_KEY && environment.OPENAI_WEBHOOK_SECRET,
           ),
           guidedSubjects: curriculumCatalog.subjects(),
+          releaseRevision: (
+            environment.NOMAD_RELEASE_COMMIT ??
+            environment.RAILWAY_GIT_COMMIT_SHA ??
+            "local"
+          ).slice(0, 12),
+          accessFeatures: {
+            missedCallCallback: environment.NOMAD_MISSED_CALL_ENABLED,
+            smsControls: environment.NOMAD_SMS_CONTROLS_ENABLED,
+            scheduler: environment.NOMAD_SCHEDULER_ENABLED,
+            smsRecap: environment.NOMAD_SMS_RECAP_ENABLED,
+          },
         }),
       );
       return;

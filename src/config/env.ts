@@ -65,6 +65,8 @@ const EnvironmentSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().url().optional(),
   ),
+  NOMAD_RELEASE_COMMIT: optionalNonEmpty,
+  RAILWAY_GIT_COMMIT_SHA: optionalNonEmpty,
   NOMAD_MISSED_CALL_ENABLED: booleanFromEnvironment,
   NOMAD_MISSED_CALL_ADULT_DEMO: booleanFromEnvironment,
   NOMAD_SMS_CONTROLS_ENABLED: booleanFromEnvironment,

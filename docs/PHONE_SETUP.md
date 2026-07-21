@@ -195,12 +195,19 @@ On real calls, record the deployed commit and verify:
 - measured mouth-to-ear response latency;
 - barge-in interrupts Continuum cleanly;
 - unclear audio restores the pending prompt without advancing lesson state;
+- missed-call access rejects the inbound call before answer and creates exactly one callback;
+- DTMF identity, reviewed quiz, feedback, repeat, and hint mappings advance only the valid stage;
 - hang-up and redial with the same name resumes the exact question;
+- a second phone with the learner code resumes the same pending question;
+- pause and homework SMS arrive once and signed replies update the correct learner;
+- scheduled and no-answer calls create lifecycle/cost receipts without an immediate redial;
+- guardian voice controls preserve sibling privacy;
 - a completed guided call appears in Mission Control with usage recorded.
 
 Publish the number or record the final live-call demo only after these checks
-pass. A local REPL, browser audio, or successful 11/11 configuration is not a
-substitute for carrier proof.
+pass. Use the exact ordered matrix and private release receipt in
+`docs/FINAL_ACCEPTANCE_RUNBOOK.md`. A local REPL, browser audio, or successful
+11/11 configuration is not a substitute for carrier proof.
 
 ## Troubleshooting
 

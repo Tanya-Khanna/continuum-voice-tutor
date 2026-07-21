@@ -43,6 +43,8 @@ This is the release ledger for the 32 user stories in `docs/BUILD_PLAN.md`. “A
 npm run check
 npm run eval
 npm run verify:fresh
+npm run curriculum:release:check
+npm run release:preflight -- --base-url https://continuum-production-8971.up.railway.app
 ```
 
-The current automated suite is the engineering gate, not a substitute for the carrier matrix, curriculum human review, a child-safety review, or real-world learning-outcome evidence.
+The current automated suite is the engineering gate, not a substitute for the carrier matrix, curriculum human review, a child-safety review, or real-world learning-outcome evidence. The final human sequence and private sign-off receipt are in `docs/FINAL_ACCEPTANCE_RUNBOOK.md`.

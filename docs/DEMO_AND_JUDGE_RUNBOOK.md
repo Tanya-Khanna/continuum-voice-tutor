@@ -9,10 +9,9 @@ the [real-phone setup guide](PHONE_SETUP.md).
 
 ## Release gates
 
-`npm run phone:preflight` has two deliberate stages. A 10/11 result permits
-exactly one controlled inbound smoke call only when signed public webhook
-delivery is the sole open check. After that delivery is verified, set the public
-webhook attestation and require 11/11 before wider testing.
+`npm run phone:preflight` is currently 11/11 for the deployed single-number
+callback configuration. That proves configuration, not the final carrier matrix.
+Use `docs/FINAL_ACCEPTANCE_RUNBOOK.md` for the measured behavior pass.
 
 Do not publish a phone number or record a “live call” sequence until all of these
 are true:
@@ -57,7 +56,8 @@ npm start
 ```
 
 - Mission Control, local: `http://localhost:3000/dashboard`
-- Mission Control, deployed: `https://<host>/dashboard#token=<judge-token>`
+- Mission Control, deployed:
+  `https://continuum-production-8971.up.railway.app/dashboard#token=<judge-token>`
 - Deterministic gate: `npm run eval` (expected: 25/25)
 - Paid agent proof: the latest complete runtime report is 24/24; do not rerun it
   casually or replace it with a targeted report.
@@ -141,7 +141,7 @@ fragment, not the query string; verify that it disappears from the address bar.
 ## Submission placeholders
 
 - Public phone number: `[PENDING PHONE GATE]`
-- Dashboard URL: `[PENDING AUTHENTICATED DEPLOYMENT]`
+- Dashboard URL: `https://continuum-production-8971.up.railway.app/dashboard#token=<judge-token>`
 - Demo video URL: `[PENDING RECORDING]`
 - Repository: `https://github.com/Tanya-Khanna/nomad-ai`
 - Main Codex feedback/session ID: `[PENDING FINAL FEEDBACK ACTION]`

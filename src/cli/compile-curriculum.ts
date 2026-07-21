@@ -1,6 +1,7 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { OpenAICurriculumCompiler } from "../compiler/openai-curriculum-compiler.js";
+import { createCompileReceipt } from "../compiler/release-workflow.js";
 import {
   CurriculumSourceBriefDraftSchema,
   CurriculumSourceBriefSchema,
@@ -16,6 +17,14 @@ function argument(flag: string): string {
 
 const sourcePath = resolve(argument("--source"));
 const outputPath = resolve(argument("--out"));
+const receiptPath = resolve(
+  process.argv.includes("--verification-out")
+    ? argument("--verification-out")
+    : `${outputPath}.verification.json`,
+);
+for (const path of [outputPath, receiptPath]) {
+  if (existsSync(path)) throw new Error(`Compiler output already exists: ${path}`);
+}
 const environment = loadEnvironment();
 const sourceDocument = JSON.parse(readFileSync(sourcePath, "utf8")) as unknown;
 const draftBrief = CurriculumSourceBriefDraftSchema.parse(sourceDocument);
@@ -42,10 +51,23 @@ if (!verification.approved || verification.issues.some((issue) => issue.severity
   }
   throw new Error("Curriculum verification failed; no pack was written.");
 }
+const compileReceipt = createCompileReceipt({
+  brief: sourceBrief,
+  pack,
+  verification,
+  verifiedAt: new Date().toISOString(),
+});
 
 mkdirSync(dirname(outputPath), { recursive: true });
+mkdirSync(dirname(receiptPath), { recursive: true });
 writeFileSync(outputPath, `${JSON.stringify(pack, null, 2)}\n`, {
   encoding: "utf8",
   flag: "wx",
 });
-console.log(`Frozen verified pack written to ${outputPath}.`);
+writeFileSync(receiptPath, `${JSON.stringify(compileReceipt, null, 2)}\n`, {
+  encoding: "utf8",
+  flag: "wx",
+});
+console.log(`Model-verified candidate pack written to ${outputPath}.`);
+console.log(`Verification receipt written to ${receiptPath}.`);
+console.log("A human builder spot-check is still required before freezing this pack.");
