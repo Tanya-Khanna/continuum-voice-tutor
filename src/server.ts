@@ -477,6 +477,7 @@ export const server = createServer(async (request, response) => {
             scheduler: environment.NOMAD_SCHEDULER_ENABLED,
             smsRecap: environment.NOMAD_SMS_RECAP_ENABLED,
           },
+          publicPhonePublished: environment.NOMAD_PUBLIC_PHONE_ENABLED,
         }),
       );
       return;
@@ -491,10 +492,12 @@ export const server = createServer(async (request, response) => {
       });
       response.end(
         renderLandingPage({
-          ...(environment.TWILIO_PHONE_NUMBER
+          ...(environment.NOMAD_PUBLIC_PHONE_ENABLED &&
+          environment.TWILIO_PHONE_NUMBER
             ? { phoneNumber: environment.TWILIO_PHONE_NUMBER }
             : {}),
           phoneReady:
+            environment.NOMAD_PUBLIC_PHONE_ENABLED &&
             environment.NOMAD_TWILIO_NUMBER_VOICE_READY &&
             environment.NOMAD_OPENAI_WEBHOOK_PUBLIC,
           missedCallEnabled: environment.NOMAD_MISSED_CALL_ENABLED,

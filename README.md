@@ -67,6 +67,10 @@ duration, eventual carrier price, OpenAI usage estimate, SMS segments, and cost
 per completed lesson. These values remain labeled synthetic or live and are not
 presented as real-world impact evidence.
 
+Configuration never publishes the number by itself. The landing-page CTA requires
+the separate default-off `NOMAD_PUBLIC_PHONE_ENABLED` release switch, which is set
+only after the measured carrier matrix passes.
+
 The proposed first pilot is one district, one grade, and roughly 200 learners. It should measure independent pre/post assessment—not tutor-session performance alone—along with attendance, completion, teacher and learner feedback, language/access subgroups, failure reports, and compliance with an agreed deletion and retention policy. Teachers remain responsible for instruction; Continuum supplies additional practice and auditable evidence.
 
 Only after the carrier and learning gates pass should the project pursue a school, NGO, state-education, or carrier partner. The build includes the missed-call callback and permission-bounded educator-summary contracts; it does not claim a live school integration, operating human-escalation network, or measured cohort outcome.

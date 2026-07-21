@@ -67,6 +67,7 @@ const EnvironmentSchema = z.object({
   ),
   NOMAD_RELEASE_COMMIT: optionalNonEmpty,
   RAILWAY_GIT_COMMIT_SHA: optionalNonEmpty,
+  NOMAD_PUBLIC_PHONE_ENABLED: booleanFromEnvironment,
   NOMAD_MISSED_CALL_ENABLED: booleanFromEnvironment,
   NOMAD_MISSED_CALL_ADULT_DEMO: booleanFromEnvironment,
   NOMAD_SMS_CONTROLS_ENABLED: booleanFromEnvironment,

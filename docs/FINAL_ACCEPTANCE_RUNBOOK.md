@@ -94,6 +94,9 @@ identity, audio, or SMS failure. Set `consecutiveGoldenJudgeJourneys` to 5 only 
 7. Prepare the dashboard judge URL with its token in the fragment, never a query
    string. Do not commit the token.
 8. Mark the public phone ready only after the entire carrier matrix passes.
+9. Only then set `NOMAD_PUBLIC_PHONE_ENABLED=true` on Railway and verify the
+   landing page exposes the intended missed-call CTA. Leave it false throughout
+   development and any failed acceptance run.
 
 ## 5. Final machine gate
 

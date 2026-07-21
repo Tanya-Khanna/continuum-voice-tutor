@@ -19,6 +19,7 @@ describe("environment configuration", () => {
     expect(environment.NOMAD_VAD_SILENCE_MS).toBe(650);
     expect(environment.NOMAD_MAX_CALLS_PER_HOUR).toBe(6);
     expect(environment.NOMAD_SMS_RECAP_ENABLED).toBe(false);
+    expect(environment.NOMAD_PUBLIC_PHONE_ENABLED).toBe(false);
     expect(environment.NOMAD_CURRICULUM_PATHS).toBeUndefined();
     expect(environment.NOMAD_DASHBOARD_TOKEN).toBeUndefined();
   });
@@ -64,6 +65,17 @@ describe("environment configuration", () => {
     expect(
       loadEnvironment({ NOMAD_SMS_RECAP_ENABLED: "false" })
         .NOMAD_SMS_RECAP_ENABLED,
+    ).toBe(false);
+  });
+
+  it("requires an explicit publication switch for the public phone CTA", () => {
+    expect(
+      loadEnvironment({ NOMAD_PUBLIC_PHONE_ENABLED: "true" })
+        .NOMAD_PUBLIC_PHONE_ENABLED,
+    ).toBe(true);
+    expect(
+      loadEnvironment({ NOMAD_PUBLIC_PHONE_ENABLED: "false" })
+        .NOMAD_PUBLIC_PHONE_ENABLED,
     ).toBe(false);
   });
 
