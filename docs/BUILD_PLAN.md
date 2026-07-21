@@ -889,21 +889,21 @@ A judge should be able to validate the product without learning a menu:
 
 ## 27. Submission checklist
 
-- Project builds from a clean clone.
-- `npm run chat`, `npm run eval`, `npm test`, `npm run typecheck`, and `npm run check` pass.
-- Server starts without curriculum-pack variables.
+- ~~Project builds from a clean clone.~~
+- ~~`npm run chat`, `npm run eval`, `npm test`, `npm run typecheck`, and `npm run check` pass.~~
+- ~~Server starts without curriculum-pack variables.~~
 - Deployed revision equals the tested commit.
 - Real carrier golden journey and DTMF/drop/SMS smoke pass.
 - Public claims name only tested languages and carrier behavior.
-- README explains setup, architecture, safety, privacy, limitations, Codex use, and GPT model use.
-- README explicitly explains why the system is not a prompt wrapper.
+- ~~README explains setup, architecture, safety, privacy, limitations, Codex use, and GPT model use.~~
+- ~~README explicitly explains why the system is not a prompt wrapper.~~
 - Demo is public, under three minutes, and shows a real working journey.
-- All synthetic evidence is labeled.
+- ~~All synthetic evidence is labeled.~~
 - `/feedback` Session ID is retrieved from the primary build task.
 - Devpost team members have accepted invitations.
 - Private repository, if used, is shared with required judges before the deadline.
 - Project description is rewritten and verified in the builder's own voice.
-- Secrets, raw phone numbers, raw audio, and private learner data are absent from Git and demo assets.
+- ~~Secrets, raw phone numbers, raw audio, and private learner data are absent from Git and demo assets.~~
 
 ## 28. Risks and mitigations
 
