@@ -81,6 +81,19 @@ export const ReviewedKeypadQuestionSchema = z
         message: "Reviewed keypad choice IDs must be unique.",
       });
     }
+    for (const [choiceIndex] of question.choices.entries()) {
+      const key = String(choiceIndex + 1);
+      const listed = new RegExp(`(^|[^0-9])${key}([^0-9]|$)`, "u").test(
+        question.featurePhoneSms,
+      );
+      if (!listed) {
+        context.addIssue({
+          code: "custom",
+          path: ["featurePhoneSms"],
+          message: `Feature-phone SMS must list keypad option ${key}.`,
+        });
+      }
+    }
   });
 
 export const VerifiedRationalComparisonSchema = z.object({
@@ -227,8 +240,13 @@ const CurriculumPackBaseSchema = z.object({
   concepts: z.array(CurriculumConceptSchema).min(1),
 });
 
-export const CurriculumPackSchema = CurriculumPackBaseSchema.superRefine(
-  (pack, context) => {
+function enforceCurriculumPackIntegrity(
+  pack: Pick<
+    z.infer<typeof CurriculumPackBaseSchema>,
+    "concepts" | "placementDiagnostic"
+  >,
+  context: z.RefinementCtx,
+): void {
     const conceptIds = new Set(pack.concepts.map((concept) => concept.id));
     for (const [level, conceptId] of Object.entries(
       pack.placementDiagnostic.recommendations,
@@ -258,11 +276,15 @@ export const CurriculumPackSchema = CurriculumPackBaseSchema.superRefine(
         }
       }
     }
-  },
+}
+
+export const CurriculumPackSchema = CurriculumPackBaseSchema.superRefine(
+  enforceCurriculumPackIntegrity,
 );
 
 export type CurriculumConcept = z.infer<typeof CurriculumConceptSchema>;
 export type CurriculumPack = z.infer<typeof CurriculumPackSchema>;
 export const CurriculumPackDraftSchema = CurriculumPackBaseSchema.omit({
   provenance: true,
-});
+}).superRefine(enforceCurriculumPackIntegrity);
+export type CurriculumPackDraft = z.infer<typeof CurriculumPackDraftSchema>;

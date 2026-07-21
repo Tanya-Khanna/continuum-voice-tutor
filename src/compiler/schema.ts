@@ -115,7 +115,7 @@ export const CurriculumVerificationSchema = z.object({
       severity: z.enum(["error", "warning"]),
       code: z.string().min(1),
       message: z.string().min(1),
-      conceptId: z.string().min(1).optional(),
+      conceptId: z.string().min(1).nullable(),
     }),
   ),
 });

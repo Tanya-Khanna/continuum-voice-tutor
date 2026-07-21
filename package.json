@@ -10,6 +10,8 @@
     "curriculum:brief:check": "tsx src/cli/check-curriculum-brief.ts",
     "curriculum:brief:review": "tsx src/cli/review-curriculum-brief.ts",
     "curriculum:compile": "tsx src/cli/compile-curriculum.ts",
+    "curriculum:review:packet": "tsx scripts/generate-curriculum-review.ts",
+    "curriculum:verify": "tsx src/cli/verify-curriculum.ts",
     "curriculum:freeze": "tsx src/cli/freeze-curriculum.ts",
     "curriculum:release:check": "tsx src/cli/check-curriculum-release.ts --target curriculum/releases/india-grade6.json",
     "diagnostic": "tsx src/cli/diagnostic.ts",

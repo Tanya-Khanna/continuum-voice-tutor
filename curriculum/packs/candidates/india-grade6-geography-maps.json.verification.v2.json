@@ -1,0 +1,20 @@
+{
+  "sourceBriefId": "india-grade6-geography-maps-v1",
+  "packId": "india-grade6-geography-maps-v1",
+  "packVersion": "1.0.1",
+  "sourceBriefSha256": "6e39e3999b63a6002a0991732f7ee3aeb89da57c2b727a40523e1f5b5cf730a4",
+  "packSha256": "bf8a9186aee14c2538d7d19765604a3dc44cd1d276357c4f118635364dfcebc2",
+  "verifiedAt": "2026-07-21T02:02:28.453Z",
+  "verification": {
+    "approved": true,
+    "checks": {
+      "source_grounded": true,
+      "original_wording": true,
+      "schema_complete": true,
+      "voice_friendly": true,
+      "answers_consistent": true,
+      "no_unreviewed_scope": true
+    },
+    "issues": []
+  }
+}

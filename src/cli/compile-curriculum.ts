@@ -42,14 +42,30 @@ const compiler = new OpenAICurriculumCompiler({
 });
 
 console.log(`Compiling reviewed source brief ${sourceBrief.id}...`);
-const pack = await compiler.compile(sourceBrief);
-console.log("Running independent verifier pass...");
-const verification = await compiler.verify(sourceBrief, pack);
-if (!verification.approved || verification.issues.some((issue) => issue.severity === "error")) {
+let pack = await compiler.compile(sourceBrief);
+let verification;
+for (let verifierRound = 1; verifierRound <= 3; verifierRound += 1) {
+  console.log(`Running independent verifier pass ${verifierRound}...`);
+  verification = await compiler.verify(sourceBrief, pack);
+  const errors = verification.issues.filter((issue) => issue.severity === "error");
+  if (verification.approved && errors.length === 0) break;
   for (const issue of verification.issues) {
     console.error(`${issue.severity.toUpperCase()} ${issue.code}: ${issue.message}`);
   }
-  throw new Error("Curriculum verification failed; no pack was written.");
+  if (verifierRound === 3) {
+    throw new Error("Curriculum verification failed after three passes; no pack was written.");
+  }
+  console.log("Regenerating the candidate from verifier feedback...");
+  pack = await compiler.compile(
+    sourceBrief,
+    verification.issues.map(
+      (issue) =>
+        `${issue.severity} ${issue.code}${issue.conceptId ? ` for ${issue.conceptId}` : ""}: ${issue.message}`,
+    ),
+  );
+}
+if (!verification) {
+  throw new Error("Curriculum verification produced no result.");
 }
 const compileReceipt = createCompileReceipt({
   brief: sourceBrief,

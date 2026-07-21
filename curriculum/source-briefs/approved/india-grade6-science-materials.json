@@ -1,0 +1,64 @@
+{
+  "id": "india-grade6-science-materials-v1",
+  "subject": "Science",
+  "deployment": {
+    "country": "India",
+    "countryCode": "IN",
+    "subject": "Science",
+    "grade": 6,
+    "defaultLanguage": "hi-Latn+en",
+    "testedLanguageModes": [
+      "hi-Latn+en",
+      "en"
+    ],
+    "syllabus": "NCERT Grade 6 Curiosity"
+  },
+  "sourceMaterials": [
+    {
+      "title": "NCERT ePathshala: Curiosity, Chapter 6 — Materials Around Us",
+      "url": "https://ncert.nic.in/textbook/pdf/fecu106.pdf",
+      "themes": [
+        "objects are made from materials",
+        "materials can be observed and grouped by shared properties",
+        "everyday observation supports comparison and classification"
+      ]
+    }
+  ],
+  "requiredConcepts": [
+    "classifying_materials_by_observable_properties"
+  ],
+  "requiredVocabulary": [
+    {
+      "conceptId": "classifying_materials_by_observable_properties",
+      "canonicalTerm": "material",
+      "termLanguage": "en",
+      "meaning": "the substance an object is made from"
+    },
+    {
+      "conceptId": "classifying_materials_by_observable_properties",
+      "canonicalTerm": "property",
+      "termLanguage": "en",
+      "meaning": "a feature we can observe or test"
+    }
+  ],
+  "localContextNotes": [
+    "Use safe no-purchase objects such as paper, cloth, a wooden pencil, or a metal spoon.",
+    "Make the Science flavor an observation-led household investigation without ingestion, heat, electricity, sharp tools, or breakable glass.",
+    "Invite the learner to describe evidence before naming a category."
+  ],
+  "originalityRequirements": [
+    "Use the source only to bound scope; write every spoken example and question originally.",
+    "Do not reproduce textbook activities, prose, character names, or question wording."
+  ],
+  "review": {
+    "status": "approved",
+    "reviewedBy": "Tanya Khanna",
+    "reviewedAt": "2026-07-21T01:27:43.540Z",
+    "reviewedSourceUrls": [
+      "https://ncert.nic.in/textbook/pdf/fecu106.pdf"
+    ],
+    "scopeNotes": [
+      "Checked the official NCERT chapter scope for objects, materials, observable properties, and classification; excluded unrelated chapter facts and unsafe activities."
+    ]
+  }
+}
