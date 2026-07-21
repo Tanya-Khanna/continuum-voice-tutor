@@ -6,7 +6,7 @@ Verified on **July 21, 2026**. This is a release handoff, not a product plan. Re
 ## Release identity
 
 - Branch: `main`
-- Last application/code release commit: `d72afb80f74a1cba23a072ef9366d68b302ae610`
+- Last application/code release commit: `8cf25c85336df0fd4a6778a4cc0a0db031ac7728`
 - GitHub: <https://github.com/Tanya-Khanna/continuum-voice-tutor> (**private at handoff time**)
 - Production: <https://continuum-production-8971.up.railway.app/>
 - Health/revision: <https://continuum-production-8971.up.railway.app/health>
@@ -15,7 +15,7 @@ Verified on **July 21, 2026**. This is a release handoff, not a product plan. Re
   `019f6dd7-9486-74b2-9828-be19ee983b70` (recorded, but the `/feedback`
   share/upload flow is still a manual submission task)
 - Successful release-gate run for the application commit:
-  <https://github.com/Tanya-Khanna/continuum-voice-tutor/actions/runs/29828967745>
+  <https://github.com/Tanya-Khanna/continuum-voice-tutor/actions/runs/29871221168>
 
 `HANDOFF.md` is the only change after the application release above. When this
 repository is cloned, `git rev-parse HEAD` is the authoritative handoff-document
@@ -317,11 +317,13 @@ Verified on the application release SHA:
 - `npm run verify:fresh`: clean exported-tree `npm ci`, formatting, strict lint,
   typecheck, **29 files / 124 tests**, **39/39 deterministic evaluations**, production
   build/smoke, and process-boundary exact resume all passed.
-- `npm run eval:live -- --confirm-spend`: **9/9** GPT cases passed on the same SHA.
-- GitHub Actions release gate passed on the same SHA.
+- The latest paid `npm run eval:live -- --confirm-spend` report is **9/9** on
+  `d72afb80f74a1cba23a072ef9366d68b302ae610`; it must be rerun before claiming
+  revision-bound live-model proof for `8cf25c8`.
+- GitHub Actions release gate passed on `8cf25c8`.
 - Production `/health` currently reports `ok: true`, OpenAI teaching, Realtime
   configured, `open_topic_teacher`, no curriculum dependency, revision
-  `d72afb80f74a`, callback/SMS/reminder/recap enabled, scheduler disabled, and public
+  `8cf25c85336d`, callback/SMS/reminder/recap enabled, scheduler disabled, and public
   phone hidden.
 - Phone configuration preflight previously reached **11/11**. This is configuration
   evidence, not carrier-behavior evidence.
