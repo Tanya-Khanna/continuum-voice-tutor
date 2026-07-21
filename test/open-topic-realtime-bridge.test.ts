@@ -6,7 +6,7 @@ import { OpenTopicLessonService } from "../src/lesson/open-topic-lesson-service.
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 import {
   OpenTopicRealtimeController,
-  type ConfirmedExamReminder,
+  type ConfirmedSmsReminder,
   type OpenTopicRealtimeClientEvent,
 } from "../src/telephony/open-topic-realtime-bridge.js";
 import {
@@ -54,7 +54,7 @@ function parseToolOutput(
 
 function fixture(
   phoneNumber = "+14155550100",
-  onExamReminderConfirmed?: (reminder: ConfirmedExamReminder) => void,
+  onSmsReminderConfirmed?: (reminder: ConfirmedSmsReminder) => void,
 ) {
   const repository = new SqliteLearningRepository(":memory:");
   const service = new OpenTopicLessonService({
@@ -75,7 +75,7 @@ function fixture(
     languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
     modelRoute: "gpt-realtime-2.1-mini",
     dynamicToolRouting: true,
-    ...(onExamReminderConfirmed ? { onExamReminderConfirmed } : {}),
+    ...(onSmsReminderConfirmed ? { onSmsReminderConfirmed } : {}),
   });
   return { repository, service, portableIdentity, controller };
 }
@@ -129,7 +129,8 @@ describe("open-topic Realtime call path", () => {
       "save_learning_preferences",
       "recover_unclear_audio",
       "propose_exam_reminder",
-      "confirm_exam_reminder",
+      "propose_callback_reminder",
+      "confirm_sms_reminder",
     ]);
     expect(OPEN_TOPIC_REALTIME_INSTRUCTIONS).toContain(
       "What would you like to learn?",
@@ -425,7 +426,7 @@ describe("open-topic Realtime call path", () => {
   });
 
   it("requires verified request text and a second consent turn before scheduling one SMS reminder", async () => {
-    const confirmed: ConfirmedExamReminder[] = [];
+    const confirmed: ConfirmedSmsReminder[] = [];
     const { repository, controller } = fixture(
       "+14155550100",
       (reminder) => confirmed.push(reminder),
@@ -466,14 +467,19 @@ describe("open-topic Realtime call path", () => {
       send,
     );
     expect(confirmed).toHaveLength(1);
-    expect(confirmed[0]).toMatchObject({ topic: "fractions", dueAt, examAt });
+    expect(confirmed[0]).toMatchObject({
+      kind: "exam_review",
+      topic: "fractions",
+      dueAt,
+      examAt,
+    });
     expect(JSON.stringify(sent.at(-1))).toContain("reminder is scheduled");
     await controller.close();
     repository.close();
   });
 
   it("rejects a reminder proposal whose source text was not spoken", async () => {
-    const confirmed: ConfirmedExamReminder[] = [];
+    const confirmed: ConfirmedSmsReminder[] = [];
     const { repository, controller } = fixture(
       "+14155550100",
       (reminder) => confirmed.push(reminder),
@@ -504,6 +510,56 @@ describe("open-topic Realtime call path", () => {
       state_changed: false,
     });
     expect(confirmed).toHaveLength(0);
+    await controller.close();
+    repository.close();
+  });
+
+  it("supports a learner-requested callback SMS without scheduling an outbound lesson call", async () => {
+    const confirmed: ConfirmedSmsReminder[] = [];
+    const { repository, controller } = fixture(
+      "+14155550100",
+      (reminder) => confirmed.push(reminder),
+    );
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+    await startNewLearner({ controller, sent });
+    const sourceText =
+      "Send me one SMS tomorrow to call back and continue the moon lesson.";
+    const dueAt = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    await controller.handleServerEvent(
+      transcription("callback-request", sourceText),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "propose-callback",
+        name: "propose_callback_reminder",
+        arguments: {
+          source_text: sourceText,
+          topic: "the moon lesson",
+          due_at: dueAt,
+          time_zone: "America/New_York",
+        },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent)).toMatchObject({
+      ok: true,
+      reminder_pending_consent: true,
+    });
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      send,
+    );
+    expect(confirmed).toEqual([
+      expect.objectContaining({
+        kind: "callback_nudge",
+        topic: "the moon lesson",
+        dueAt,
+        examAt: null,
+      }),
+    ]);
+    expect(repository.findStudyPlan(confirmed[0]!.learner.id)).toBeUndefined();
     await controller.close();
     repository.close();
   });

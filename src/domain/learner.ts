@@ -31,6 +31,7 @@ import {
 import type { HomeworkAssignment } from "./homework.js";
 import type { CarrierCallReceipt } from "./carrier-usage.js";
 import type { SmsReminder } from "./sms-reminder.js";
+import type { LegacyLearningMemory } from "./product-migration.js";
 
 export const LearnerProfileSchema = z.object({
   id: z.string().min(1),
@@ -187,5 +188,7 @@ export interface LearningRepository {
     limit: number;
   }): SmsReminder[];
   cancelPendingSmsReminders(learnerId: string, now: string): number;
+  listLegacyLearningMemories(learnerId: string): LegacyLearningMemory[];
+  hasProductMigration(id: string): boolean;
   close(): void;
 }

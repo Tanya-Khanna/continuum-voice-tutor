@@ -202,4 +202,36 @@ describe("consented one-time SMS reminders", () => {
     expect(repository.listSmsReminders(learner.id)[0]?.status).toBe("cancelled");
     repository.close();
   });
+
+  it("schedules a separate one-time callback nudge without creating a call job", async () => {
+    const { repository, learner, reminders, setNow } = fixture();
+    const first = reminders.scheduleCallbackNudge({
+      learnerId: learner.id,
+      recipientPhoneNumber: PHONE,
+      topic: "continue the moon lesson",
+      dueAt: "2026-07-21T13:00:00.000Z",
+      consentConfirmed: true,
+    });
+    const duplicate = reminders.scheduleCallbackNudge({
+      learnerId: learner.id,
+      recipientPhoneNumber: PHONE,
+      topic: "continue the moon lesson",
+      dueAt: "2026-07-21T13:00:00.000Z",
+      consentConfirmed: true,
+    });
+    expect(duplicate.id).toBe(first.id);
+    expect(first.kind).toBe("callback_nudge");
+    expect(first.message).toContain("Call Continuum");
+    expect(smsSegmentInfo(first.message).segments).toBe(1);
+    setNow("2026-07-21T13:05:00.000Z");
+    const sent: string[] = [];
+    expect(
+      await reminders.runDue(async ({ body }) => {
+        sent.push(body);
+      }),
+    ).toMatchObject({ sent: 1 });
+    expect(sent).toEqual([first.message]);
+    expect(repository.listRecentLessons(10)).toHaveLength(0);
+    repository.close();
+  });
 });

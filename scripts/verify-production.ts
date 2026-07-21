@@ -60,6 +60,11 @@ function safeEnvironment(port: number): NodeJS.ProcessEnv {
     NOMAD_DATABASE_PATH: join(temporaryRoot, "nomad.db"),
     NOMAD_PHONE_HASH_SECRET: "production-smoke-only-secret",
     NOMAD_DASHBOARD_TOKEN: dashboardToken,
+    NOMAD_MISSED_CALL_ENABLED: "false",
+    NOMAD_SMS_CONTROLS_ENABLED: "false",
+    NOMAD_SMS_REMINDERS_ENABLED: "false",
+    NOMAD_SMS_RECAP_ENABLED: "false",
+    NOMAD_SCHEDULER_ENABLED: "false",
   };
 }
 
@@ -133,7 +138,9 @@ try {
   if (
     healthBody.ok !== true ||
     healthBody.teachingEngine !== "offline" ||
-    healthBody.realtimeConfigured !== false
+    healthBody.realtimeConfigured !== false ||
+    healthBody.experience !== "open_topic_teacher" ||
+    healthBody.curriculumRequiredForCalls !== false
   ) {
     throw new Error("Production health response did not match the safe smoke config.");
   }
@@ -171,7 +178,7 @@ try {
   }
 
   console.log(
-    "Production smoke passed: compiled Node server, health, dashboard auth, release readiness, SQLite access, and ranged sample audio are deployable without local secrets.",
+    "Production smoke passed: compiled pack-free open-topic server, health, dashboard auth, release readiness, SQLite access, and ranged sample audio are deployable without local secrets.",
   );
 } finally {
   if (productionServer) await stopServer(productionServer);

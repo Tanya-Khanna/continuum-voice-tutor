@@ -39,7 +39,7 @@ The current production call path implements:
 - One-question SMS practice and phone-bound replies, progress/memory/stop/delete controls, MessageSid idempotency, and bounded handling of unsupported SMS chat.
 - One-time exam/revision SMS reminders with exact-phone authorization, a separate spoken/keypad consent turn, quiet hours, one-segment formatting, due-job locking, and immediate `STOP` cancellation.
 - A missed-call callback adapter, carrier receipt ledger, cost/usage metrics, and an access-controlled redacted proof view.
-- A zero-credit open-topic CLI and a 26-case deterministic anti-wrapper gate.
+- A zero-credit open-topic CLI and a 39-case deterministic anti-wrapper gate.
 
 The public phone number remains gated until the final real-carrier acceptance matrix passes. Automated success is not presented as live-carrier proof.
 
@@ -155,8 +155,18 @@ npm run build
 ```
 
 - `npm run check` runs strict TypeScript and all deterministic unit/integration tests.
-- `npm run eval` runs 26 zero-credit v7 gates covering the product contract, trusted model boundary, phase/evidence rules, voice output, method switching, mastery honesty, safety, privacy, continuity, and three unrelated topics through one pack-free engine.
+- `npm run eval` runs 39 zero-credit v7 gates covering the product contract, trusted model boundary, diagnosis evidence, phase/evidence rules, voice output, method switching, teach-back, transfer, mastery honesty, safety, privacy, memory, exact continuity, and unrelated topics through one pack-free engine.
 - `npm run build` compiles the production server.
+
+The current GPT-powered evaluation is opt-in because it spends API credit. It
+runs nine v7 cases through the same Responses engine used by the phone teacher
+and writes a revision-bound report for Mission Control and release preflight:
+
+```bash
+npm run eval:live -- --confirm-spend
+# or one targeted case
+npm run eval:live -- --confirm-spend --case hinglish-code-switch
+```
 
 For an independent clean export/install/build/test run:
 
@@ -164,7 +174,8 @@ For an independent clean export/install/build/test run:
 npm run verify:fresh
 ```
 
-Historical curriculum-specific eval commands remain available for audit, but their results are not the current v7 release gate.
+Historical curriculum-specific eval commands remain under `eval:legacy:*` for
+audit, but their results are not the current v7 release gate.
 
 ## Server and Mission Control
 
@@ -227,7 +238,8 @@ The current model names are deployment defaults, not a claim that every task nee
 - Public language claims must be limited to adult-speaker carrier patterns actually tested; keypad routing alone does not prove speech quality.
 - The zero-credit adapter validates state and pedagogy boundaries but cannot teach arbitrary facts without a model.
 - One-time reminder automation is implemented and deterministic-test green, but real Twilio delivery and multilingual natural-date interpretation still require carrier acceptance on the deployed revision.
-- Live v7 GPT learner/evaluator cases must replace the historical curriculum agent report before final release.
+- The revision-bound nine-case live GPT v7 suite is implemented; it must be run
+  with explicit spend confirmation on the final commit before release.
 - The final demo, `/feedback` session ID, Devpost acceptance, public repository/judge access, and human-written submission description remain human release steps.
 - Voice-only access excludes deaf and hard-of-hearing learners; SMS is supplementary, not an equivalent classroom.
 

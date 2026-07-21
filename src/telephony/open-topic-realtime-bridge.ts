@@ -68,7 +68,13 @@ const ExamReminderProposalArgumentsSchema = z.object({
   exam_at: z.string().datetime(),
   time_zone: z.string().trim().min(1).max(80),
 });
-const ConfirmExamReminderArgumentsSchema = z.object({
+const CallbackReminderProposalArgumentsSchema = z.object({
+  source_text: z.string().trim().min(1).max(2_000),
+  topic: z.string().trim().min(1).max(120),
+  due_at: z.string().datetime(),
+  time_zone: z.string().trim().min(1).max(80),
+});
+const ConfirmSmsReminderArgumentsSchema = z.object({
   consent_confirmed: z.boolean(),
 });
 const EmptyArgumentsSchema = z.object({}).strict();
@@ -167,12 +173,13 @@ export interface PausedOpenTopicLesson {
   context: OpenTopicLessonContext;
   pendingQuestionNumber: number;
 }
-export interface ConfirmedExamReminder {
+export interface ConfirmedSmsReminder {
   callerNumber: string;
   learner: LearnerProfile;
+  kind: "exam_review" | "callback_nudge";
   topic: string;
   dueAt: string;
-  examAt: string;
+  examAt: string | null;
 }
 
 function formattedReminderTime(
@@ -328,8 +335,8 @@ export class OpenTopicRealtimeController {
   readonly #onLessonPaused:
     | ((lesson: PausedOpenTopicLesson) => Promise<void> | void)
     | undefined;
-  readonly #onExamReminderConfirmed:
-    | ((reminder: ConfirmedExamReminder) => Promise<void> | void)
+  readonly #onSmsReminderConfirmed:
+    | ((reminder: ConfirmedSmsReminder) => Promise<void> | void)
     | undefined;
   readonly #handledCallIds = new Set<string>();
   readonly #handledUsageIds = new Set<string>();
@@ -351,7 +358,13 @@ export class OpenTopicRealtimeController {
     | { pendingPrompt: string; objectiveResult: z.infer<typeof EvidenceResultSchema> }
     | undefined;
   #pendingReminder:
-    | { topic: string; dueAt: string; examAt: string; timeZone: string }
+    | {
+        kind: "exam_review" | "callback_nudge";
+        topic: string;
+        dueAt: string;
+        examAt: string | null;
+        timeZone: string;
+      }
     | undefined;
   #responseInProgress = false;
   #activeResponseId: string | undefined;
@@ -376,8 +389,8 @@ export class OpenTopicRealtimeController {
     onLessonPaused?: (
       lesson: PausedOpenTopicLesson,
     ) => Promise<void> | void;
-    onExamReminderConfirmed?: (
-      reminder: ConfirmedExamReminder,
+    onSmsReminderConfirmed?: (
+      reminder: ConfirmedSmsReminder,
     ) => Promise<void> | void;
   }) {
     this.#callerNumber = options.callerNumber;
@@ -390,7 +403,7 @@ export class OpenTopicRealtimeController {
     this.#onError = options.onError ?? (() => undefined);
     this.#onLessonCompleted = options.onLessonCompleted;
     this.#onLessonPaused = options.onLessonPaused;
-    this.#onExamReminderConfirmed = options.onExamReminderConfirmed;
+    this.#onSmsReminderConfirmed = options.onSmsReminderConfirmed;
   }
 
   openingStage(): OpenTopicRealtimeStage {
@@ -1026,6 +1039,7 @@ export class OpenTopicRealtimeController {
             this.#selectedLanguage?.languageMode ?? "en",
           );
           this.#pendingReminder = {
+            kind: "exam_review",
             topic: args.topic,
             dueAt: args.due_at,
             examAt: args.exam_at,
@@ -1039,8 +1053,59 @@ export class OpenTopicRealtimeController {
           };
           policy = "localize_onboarding";
         }
-      } else if (call.name === "confirm_exam_reminder") {
-        const args = ConfirmExamReminderArgumentsSchema.parse(
+      } else if (call.name === "propose_callback_reminder") {
+        const args = CallbackReminderProposalArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        const transcript = this.#lastVerifiedTranscript;
+        const dueAt = new Date(args.due_at);
+        if (!this.#learner || !this.#context) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response:
+              "Before setting a reminder, what name would you like me to use?",
+          };
+          nextStage = "identity";
+        } else if (!transcript || args.source_text !== transcript) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response: `I need the reminder request in your own words. ${this.#context.session.lastPrompt}`,
+          };
+        } else if (
+          dueAt <= new Date() ||
+          dueAt.getTime() - Date.now() > 365 * 24 * 60 * 60_000
+        ) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response:
+              "I need a future callback reminder time within one year. What date and time should I use?",
+          };
+        } else {
+          const displayTime = formattedReminderTime(
+            args.due_at,
+            args.time_zone,
+            this.#selectedLanguage?.languageMode ?? "en",
+          );
+          this.#pendingReminder = {
+            kind: "callback_nudge",
+            topic: args.topic,
+            dueAt: args.due_at,
+            examAt: null,
+            timeZone: args.time_zone,
+          };
+          this.#lastVerifiedTranscript = undefined;
+          output = {
+            ok: true,
+            reminder_pending_consent: true,
+            spoken_response: `One SMS reminder to call Continuum about ${args.topic} at ${displayTime}. Should I schedule it? Say yes or no, or press 1 or 2.`,
+          };
+          policy = "localize_onboarding";
+        }
+      } else if (call.name === "confirm_sms_reminder") {
+        const args = ConfirmSmsReminderArgumentsSchema.parse(
           JSON.parse(call.arguments),
         );
         if (!this.#pendingReminder || !this.#lastVerifiedTranscript) {
@@ -1118,13 +1183,14 @@ export class OpenTopicRealtimeController {
     if (!consentConfirmed) {
       return `Okay, I did not schedule it. ${nextPrompt}`;
     }
-    if (!this.#onExamReminderConfirmed) {
+    if (!this.#onSmsReminderConfirmed) {
       return `SMS reminders are not enabled for this call. ${nextPrompt}`;
     }
     try {
-      await this.#onExamReminderConfirmed({
+      await this.#onSmsReminderConfirmed({
         callerNumber: this.#callerNumber,
         learner: this.#learner,
+        kind: pending.kind,
         topic: pending.topic,
         dueAt: pending.dueAt,
         examAt: pending.examAt,
@@ -1214,8 +1280,8 @@ export class OpenTopicRealtimeBridge {
     onLessonPaused?: (
       lesson: PausedOpenTopicLesson,
     ) => Promise<void> | void;
-    onExamReminderConfirmed?: (
-      reminder: ConfirmedExamReminder,
+    onSmsReminderConfirmed?: (
+      reminder: ConfirmedSmsReminder,
     ) => Promise<void> | void;
   }) {
     this.#apiKey = options.apiKey;
@@ -1241,8 +1307,8 @@ export class OpenTopicRealtimeBridge {
       ...(options.onLessonPaused
         ? { onLessonPaused: options.onLessonPaused }
         : {}),
-      ...(options.onExamReminderConfirmed
-        ? { onExamReminderConfirmed: options.onExamReminderConfirmed }
+      ...(options.onSmsReminderConfirmed
+        ? { onSmsReminderConfirmed: options.onSmsReminderConfirmed }
         : {}),
     });
   }

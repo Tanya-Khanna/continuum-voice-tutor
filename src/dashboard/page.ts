@@ -256,6 +256,11 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       }
       const analysis = text('aside', '', 'analysis'); analysis.append(text('div', 'Teaching intelligence', 'section-label'));
       addCard(analysis, 'Latest diagnosis', latest?.diagnosis ?? session.last_diagnosis);
+      addCard(analysis, 'Diagnosis basis', latest?.diagnosis_basis ? humanize(latest.diagnosis_basis) : 'Legacy or awaiting evidence');
+      addCard(analysis, 'Supported misconception', latest?.misconception ?? 'None established');
+      addCard(analysis, 'Transition authority', latest?.transition_authority ? humanize(latest.transition_authority) : 'Legacy');
+      addCard(analysis, 'Trusted phase', latest?.trusted_phase ? humanize(latest.trusted_phase) : 'Awaiting first turn');
+      addCard(analysis, 'Policy checks', latest?.policy_checks?.length ? latest.policy_checks.map(humanize).join(', ') : 'Legacy or awaiting checks');
       addCard(analysis, 'Latest activity', latest?.activity_kind ? humanize(latest.activity_kind) : 'Awaiting first activity');
       const reasoning = latest?.reasoning_trace?.length
         ? latest.reasoning_trace.map((entry) => entry.source.replace('_', ' ') + ' · ' + entry.status + ': ' + entry.claim).join(' | ')
@@ -304,22 +309,22 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         list.append(row);
       }
       root.append(hero, list);
-      const agent = report.agent_report;
+      const agent = report.live_report;
       const agentHead = text('div', '', 'eval-section');
-      agentHead.append(text('div', 'Historical curriculum agent report · not the v7 release gate', 'eyebrow'));
+      agentHead.append(text('div', 'Live GPT v7 evaluation · explicit API-spend opt-in', 'eyebrow'));
       if (!agent) {
-        agentHead.append(text('h2', 'Agent evaluation has not been run.'));
-        agentHead.append(text('p', 'Opt-in only: npm run eval:agents -- --confirm-spend --case <id>', 'count'));
+        agentHead.append(text('h2', 'Live v7 evaluation has not been run.'));
+        agentHead.append(text('p', 'Opt-in only: npm run eval:live -- --confirm-spend --case <id>', 'count'));
         root.append(agentHead);
         return;
       }
-      const fullAgentRun = agent.total === 24;
+      const fullAgentRun = agent.total === 9;
       const agentGreen = agent.passed === agent.total;
       agentHead.append(text('h2', fullAgentRun && agentGreen
-        ? 'Full 24-case agent suite is green.'
+        ? 'Full 9-case live v7 suite is green.'
         : agentGreen
-          ? 'Targeted agent run passed; full suite not yet run.'
-          : 'Agent evaluation needs attention.'));
+          ? 'Targeted live v7 run passed; full suite not yet run.'
+          : 'Live v7 evaluation needs attention.'));
       agentHead.append(text('p', agent.passed + '/' + agent.total + ' passed · ' + (agent.input_tokens + agent.output_tokens) + ' recorded text tokens · ' + new Date(agent.generated_at).toLocaleString(), 'count'));
       const agentList = text('div', '', 'eval-list');
       for (const result of agent.results) {
@@ -327,19 +332,14 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
         row.append(text('strong', result.id));
         row.append(text('span', result.category));
         row.append(text('span', result.passed ? 'PASS' : 'FAIL', result.passed ? 'pass' : 'fail'));
-        const failures = result.kind === 'execution_error'
-          ? [...result.structural_failures, result.error]
-          : [...result.structural_failures, ...result.evaluation.failures];
-        const rationale = result.kind === 'execution_error'
-          ? 'The case failed closed during ' + result.stage + '.'
-          : result.evaluation.rationale;
+        const failures = result.failures;
         if (failures.length > 0) {
           row.append(text('span', failures.join(' · '), 'fail'));
         } else {
           const note = document.createElement('details');
           note.className = 'eval-note';
-          note.append(text('summary', 'View evaluator note'));
-          note.append(text('p', rationale));
+          note.append(text('summary', 'View trusted trace'));
+          note.append(text('p', humanize(result.language_mode) + ' · ' + humanize(result.knowledge_state) + ' · ' + humanize(result.diagnosis_basis) + ' · ' + humanize(result.strategy) + ' · ' + humanize(result.activity_kind)));
           row.append(note);
         }
         agentList.append(row);

@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { z } from "zod";
 import { loadEnvironment } from "../src/config/env.js";
 import { buildPhoneReadinessReport } from "../src/telephony/readiness.js";
+import { OpenTopicLiveEvalReportSchema } from "../src/evals/open-topic-live-report.js";
 
 const CarrierTestsSchema = z.object({
   missedCallCallback: z.boolean(),
@@ -11,15 +12,18 @@ const CarrierTestsSchema = z.object({
   hindiEnglishLesson: z.boolean(),
   spanishEnglishAdultTest: z.boolean(),
   frenchEnglishAdultTest: z.boolean(),
+  languageFirstOnboarding: z.boolean(),
+  openTopicNoMenu: z.boolean(),
+  methodSwitchAndFeedback: z.boolean(),
   dtmfLearnerCode: z.boolean(),
-  dtmfQuizAndFeedback: z.boolean(),
+  dtmfAnswerRepeatHintFeedback: z.boolean(),
   dropAndPauseSms: z.boolean(),
   samePhoneResume: z.boolean(),
   crossPhoneResume: z.boolean(),
-  homeworkReply: z.boolean(),
-  scheduledLesson: z.boolean(),
-  missedScheduledLesson: z.boolean(),
-  guardianVoiceControls: z.boolean(),
+  microPracticeReply: z.boolean(),
+  examReminderConsentAndSend: z.boolean(),
+  stopBeforeDueSend: z.boolean(),
+  sharedPhoneSiblingIsolation: z.boolean(),
 });
 
 const SubmissionReleaseInputSchema = z.object({
@@ -84,18 +88,10 @@ check(
   worktree ? "Commit intended release changes before final verification." : "Git worktree is clean.",
 );
 
-const curriculum = spawnSync("npm", ["run", "curriculum:release:check"], {
-  cwd: root,
-  encoding: "utf8",
-});
 check(
-  "five_subject_catalog",
-  curriculum.status === 0 ? "pass" : curriculum.status === 2 ? "manual" : "open",
-  curriculum.status === 0
-    ? "All five digest-bound curriculum releases passed."
-    : curriculum.status === 2
-      ? "One or more curriculum packs still require human source approval, compilation, verification, spot-check, or freeze."
-      : "Curriculum release check failed unexpectedly.",
+  "open_topic_product_contract",
+  "pass",
+  "The release product is language, identity, and one open learning question; curriculum packs are historical audit artifacts, not a runtime gate.",
 );
 
 let environment: ReturnType<typeof loadEnvironment> | undefined;
@@ -115,6 +111,43 @@ try {
   );
 }
 
+if (environment) {
+  const liveEvalPath = resolve(
+    root,
+    environment.NOMAD_OPEN_TOPIC_LIVE_EVAL_REPORT_PATH,
+  );
+  if (!existsSync(liveEvalPath)) {
+    check(
+      "live_open_topic_eval",
+      "open",
+      "Run npm run eval:live -- --confirm-spend on the final commit.",
+    );
+  } else {
+    try {
+      const liveEval = OpenTopicLiveEvalReportSchema.parse(
+        JSON.parse(readFileSync(liveEvalPath, "utf8")) as unknown,
+      );
+      const green =
+        liveEval.revision === revision &&
+        liveEval.total === 9 &&
+        liveEval.passed === liveEval.total;
+      check(
+        "live_open_topic_eval",
+        green ? "pass" : "open",
+        green
+          ? `Live GPT v7 suite passed 9/9 on ${revision.slice(0, 12)}.`
+          : `Live GPT report is ${liveEval.passed}/${liveEval.total} on ${liveEval.revision.slice(0, 12)}; expected 9/9 on ${revision.slice(0, 12)}.`,
+      );
+    } catch (error) {
+      check(
+        "live_open_topic_eval",
+        "open",
+        `Live GPT report is invalid: ${error instanceof Error ? error.message : "unknown error"}`,
+      );
+    }
+  }
+}
+
 const publicBaseUrl = argument("--base-url") ?? environment?.NOMAD_PUBLIC_BASE_URL;
 if (publicBaseUrl) {
   try {
@@ -123,7 +156,8 @@ if (publicBaseUrl) {
       ok?: boolean;
       teachingEngine?: string;
       realtimeConfigured?: boolean;
-      guidedSubjects?: unknown;
+      experience?: string;
+      curriculumRequiredForCalls?: boolean;
       releaseRevision?: string;
       accessFeatures?: Record<string, boolean>;
     };
@@ -132,19 +166,28 @@ if (publicBaseUrl) {
       response.ok &&
       health.ok === true &&
       health.teachingEngine === "openai" &&
-      health.realtimeConfigured === true;
+      health.realtimeConfigured === true &&
+      health.experience === "open_topic_teacher" &&
+      health.curriculumRequiredForCalls === false;
     check(
       "production_health",
       healthy ? "pass" : "open",
       healthy
-        ? `Production is healthy with ${Array.isArray(health.guidedSubjects) ? health.guidedSubjects.length : 0} guided subject(s).`
-        : "Production health does not report the live OpenAI/Realtime configuration.",
+        ? "Production reports the live pack-free open-topic OpenAI/Realtime experience."
+        : "Production health does not report the live pack-free OpenAI/Realtime experience.",
     );
-    const accessFlags = Object.values(health.accessFeatures ?? {});
+    const access = health.accessFeatures ?? {};
+    const accessFlags = [
+      access.missedCallCallback === true,
+      access.smsControls === true,
+      access.smsReminders === true,
+      access.smsRecap === true,
+      access.scheduler === false,
+    ];
     check(
       "access_features_enabled",
-      accessFlags.length === 4 && accessFlags.every(Boolean) ? "pass" : "open",
-      `${accessFlags.filter(Boolean).length}/4 production callback, SMS, scheduler, and recap switches are enabled.`,
+      accessFlags.length === 5 && accessFlags.every(Boolean) ? "pass" : "open",
+      `${accessFlags.filter(Boolean).length}/5 production callback, bounded SMS, one-time reminder, recap, and scheduler-disabled invariants pass.`,
     );
     check(
       "deployed_revision",
@@ -166,14 +209,15 @@ if (publicBaseUrl) {
     ? [
         environment.NOMAD_MISSED_CALL_ENABLED,
         environment.NOMAD_SMS_CONTROLS_ENABLED,
-        environment.NOMAD_SCHEDULER_ENABLED,
+        environment.NOMAD_SMS_REMINDERS_ENABLED,
         environment.NOMAD_SMS_RECAP_ENABLED,
+        !environment.NOMAD_SCHEDULER_ENABLED,
       ]
     : [];
   check(
     "access_features_enabled",
-    accessFlags.length === 4 && accessFlags.every(Boolean) ? "pass" : "open",
-    `${accessFlags.filter(Boolean).length}/4 local callback, SMS, scheduler, and recap switches are enabled.`,
+    accessFlags.length === 5 && accessFlags.every(Boolean) ? "pass" : "open",
+    `${accessFlags.filter(Boolean).length}/5 local callback, bounded SMS, one-time reminder, recap, and scheduler-disabled invariants pass.`,
   );
 }
 

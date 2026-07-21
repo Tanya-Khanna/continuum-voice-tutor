@@ -165,6 +165,46 @@ export const PedagogyDecisionSchema = z.object({
   concept: z.string().min(1),
   activity: LearningActivitySchema,
   diagnosis: z.string().min(1),
+  diagnosisBasis: z
+    .enum([
+      "legacy_unstructured",
+      "no_evidence",
+      "learner_words",
+      "learner_reasoning",
+      "prior_learning_evidence",
+    ])
+    .default("legacy_unstructured"),
+  misconception: z.string().trim().min(1).max(500).nullable().default(null),
+  trustedPhase: z
+    .enum([
+      "legacy",
+      "diagnose",
+      "teach",
+      "practice",
+      "teach_back",
+      "transfer",
+      "reflect",
+      "recap",
+    ])
+    .default("legacy"),
+  transitionAuthority: z
+    .enum(["legacy", "trusted_application"])
+    .default("legacy"),
+  policyChecks: z
+    .array(
+      z.enum([
+        "verified_learner_words",
+        "phase_activity_match",
+        "phase_evidence_match",
+        "diagnosis_evidence",
+        "failed_method_switch",
+        "exact_saved_question",
+        "mastery_evidence_cap",
+        "knowledge_boundary",
+        "voice_native_output",
+      ]),
+    )
+    .default([]),
   strategy: z.string().min(1),
   strategyReason: z.string().min(1),
   strategyChanged: z.boolean(),

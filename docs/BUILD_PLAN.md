@@ -786,7 +786,7 @@ Migration rules:
 - Convert compatible old lesson history to private topic records; mark formal pack mastery as legacy.
 - Do not expose old subject, mode, or duration prompts after the migration flag is enabled.
 - Keep old pack artifacts immutable for audit; no pack path may be required to start an open-topic lesson.
-- Add a test that starts the server with no curriculum-pack environment variables.
+- ~~Add a test that starts the server with no curriculum-pack environment variables.~~
 
 ## 24. Implementation sequence
 
@@ -795,7 +795,7 @@ Migration rules:
 - ~~Make this plan and the agent guide authoritative.~~
 - ~~Add contract tests forbidding subject menu, Guided/Sandbox, grade placement, and duration selection.~~
 - ~~Define the open-topic state machine and versioned schemas.~~
-- Add a migration flag and preserve the previous flow only long enough for safe data migration.
+- ~~Add a one-time migration marker and preserve compatible previous learning history only for safe, private data migration.~~
 
 **Exit:** a new learner reaches “What would you like to learn?” after language and identity, with no course choice.
 
@@ -814,7 +814,7 @@ Migration rules:
 - ~~Store learner feedback beside objective evidence.~~
 - ~~Persist helpful/failed methods, exact next point, exam dates, and requested follow-ups.~~
 - ~~Complete consented memory inspection, correction, and two-step deletion.~~
-- Complete legacy-memory migration.
+- ~~Complete legacy-memory migration.~~
 
 **Exit:** a second call uses prior evidence appropriately without replaying or overclaiming it.
 
@@ -829,7 +829,7 @@ Migration rules:
 
 ### Phase 4 — SMS relationship thread
 
-- Implement recaps, one-question practice, replies, drop reminders, exam reminders, callback nudges, and guardian summaries.
+- ~~Implement recaps, one-question practice, replies, drop reminders, exam reminders, callback nudges, and guardian summaries.~~
 - ~~Implement one-question practice replies and bounded, signed SMS controls.~~
 - ~~Disable the outbound lesson-call scheduler.~~
 - ~~Enforce consent, quiet hours, rate limits, `STOP`, one-segment targets, and bounded SMS behavior.~~
@@ -838,9 +838,9 @@ Migration rules:
 
 ### Phase 5 — Safety, factuality, and anti-wrapper evals
 
-- Add dependency, secrecy, companion, high-stakes, abuse, prompt-injection, and disputed-fact cases.
-- Add evaluator assertions for diagnosis evidence, method switch, teach-back, transfer, memory, and exact resume.
-- Add traces proving trusted code—not model prose—made each state transition.
+- ~~Add dependency, secrecy, companion, high-stakes, abuse, prompt-injection, and disputed-fact cases.~~
+- ~~Add evaluator assertions for diagnosis evidence, method switch, teach-back, transfer, memory, and exact resume.~~
+- ~~Add traces proving trusted code—not model prose—made each state transition.~~
 
 **Exit:** all critical gates pass at 100%, and a judge can inspect why the product is more than a prompt.
 

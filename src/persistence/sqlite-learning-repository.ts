@@ -60,6 +60,13 @@ import {
   SmsReminderSchema,
   type SmsReminder,
 } from "../domain/sms-reminder.js";
+import {
+  LegacyLearningMemorySchema,
+  OPEN_TOPIC_V7_MIGRATION,
+  type LegacyLearningMemory,
+} from "../domain/product-migration.js";
+import { OPEN_TOPIC_NAMESPACE } from "../domain/open-topic.js";
+import { redactPotentialPii } from "../privacy/redact-pii.js";
 
 interface LearnerRow {
   id: string;
@@ -439,6 +446,21 @@ export class SqliteLearningRepository implements LearningRepository {
       CREATE INDEX IF NOT EXISTS sms_reminders_learner_idx
         ON sms_reminders(learner_id, updated_at DESC);
 
+      CREATE TABLE IF NOT EXISTS product_migrations (
+        id TEXT PRIMARY KEY,
+        applied_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS legacy_learning_memories (
+        id TEXT PRIMARY KEY,
+        learner_id TEXT NOT NULL REFERENCES learners(id) ON DELETE CASCADE,
+        memory_json TEXT NOT NULL,
+        last_observed_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS legacy_learning_memories_learner_idx
+        ON legacy_learning_memories(learner_id, last_observed_at DESC);
+
       CREATE TABLE IF NOT EXISTS product_metric_events (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -559,6 +581,58 @@ export class SqliteLearningRepository implements LearningRepository {
     if (!usageColumns.some((column) => column.name === "latency_ms")) {
       this.#database.exec("ALTER TABLE model_usage ADD COLUMN latency_ms REAL");
     }
+    this.#migrateLegacyLearningMemory();
+  }
+
+  #migrateLegacyLearningMemory(): void {
+    if (this.hasProductMigration(OPEN_TOPIC_V7_MIGRATION)) return;
+    this.#database.transaction(() => {
+      const importedAt = new Date().toISOString();
+      const rows = this.#database
+        .prepare(
+          "SELECT * FROM lesson_sessions WHERE curriculum_pack_id <> ? ORDER BY updated_at DESC",
+        )
+        .all(OPEN_TOPIC_NAMESPACE) as LessonRow[];
+      for (const row of rows) {
+        const session = lessonFromRow(row);
+        const topic = redactPotentialPii(session.concept).slice(0, 240).trim();
+        const summary = redactPotentialPii(
+          `${session.lastDiagnosis} ${session.masteryEvidence}`,
+        )
+          .replace(/\s+/gu, " ")
+          .slice(0, 1_000)
+          .trim();
+        if (!topic || !summary) continue;
+        const memory = LegacyLearningMemorySchema.parse({
+          id: `legacy:${session.id}`,
+          learnerId: session.learnerId,
+          sourceSessionId: session.id,
+          sourcePackId: session.curriculumPackId,
+          topic,
+          summary,
+          legacyMasteryStatus: session.masteryStatus,
+          lastObservedAt: session.updatedAt,
+          importedAt,
+        });
+        this.#database
+          .prepare(
+            `INSERT OR IGNORE INTO legacy_learning_memories (
+              id, learner_id, memory_json, last_observed_at
+            ) VALUES (?, ?, ?, ?)`,
+          )
+          .run(
+            memory.id,
+            memory.learnerId,
+            JSON.stringify(memory),
+            memory.lastObservedAt,
+          );
+      }
+      this.#database
+        .prepare(
+          "INSERT OR IGNORE INTO product_migrations (id, applied_at) VALUES (?, ?)",
+        )
+        .run(OPEN_TOPIC_V7_MIGRATION, importedAt);
+    })();
   }
 
   findLearner(id: string): LearnerProfile | undefined {
@@ -1623,6 +1697,27 @@ export class SqliteLearningRepository implements LearningRepository {
       }
       return reminders.length;
     })();
+  }
+
+  listLegacyLearningMemories(learnerId: string): LegacyLearningMemory[] {
+    const rows = this.#database
+      .prepare(
+        "SELECT memory_json FROM legacy_learning_memories WHERE learner_id = ? ORDER BY last_observed_at DESC",
+      )
+      .all(learnerId) as { memory_json: string }[];
+    return rows.map((row) =>
+      LegacyLearningMemorySchema.parse(
+        JSON.parse(row.memory_json) as unknown,
+      ),
+    );
+  }
+
+  hasProductMigration(id: string): boolean {
+    return Boolean(
+      this.#database
+        .prepare("SELECT 1 FROM product_migrations WHERE id = ?")
+        .get(id),
+    );
   }
 
   deleteLearnerData(learnerId: string): void {

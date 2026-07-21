@@ -74,6 +74,8 @@ export class OfflineOpenTopicEngine implements OpenTopicTeachingEngine {
         ? {
             ...common,
             diagnosis: "No understanding evidence has been collected yet.",
+            diagnosisBasis: "no_evidence",
+            misconception: null,
             strategy: "ask_reasoning",
             strategyReason: "Begin from the learner's current mental model.",
             activityKind: "socratic_prompt",
@@ -88,6 +90,8 @@ export class OfflineOpenTopicEngine implements OpenTopicTeachingEngine {
           ? {
               ...common,
               diagnosis: "The learner is ready to state the idea in their own words.",
+              diagnosisBasis: "learner_reasoning",
+              misconception: null,
               strategy: "teach_back",
               strategyReason: "Teach-back checks meaning rather than recognition.",
               activityKind: "teach_back",
@@ -102,6 +106,8 @@ export class OfflineOpenTopicEngine implements OpenTopicTeachingEngine {
             ? {
                 ...common,
                 diagnosis: "The learner needs a new application before understanding can be secure.",
+                diagnosisBasis: "learner_reasoning",
+                misconception: null,
                 strategy: "transfer",
                 strategyReason: "A new case distinguishes understanding from repetition.",
                 activityKind: "transfer",
@@ -116,6 +122,8 @@ export class OfflineOpenTopicEngine implements OpenTopicTeachingEngine {
               ? {
                   ...common,
                   diagnosis: "The learner has reached a reflection checkpoint.",
+                  diagnosisBasis: "prior_learning_evidence",
+                  misconception: null,
                   strategy: "reflection",
                   strategyReason: "Reflection gives the learner agency over the next step.",
                   activityKind: "reflection",
@@ -130,6 +138,8 @@ export class OfflineOpenTopicEngine implements OpenTopicTeachingEngine {
                 ? {
                     ...common,
                     diagnosis: request.previousDiagnosis,
+                    diagnosisBasis: "prior_learning_evidence",
+                    misconception: null,
                     strategy: "recap",
                     strategyReason: "Close at a coherent checkpoint and save what comes next.",
                     activityKind: "recap",
@@ -147,6 +157,11 @@ export class OfflineOpenTopicEngine implements OpenTopicTeachingEngine {
                       request.learnerInput.length < 4
                         ? "The learner's evidence is too brief to interpret confidently."
                         : "The learner has offered a starting idea that needs one smaller step.",
+                    diagnosisBasis:
+                      request.learnerInput.length < 4
+                        ? "learner_words"
+                        : "learner_reasoning",
+                    misconception: null,
                     strategy:
                       request.latestFeedback?.helpfulness === "not_helpful"
                         ? "concrete_analogy"

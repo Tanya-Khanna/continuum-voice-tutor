@@ -90,6 +90,10 @@ const EnvironmentSchema = z.object({
     .string()
     .min(1)
     .default(".data/latest-agent-eval.json"),
+  NOMAD_OPEN_TOPIC_LIVE_EVAL_REPORT_PATH: z
+    .string()
+    .min(1)
+    .default(".data/latest-open-topic-live-eval.json"),
   NOMAD_DASHBOARD_TOKEN: optionalDashboardToken,
   NOMAD_MAX_CALLS_PER_HOUR: z.coerce.number().int().min(1).max(100).default(6),
   OPENAI_API_KEY: optionalNonEmpty,

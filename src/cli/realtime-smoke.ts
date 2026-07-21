@@ -1,13 +1,19 @@
 import WebSocket from "ws";
 import { loadEnvironment, requireOpenAIKey } from "../config/env.js";
 import {
-  REALTIME_CONVERSATION_INSTRUCTIONS,
-  REALTIME_TEACHING_TOOLS,
-} from "../telephony/realtime-sip.js";
+  OPEN_TOPIC_REALTIME_INSTRUCTIONS,
+  OPEN_TOPIC_REALTIME_TOOLS,
+} from "../telephony/open-topic-realtime.js";
 
 const environment = loadEnvironment();
 const apiKey = requireOpenAIKey(environment);
-const model = "gpt-realtime-2.1-mini";
+const model = environment.OPENAI_REALTIME_MODEL;
+const expectedTools = [
+  "select_language",
+  "start_lesson",
+  "start_lesson",
+  "teach_open_topic",
+] as const;
 
 await new Promise<void>((resolve, reject) => {
   const socket = new WebSocket(
@@ -17,18 +23,47 @@ await new Promise<void>((resolve, reject) => {
   const timeout = setTimeout(() => {
     socket.close();
     reject(new Error("Realtime smoke test timed out."));
-  }, 20_000);
+  }, 30_000);
   let inputSent = false;
-  let expectedTool:
-    | "start_lesson"
-    | "choose_learning_mode"
-    | "complete_placement" = "start_lesson";
+  let step = 0;
 
   function finish(error?: Error): void {
     clearTimeout(timeout);
     socket.close();
     if (error) reject(error);
     else resolve();
+  }
+
+  function user(text: string): void {
+    socket.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text }],
+        },
+      }),
+    );
+    socket.send(
+      JSON.stringify({
+        type: "response.create",
+        response: { output_modalities: ["text"] },
+      }),
+    );
+  }
+
+  function toolOutput(callId: string, output: Record<string, unknown>): void {
+    socket.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "function_call_output",
+          call_id: callId,
+          output: JSON.stringify(output),
+        },
+      }),
+    );
   }
 
   socket.once("open", () => {
@@ -38,8 +73,8 @@ await new Promise<void>((resolve, reject) => {
         session: {
           type: "realtime",
           output_modalities: ["text"],
-          instructions: REALTIME_CONVERSATION_INSTRUCTIONS,
-          tools: REALTIME_TEACHING_TOOLS,
+          instructions: OPEN_TOPIC_REALTIME_INSTRUCTIONS,
+          tools: OPEN_TOPIC_REALTIME_TOOLS,
           tool_choice: "auto",
         },
       }),
@@ -58,148 +93,66 @@ await new Promise<void>((resolve, reject) => {
     }
     if (event.type === "session.updated" && !inputSent) {
       inputSent = true;
-      socket.send(
-        JSON.stringify({
-          type: "conversation.item.create",
-          item: {
-            type: "message",
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: "My name is Realtime Smoke.",
-              },
-            ],
-          },
-        }),
-      );
-      socket.send(
-        JSON.stringify({
-          type: "response.create",
-          response: { output_modalities: ["text"] },
-        }),
+      user("English.");
+      return;
+    }
+    if (event.type !== "response.done") return;
+    const functionCall = event.response?.output?.find(
+      (item): item is { type: string; name: string; call_id: string } =>
+        typeof item === "object" &&
+        item !== null &&
+        "type" in item &&
+        item.type === "function_call" &&
+        "name" in item &&
+        "call_id" in item,
+    );
+    const expected = expectedTools[step];
+    if (!functionCall || functionCall.name !== expected) {
+      finish(
+        new Error(
+          `Realtime routed to ${functionCall?.name ?? "no tool"}; expected ${expected ?? "completion"}.`,
+        ),
       );
       return;
     }
-    if (event.type === "response.done") {
-      const functionCall = event.response?.output?.find(
-        (item): item is { type: string; name?: string; call_id?: string } =>
-          typeof item === "object" &&
-          item !== null &&
-          "type" in item &&
-          item.type === "function_call",
-      );
-      if (!functionCall) {
-        finish(new Error("Realtime response contained no function call."));
-        return;
-      }
-      if (functionCall.name !== expectedTool) {
-        finish(
-          new Error(
-            `Realtime routed to ${functionCall.name ?? "no named tool"}, expected ${expectedTool}.`,
-          ),
-        );
-        return;
-      }
-      if (!functionCall.call_id) {
-        finish(new Error(`${expectedTool} returned no call ID.`));
-        return;
-      }
-      if (expectedTool === "start_lesson") {
-        expectedTool = "choose_learning_mode";
-        socket.send(
-          JSON.stringify({
-            type: "conversation.item.create",
-            item: {
-              type: "function_call_output",
-              call_id: functionCall.call_id,
-              output: JSON.stringify({
-                ok: true,
-                menu_options: ["guided", "curious_sandbox"],
-                spoken_response:
-                  "Would you like guided Math, or Curious Sandbox?",
-              }),
-            },
-          }),
-        );
-        socket.send(
-          JSON.stringify({
-            type: "conversation.item.create",
-            item: {
-              type: "message",
-              role: "user",
-              content: [{ type: "input_text", text: "Guided Math, please." }],
-            },
-          }),
-        );
-        socket.send(
-          JSON.stringify({
-            type: "response.create",
-            response: { output_modalities: ["text"] },
-          }),
-        );
-        return;
-      }
-      if (expectedTool === "choose_learning_mode") {
-        expectedTool = "complete_placement";
-        socket.send(
-          JSON.stringify({
-            type: "conversation.item.create",
-            item: {
-              type: "function_call_output",
-              call_id: functionCall.call_id,
-              output: JSON.stringify({
-                ok: true,
-                mode: "guided",
-                placement_required: true,
-                placement_questions: [
-                  {
-                    id: "equal_shares",
-                    prompt: "What share does each of two people receive?",
-                  },
-                  {
-                    id: "compare_halves_quarters",
-                    prompt: "Which is larger, one half or one fourth, and why?",
-                  },
-                  {
-                    id: "compare_thirds_fifths",
-                    prompt: "Which is larger, one third or one fifth, and why?",
-                  },
-                ],
-                spoken_response:
-                  "What share does each of two people receive?",
-              }),
-            },
-          }),
-        );
-        socket.send(
-          JSON.stringify({
-            type: "conversation.item.create",
-            item: {
-              type: "message",
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: "My placement answers are: equal_shares: one half; compare_halves_quarters: one half because fewer pieces are bigger; compare_thirds_fifths: one third because fewer pieces are bigger.",
-                },
-              ],
-            },
-          }),
-        );
-        socket.send(
-          JSON.stringify({
-            type: "response.create",
-            response: { output_modalities: ["text"] },
-          }),
-        );
-        return;
-      }
-      console.log(
-        `Realtime text-only name, menu, and placement routing passed on ${model}.`,
-      );
-      finish();
+    if (step === 0) {
+      toolOutput(functionCall.call_id, {
+        ok: true,
+        language_selected: true,
+        language_mode: "en",
+        spoken_response: "What name would you like me to use?",
+      });
+      step += 1;
+      user("My name is Realtime Smoke.");
+      return;
     }
+    if (step === 1) {
+      toolOutput(functionCall.call_id, {
+        ok: true,
+        identity_complete: false,
+        learner_name_saved: true,
+        spoken_response:
+          "Do you already have a six-digit learner code? If not, say no.",
+      });
+      step += 1;
+      user("No, I do not have a learner code.");
+      return;
+    }
+    if (step === 2) {
+      toolOutput(functionCall.call_id, {
+        ok: true,
+        identity_complete: true,
+        open_topic: true,
+        spoken_response: "What would you like to learn?",
+      });
+      step += 1;
+      user("Teach me why the moon seems to follow a moving car.");
+      return;
+    }
+    console.log(
+      `Realtime language, two-turn identity, and open-topic routing passed on ${model}.`,
+    );
+    finish();
   });
 
   socket.once("error", (error) => finish(error));

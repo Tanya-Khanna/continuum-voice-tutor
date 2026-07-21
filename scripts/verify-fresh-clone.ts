@@ -90,8 +90,6 @@ try {
       "+910000000042",
       "--language",
       "en",
-      "--subject",
-      "Math",
     ],
     {
       environment: cleanEnvironment,
@@ -100,7 +98,7 @@ try {
   );
 
   console.log(
-    "\nFresh-clone gate passed: lockfile install, compiled production smoke, tests, deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
+    "\nFresh-clone gate passed: lockfile install, pack-free production smoke, tests, v7 deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
   );
 } finally {
   rmSync(freshRoot, { recursive: true, force: true });

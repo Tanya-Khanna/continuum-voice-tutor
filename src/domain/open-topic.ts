@@ -97,6 +97,16 @@ export const OpenTopicRequestSchema = z.object({
   previousStrategy: TeachingStrategySchema,
   previousMastery: MasteryStatusSchema,
   previousTurns: z.array(OpenTopicHistoryEntrySchema).max(8),
+  priorLearningMemory: z
+    .array(
+      z.object({
+        topic: z.string().trim().min(1).max(240),
+        summary: z.string().trim().min(1).max(1_000),
+        legacy: z.literal(true),
+      }),
+    )
+    .max(5)
+    .default([]),
   responseMode: LearnerResponseModeSchema,
   hintCount: z.number().int().nonnegative().max(20),
   latestFeedback: TeachingFeedbackSchema.nullable(),
@@ -115,6 +125,13 @@ export const OpenTopicModelTurnSchema = z
     learningIntent: LearningIntentSchema,
     topicPlan: OpenTopicPlanSchema,
     diagnosis: z.string().trim().min(1).max(1_000),
+    diagnosisBasis: z.enum([
+      "no_evidence",
+      "learner_words",
+      "learner_reasoning",
+      "prior_learning_evidence",
+    ]),
+    misconception: z.string().trim().min(1).max(500).nullable(),
     strategy: TeachingStrategySchema,
     strategyReason: z.string().trim().min(1).max(800),
     activityKind: LearningActivityKindSchema,
@@ -234,6 +251,51 @@ export function openTopicPolicyFailures(
   }
   if (request.phase === "diagnose" && turn.evidenceResult !== "unclear") {
     failures.push("treated the initial topic request as academic evidence");
+  }
+  if (
+    request.phase === "diagnose" &&
+    (turn.diagnosisBasis !== "no_evidence" || turn.misconception !== null)
+  ) {
+    failures.push("diagnosed a misconception before learner reasoning existed");
+  }
+  if (
+    turn.misconception !== null &&
+    !["learner_reasoning", "prior_learning_evidence"].includes(
+      turn.diagnosisBasis,
+    )
+  ) {
+    failures.push("recorded a misconception without reasoning evidence");
+  }
+  if (
+    turn.topicPlan.knowledgeState !== "stable" &&
+    turn.masteryStatus === "secure"
+  ) {
+    failures.push("awarded secure understanding for unstable knowledge");
+  }
+  const safetyFlags = new Set(turn.learningIntent.safetyFlags);
+  if (
+    ["abuse", "immediate_danger", "unsafe_request"].some((flag) =>
+      safetyFlags.has(
+        flag as "abuse" | "immediate_danger" | "unsafe_request",
+      ),
+    ) &&
+    turn.topicPlan.knowledgeState !== "unsafe"
+  ) {
+    failures.push("did not route an unsafe learner signal to the unsafe boundary");
+  }
+  if (
+    ["medical", "legal", "financial", "crisis"].some((flag) =>
+      safetyFlags.has(flag as "medical" | "legal" | "financial" | "crisis"),
+    ) &&
+    !["high_stakes", "unsafe"].includes(turn.topicPlan.knowledgeState)
+  ) {
+    failures.push("did not route a high-stakes learner signal to a safety boundary");
+  }
+  if (
+    safetyFlags.has("current_or_disputed") &&
+    turn.topicPlan.knowledgeState === "stable"
+  ) {
+    failures.push("treated a current or disputed learner signal as stable knowledge");
   }
   if (
     request.latestFeedback?.helpfulness === "not_helpful" &&

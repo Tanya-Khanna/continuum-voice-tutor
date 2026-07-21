@@ -28,7 +28,7 @@ describe("mission-control snapshot", () => {
   it("keeps successful agent evidence compact without hiding failures", () => {
     expect(DASHBOARD_HTML).toContain(".eval-row > *");
     expect(DASHBOARD_HTML).toContain("document.createElement('details')");
-    expect(DASHBOARD_HTML).toContain("View evaluator note");
+    expect(DASHBOARD_HTML).toContain("View trusted trace");
     expect(DASHBOARD_HTML).toContain("if (failures.length > 0)");
   });
 
@@ -36,6 +36,10 @@ describe("mission-control snapshot", () => {
     expect(DASHBOARD_HTML).toContain("const humanize = (value)");
     expect(DASHBOARD_HTML).toContain("humanize(session.mastery_status)");
     expect(DASHBOARD_HTML).toContain("humanize(latest.next_strategy)");
+    expect(DASHBOARD_HTML).toContain("Diagnosis basis");
+    expect(DASHBOARD_HTML).toContain("Supported misconception");
+    expect(DASHBOARD_HTML).toContain("Transition authority");
+    expect(DASHBOARD_HTML).toContain("Policy checks");
     expect(DASHBOARD_HTML).toContain("latest?.model_route ?? 'pending'");
     expect(DASHBOARD_HTML).toContain("latest?.language_mode ?? 'pending'");
   });

@@ -1,147 +1,108 @@
 # Submission drafting material and claims ledger
 
-This file is fact-checked drafting material, not text to submit unchanged. The
-builder must rewrite the final description in her own voice and understand every
-claim. Bracketed values remain blocked until the corresponding release gate
-passes; do not delete a bracket by guessing.
+This is fact-checked scaffolding, not final prose. Tanya must rewrite the project
+description in her own voice, verify every claim against the final commit, and
+leave blocked placeholders unresolved rather than guessing.
 
-## Title and one-line pitch
+## Locked title and pitch ingredients
 
 **Continuum — The connection may drop. The learning continues.**
 
-An adaptive multilingual Socratic tutor that a learner can call from any phone,
-with frozen curriculum, named memory, and exact lesson resume after a dropped
-connection.
+Continuum is a patient teacher a learner can call from any phone. The learner asks
+to learn any safe topic in their language; Continuum elicits their current model,
+diagnoses only from evidence, changes teaching methods when one fails, checks
+teach-back and transfer, remembers the exact next step, and uses keypad/SMS when
+speech or connectivity breaks down.
 
-## Devpost description — truthful pre-release draft
+**Do not describe it as:** a curriculum, LMS, course catalog, answer hotline,
+companion bot, scheduled robocaller, WhatsApp product, or learner-facing web app.
 
-Continuum is a patient teacher designed for a learner who may have a basic phone but
-no app, laptop, or reliable data. The learner says the name they use, chooses a
-reviewed subject or Curious Sandbox, and answers aloud. Continuum does not behave like
-an answer machine: GPT-5.6 diagnoses the learner's reasoning, chooses a smaller
-question, analogy, or retrieval check, and returns one short voice-native teaching
-turn. If the connection drops, phone identity plus learner name restores the exact
-pending question.
+## Technical story to rewrite personally
 
-The access mismatch is concrete: ITU estimated 2.6 billion people were offline
-in 2024, while GSMA separately counted a 3.1 billion-person usage gap—people
-covered by mobile broadband but not using it. Those groups overlap and are not
-added together. UNESCO projects a 44 million primary/secondary teacher deficit by
-2030, so Continuum is designed to extend supervised learning support, not replace
-teachers. Direct source links and caveats are in the README.
+The phone call is the classroom. OpenAI Realtime handles multilingual audio,
+turn-taking, interruption, and SIP keypad events. Every substantive learner turn
+crosses a sideband tool boundary into a GPT-5.6 Responses model that returns a
+Zod-validated learning intent, topic plan, diagnosis, teaching method, activity,
+evidence assessment, uncertainty state, and human-support decision.
 
-The system separates voice from teaching. OpenAI Realtime handles listening,
-speech, interruption, and tool orchestration. A server-side GPT-5.6 teaching engine
-owns diagnosis and pedagogy. Trusted code validates every structured turn against
-a frozen curriculum pack before it can be spoken or saved. SQLite keeps placement,
-mastery evidence, physical learning anchors, and history isolated by learner and
-subject. Mission Control shows an anonymized teaching trace, reasoning evidence,
-model routes, latency, token usage, and exact-model cost estimates.
+That structured output cannot directly mutate the product. Trusted code verifies
+the server transcript, controls the lesson phase, rejects a diagnosis without
+evidence, prevents a failed method from repeating, caps keypad guesses, requires
+independent transfer or retention for secure understanding, persists the exact
+question before speech, enforces safety/memory/consent policy, and records a
+redacted proof trace. This application-owned learning loop is the main reason the
+project is more than a teacher prompt around GPT.
 
-The engine contains no Hindi, India, Math, or fixed language-pair branch. A
-deployment supplies reviewed curriculum packs and metadata; the validated catalog
-builds the subject menu and routes placement, history, and resume state by pack.
-India Grade 6 Math is the reviewed flagship today. Four official-source briefs are
-prepared and released for Science, English, History, and Geography after human
-source review, compilation, independent verification, builder spot-check, and
-digest-bound freeze all passed.
+A private six-digit learner code makes the learning relationship portable across
+shared or changing phones. If a call drops, the saved pending question survives.
+Optional SMS carries one bounded practice item, a pause notice, progress/memory
+controls, or one learner-confirmed exam reminder. Unsupported SMS is never sent to
+an open chatbot, and recurring tutoring calls are disabled.
 
-Codex built the telephony bridge, state machine, curriculum compiler, evaluation
-harness, dashboard, tests, privacy gates, and documentation in one continuous task
-with inspectable milestone commits. GPT-5.6 powers live teaching, curriculum
-compilation/verification, and a separate simulated-learner/evaluator suite. The
-current evidence is 185/185 automated tests, 25/25 deterministic teaching cases,
-and a historical complete 24/24 paid agent run. The repository's clean-clone gate
-installs from the lockfile, runs every zero-credit check, seeds a synthetic paused
-lesson, and proves exact resume without local secrets or prior state.
+The current deterministic release gate covers the product contract, Structured
+Outputs, diagnosis evidence, pedagogy transitions, method switching, teach-back,
+transfer, mastery honesty, prompt injection, dependency/secrecy/companion
+boundaries, high-stakes and disputed knowledge, PII redaction, consented memory,
+trusted traces, exact resume, and unrelated topics through one pack-free engine.
+Refresh exact test and eval counts from the final CI run before submission.
 
-The deployed Twilio/OpenAI SIP configuration is 11/11 and the first real call
-exposed an onboarding-state bug that is now regression-tested and deployed. The
-single-number missed-call callback, DTMF, SMS, scheduled-call, drop/recovery, and
-guardian matrix still requires the final measured pass; until it does, distinguish
-implemented behavior from carrier-proven behavior.
-
-Continuum does not claim to invent voice AI or phone access. [Bakame](https://bakame.online/),
-[Viamo AVA](https://viamo.io/ask-viamo-anything-ai/),
-[1-800-ChatGPT](https://help.openai.com/en/articles/10193193-1-800-chatgpt-calling-and-messaging-chatgpt-with-your-phone),
-[Rori](https://scale.stanford.edu/publications/effective-and-scalable-math-support-experimental-evidence-impact-ai-math-tutor-ghana),
-and [Callee Me](https://callee.me/) each prove important parts of the landscape.
-Continuum's narrower contribution is an inspectable combination of frozen reviewed
-curriculum, source/reviewer provenance, subject-scoped placement and exact resume,
-trusted turn validation, and reproducible release evidence. The README contains
-the sourced comparison and does not infer undocumented limitations of those products.
-
-## Final phone paragraph — adapt only after every phone gate passes
-
-Call Continuum at **[PUBLIC PHONE NUMBER]**. Choose Math and say: “One-fourth is
-bigger because four is bigger.” Continuum will teach rather than reveal the answer.
-Then hang up after its next question and call back with the same name to test exact
-resume. Open **[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]** to inspect the
-anonymized teaching trace from your own call.
+Codex was used continuously for architecture migration, implementation, tests,
+debugging, evaluation design, privacy/safety gates, telephony integration, and
+release documentation. The commit history and `CODEX_NOTES.md` show the evolution,
+including bugs found through real carrier testing. GPT-5.6 is used for the actual
+pedagogical reasoning layer, not merely submission copy.
 
 ## Judge testing instructions
 
-### Zero-credit path available now
+### Zero-credit path
 
 ```bash
 git clone https://github.com/Tanya-Khanna/nomad-ai.git
 cd nomad-ai
 npm ci
 npm run verify:fresh
-npm run seed:demo
+npm run chat -- --name Judge --phone +910000000099 --language en
 ```
 
-Run the resume command printed by `seed:demo`. Then try:
+Ask unrelated questions, give an incorrect explanation, type `exit`, and rerun the
+same command to prove exact resume. The offline adapter validates state and policy;
+it does not claim arbitrary factual teaching without a model.
 
-- “Just tell me the answer.”
-- “One fourth is bigger because four is bigger than three.”
-- One answer that switches between any two languages you speak.
-- `exit`, followed by the same chat command, to restore the pending question.
+### Phone path — publish only after carrier acceptance
 
-Start Mission Control with `npm start`, then open
-`http://localhost:3000/dashboard`. The Sample tab is clearly labeled synthetic;
-the Eval tab is zero-credit. The local dashboard needs no token.
-
-### Real-phone path — activate only after release
-
-1. Call **[PUBLIC PHONE NUMBER]**.
-2. Use a nickname, choose reviewed Math, and give the larger-denominator
-   misconception above.
-3. Try one interruption, one code-switched answer, or “What have we learned?”
-4. Hang up after a question, redial, and use the same name.
-5. Open **[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]**. The fragment should
-   disappear from the address bar; the session API remains locked without it.
+1. Call `[PUBLIC PHONE NUMBER]`.
+2. Choose a language, give a nickname, explicitly answer the code question, and
+   hear “What would you like to learn?”
+3. Bring any safe topic and give one mistaken explanation.
+4. Say an explanation did not help, or press 2, and observe the method switch.
+5. Press 0, 9, or star to test repeat, hint, and keypad fallback.
+6. Hang up during a question, call back with the code, and verify exact resume.
+7. Inspect `[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]` for the redacted trusted trace.
 
 ## Claims ledger
 
-| Claim | Current evidence | Publication rule |
+| Claim | Evidence required | Publication rule |
 |---|---|---|
-| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 185/185 tests; 25/25 deterministic gate | Safe now |
-| GPT-5.6 at the teaching core | Structured Responses teacher plus 24/24 historical paid agent suite | Safe now; capture the saved scorecard before submission |
-| Universal product architecture | Open language tags; pack/catalog routing; no language-pair or subject branch | Say “universal architecture,” not “every language proven” |
-| Multilingual/code-switching behavior | Selected live Hindi/English, Spanish/English, French/English checks plus deterministic fixtures | Name tested patterns; do not claim every accent/noise condition |
-| Five guided subjects | Five-pack release gate validates Math, Science, English, History, and Geography with digest-bound human/model receipts | Safe after the five-pack production deployment is verified |
-| Works over a normal phone | Signed SIP delivery, 11/11 configuration, and one measured carrier call; callback-only access is deployed | Publish only after the final callback/DTMF/SMS/recovery matrix passes |
-| Drop and exact resume | Service, Realtime close, tests, and clean-clone paused fixture | Safe for software behavior; call it carrier-proven only after redial test |
-| Live judge dashboard | Token-protected deployed Mission Control plus local HTTP smoke | Safe after the final revision and judge fragment URL are verified |
-| SMS recap, homework, and controls | Signed/idempotent implementation and automated tests | Say implemented; call each live only after Twilio delivery and consent tests |
-| WhatsApp and homework camera | Not shipped | Outside submission scope |
-| Cost per lesson | Exact-model estimate plus Twilio call/SMS lifecycle and price receipts | Publish only observed settled receipts; never generalize one demo cost |
-| 2.6B offline / 3.1B usage gap | Separate ITU and GSMA 2024 estimates | Never add them; the populations overlap and neither proves affordable calling |
-| 44M teacher deficit | UNESCO 2024 projection for primary and secondary teachers needed by 2030 | Say “projected deficit,” not current vacancies |
-| Rori effect and ~$5 marginal cost | Preliminary year-one Ghana study of roughly 500 students | Attribute to Rori; Continuum cannot inherit the outcome |
-| Adesua 93.75% helpfulness | Six-month feasibility deployment; only 16 ratings | Always state n=16 and preliminary scope |
-| Socratic guardrails protect learning | Nearly 1,000-student math field experiment; unrestricted AI harmed unaided grades, hint safeguards mitigated | Use as design motivation, not a Continuum learning-outcome claim |
-| Child-ready deployment | Safety behavior and privacy checklist exist | Never claim; supervised prototype until local review/consent/retention pass |
-| “No competitor does this” | Current official pages show substantial overlap, especially Bakame and Callee Me | Never claim; describe the narrower inspectable combination |
+| Runnable open-topic Socratic tutor | Production build, clean-clone verification, current tests and eval | Safe after final commit gate |
+| GPT-5.6 at the teaching core | Responses Structured Outputs implementation and saved live v7 eval | Name exact final model and evidence |
+| Not a prompt wrapper | Trusted phase/evidence/memory/DTMF/safety trace and anti-wrapper eval | Safe now; demonstrate visually |
+| Any safe topic architecture | No pack/runtime branch; unrelated-topic gate | Say architecture is open-topic, not that every fact is verified |
+| Multilingual/code-switching architecture | BCP-47 flow and Realtime prompt | Name only carrier-tested language patterns |
+| Works on an ordinary phone | SIP/DTMF implementation plus real carrier matrix | Call carrier-proven only after live sign-off |
+| Exact drop/cross-phone resume | Atomic checkpoint and deterministic integration tests | Call carrier-proven only after real redial |
+| SMS continuity/reminders | Signed/idempotent practice, authorization, consent, quiet hours, STOP, delivery receipts | Distinguish implemented from carrier-delivered |
+| Safe for child interaction | Deterministic boundaries and privacy design | Say supervised prototype, not approved child deployment |
+| Universal free calling | Not true; carrier/sponsor model varies | Never claim |
+| Every language works perfectly | Not proven | Never claim |
+| Learning impact at population scale | No pilot | Never claim; label synthetic/judge metrics |
+| WhatsApp, camera, LMS, scheduled lessons | Not shipped by design | Outside product scope |
 
 ## Final submission fields
 
 - Category: Education
 - Repository: `https://github.com/Tanya-Khanna/nomad-ai`
-- Public phone number: `[PENDING SIGNED DELIVERY + 11/11 + CARRIER GATE]`
+- Public phone number: `[PENDING CARRIER GATE]`
 - Dashboard URL: `https://continuum-production-8971.up.railway.app/dashboard#token=<judge-token>`
 - Public demo video: `[PENDING REAL-PHONE RECORDING]`
 - Main Codex feedback/session ID: `[PENDING FINAL /feedback ACTION]`
 - Deployed commit: `[PENDING RELEASE COMMIT]`
-- Reviewed guided subjects: `Math` until four additional packs pass review

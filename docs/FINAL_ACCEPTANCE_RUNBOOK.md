@@ -3,24 +3,24 @@
 Run this once, in order, after feature freeze. Use synthetic adults and phone
 numbers whose owners consented to receive calls and SMS. Do not use real child data.
 
-## 1. Freeze curriculum and code
+## 1. Freeze the open-topic product and code
 
-1. Complete `docs/CURRICULUM_RELEASE.md`, or keep the public menu honestly limited
-   to Math.
-2. Run `npm run curriculum:release:check`; record whether the truthful public claim
-   is one reviewed subject or five.
-3. Commit and push every intended file.
-4. Wait for the GitHub release gate to pass.
-5. Deploy that exact commit to Railway.
-6. Run:
+1. Run `npm run check`, `npm run eval`, and `npm run build`. The learner runtime
+   must need no curriculum variable and expose no subject menu.
+2. Commit every intended file, then run `npm run eval:live -- --confirm-spend`.
+   The revision-bound live report must pass 9/9 on that exact commit.
+3. Push the commit and wait for the GitHub release gate to pass.
+4. Deploy that exact commit to Railway.
+5. Run:
 
    ```bash
    npm run release:preflight -- \
      --base-url https://continuum-production-8971.up.railway.app
    ```
 
-   Production must report `openai`, Realtime configured, the intended subject
-   count, all four access switches, and the same 12-character commit prefix.
+   Production must report `openai`, Realtime configured, `open_topic_teacher`,
+   no curriculum requirement, callback/SMS/reminder/recap enabled, the recurring
+   call scheduler disabled, and the same 12-character commit prefix.
 
 ## 2. Prepare a private acceptance receipt
 
@@ -41,16 +41,18 @@ Railway, the received SMS, and Mission Control without exposing credentials.
 1. **Missed-call callback:** ring once and hang up. Confirm Twilio rejects the
    inbound call without answering, creates one job, and calls back once. A duplicate
    ring inside one minute must not create another callback.
-2. **Cold start and duration:** provide a name, receive a six-digit learner code,
-   select Math, and select three, five, then ten minutes across separate profiles.
-3. **Real teaching:** give the larger-denominator misconception. Confirm Continuum
-   diagnoses it, asks one question, and does not reveal the final answer.
+2. **Language-first cold start:** choose a language, provide a name, explicitly
+   answer the learner-code question, receive a code as a new learner, and hear
+   “What would you like to learn?” No subject, grade, mode, or duration menu may appear.
+3. **Real open-topic teaching:** bring a topic, then give a response that reveals
+   a misconception. Confirm Continuum records its evidence basis, asks one question,
+   and teaches a useful step instead of dumping an answer.
 4. **Method feedback:** after an explanation, say no or press 2. Confirm the next
    method differs and the feedback appears in Mission Control.
-5. **Teach-back and transfer:** explain the idea, then answer a different reviewed
+5. **Teach-back and transfer:** explain the idea, then answer a different
    transfer question. Keypad-only success must remain `developing`, never `secure`.
 6. **DTMF recovery:** press star for keypad fallback, 9 for a hint, 0 to repeat,
-   and answer one reviewed option. Invalid digits must not advance state.
+   and answer one currently spoken option. Invalid digits must not advance state.
 7. **Drop recovery:** hang up while Question 2 is pending. Confirm one short pause
    SMS names Q2 without sensitive content.
 8. **Same-phone resume:** call again, identify the learner, and hear the exact
@@ -59,21 +61,19 @@ Railway, the received SMS, and Mission Control without exposing credentials.
    code plus pound, confirm the name, and resume the same question.
 10. **Shared phone:** create a sibling profile on the first number. Confirm no name,
     progress, homework, schedule, or memory crosses profiles.
-11. **Homework:** consent to homework, receive one short SMS, reply with the expected
+11. **Micro-practice:** consent to practice, receive one short SMS, reply with the expected
     code/answer, and confirm idempotent evidence on a duplicated webhook.
-12. **Scheduled lesson:** create a guardian-approved slot. Confirm exactly one call,
-    due homework or retrieval first, and no call outside quiet hours.
-13. **Missed scheduled lesson:** do not answer. Confirm one SMS and no immediate
-    application redial.
-14. **Guardian voice controls:** press 8, enter the guardian code, hear progress,
-    change time using four digits plus pound, pause calls, and exercise the two-step
-    deletion confirmation with a disposable profile.
-15. **SMS controls:** exercise `PROGRESS`, `MEMORY`, `TIME`, `DAYS`, `PAUSE`,
-    `RESUME`, `STOP`, and the two-step `DELETE` flow against a disposable profile.
-16. **Language patterns:** complete named adult-speaker checks for English,
+12. **Exam reminder:** pre-enroll the exact SMS phone, ask for a one-time review
+    reminder with an explicit date/time, confirm it in a separate speech or keypad
+    turn, and observe exactly one SMS outside quiet hours.
+13. **STOP before send:** schedule a disposable reminder, send `STOP <guardian code>`
+    before it is due, and confirm no message is sent.
+14. **SMS controls:** exercise `PROGRESS`, `MEMORY`, `STOP`, and two-step `DELETE`.
+    Unsupported SMS tutoring and retired scheduling commands must remain bounded.
+15. **Language patterns:** complete named adult-speaker checks for English,
     Hindi-English, Spanish-English, and French-English. Record only the patterns
     actually heard; do not claim every language or accent was carrier-tested.
-17. **Carrier receipts:** after Twilio pricing settles, confirm completed/no-answer
+16. **Carrier receipts:** after Twilio pricing settles, confirm completed/no-answer
     state, call duration, SMS segments/delivery, carrier cost, OpenAI estimate, and
     cost per completed lesson in Mission Control.
 
@@ -112,5 +112,5 @@ npm run release:preflight -- \
 
 The second command must report every row `PASS`. The first command deliberately
 archives committed `HEAD`, installs from the lockfile, builds production, runs all
-tests and the 25-case evaluation, seeds a paused lesson, and proves exact resume
+tests and the 39-case evaluation, seeds a paused lesson, and proves exact resume
 without local secrets.

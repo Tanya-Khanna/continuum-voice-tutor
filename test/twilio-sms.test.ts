@@ -17,6 +17,24 @@ describe("Twilio SMS recap boundary", () => {
     ).toThrow(/requires TWILIO/);
   });
 
+  it("enables delivery for the reminder worker even when lesson recaps are off", () => {
+    expect(
+      resolveTwilioSmsConfig(
+        loadEnvironment({
+          NOMAD_SMS_REMINDERS_ENABLED: "true",
+          NOMAD_PUBLIC_BASE_URL: "https://continuum.example",
+          TWILIO_ACCOUNT_SID: ACCOUNT_SID,
+          TWILIO_AUTH_TOKEN: "secret-token",
+          TWILIO_PHONE_NUMBER: "+14155550100",
+        }),
+      ),
+    ).toEqual({
+      accountSid: ACCOUNT_SID,
+      authToken: "secret-token",
+      from: "+14155550100",
+    });
+  });
+
   it("creates a form-encoded Message with HTTP Basic authentication", async () => {
     const fetchImplementation = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(JSON.stringify({ sid: "SM123", status: "queued" }), {

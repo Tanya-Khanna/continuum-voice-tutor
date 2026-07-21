@@ -67,6 +67,21 @@ function oneSegmentReminder(topic: string): { topic: string; message: string } {
   throw new Error("The reminder topic cannot fit in one SMS segment.");
 }
 
+function oneSegmentCallbackNudge(topic: string): {
+  topic: string;
+  message: string;
+} {
+  let fittedTopic = topic;
+  while (fittedTopic.length > 0) {
+    const message = `Continue: ${fittedTopic}. Call Continuum. STOP <code>.`;
+    if (smsSegmentInfo(message).segments === 1) {
+      return { topic: fittedTopic, message };
+    }
+    fittedTopic = fittedTopic.slice(0, -1).trimEnd();
+  }
+  throw new Error("The callback reminder topic cannot fit in one SMS segment.");
+}
+
 export class SmsReminderService {
   readonly #repository: LearningRepository;
   readonly #phoneHashSecret: string;
@@ -104,9 +119,11 @@ export class SmsReminderService {
     dueAt: string;
     examAt: string;
     consentConfirmed: boolean;
+  }, internal: { kind: "exam_review" | "callback_nudge" } = {
+    kind: "exam_review",
   }): SmsReminder {
     if (!options.consentConfirmed) {
-      throw new Error("An exam reminder requires explicit consent.");
+      throw new Error("An SMS reminder requires explicit consent.");
     }
     const learner = this.#repository.findLearner(options.learnerId);
     if (!learner) throw new Error(`Unknown learner ${options.learnerId}.`);
@@ -137,7 +154,7 @@ export class SmsReminderService {
       examAt.getTime() - nowDate.getTime() > 366 * 24 * 60 * 60_000
     ) {
       throw new Error(
-        "The reminder must be in the future, before the exam, and within one year.",
+        "The reminder must be in the future, before it expires, and within one year.",
       );
     }
     const topic = redactPotentialPii(options.topic)
@@ -145,12 +162,15 @@ export class SmsReminderService {
       .trim()
       .slice(0, 72);
     if (!topic) throw new Error("A reminder topic is required.");
-    const fitted = oneSegmentReminder(topic);
+    const fitted =
+      internal.kind === "callback_nudge"
+        ? oneSegmentCallbackNudge(topic)
+        : oneSegmentReminder(topic);
     const existing = this.#repository
       .listSmsReminders(options.learnerId)
       .find(
         (reminder) =>
-          reminder.kind === "exam_review" &&
+          reminder.kind === internal.kind &&
           reminder.status === "pending" &&
           reminder.topic.toLocaleLowerCase() ===
             fitted.topic.toLocaleLowerCase() &&
@@ -167,7 +187,7 @@ export class SmsReminderService {
     const reminder = SmsReminderSchema.parse({
       id: this.#makeId(),
       learnerId: options.learnerId,
-      kind: "exam_review",
+      kind: internal.kind,
       topic: fitted.topic,
       message: fitted.message,
       recipientPhoneHash,
@@ -193,6 +213,24 @@ export class SmsReminderService {
     });
     this.#recordMetric(reminder, "sms_reminder_scheduled", now);
     return reminder;
+  }
+
+  scheduleCallbackNudge(options: {
+    learnerId: string;
+    recipientPhoneNumber: string;
+    topic: string;
+    dueAt: string;
+    consentConfirmed: boolean;
+  }): SmsReminder {
+    const dueAt = new Date(options.dueAt);
+    if (Number.isNaN(dueAt.getTime())) {
+      throw new Error("A valid callback reminder time is required.");
+    }
+    const expiresAt = new Date(dueAt.getTime() + 24 * 60 * 60_000);
+    return this.scheduleExamReview({
+      ...options,
+      examAt: expiresAt.toISOString(),
+    }, { kind: "callback_nudge" });
   }
 
   cancelAll(learnerId: string): number {

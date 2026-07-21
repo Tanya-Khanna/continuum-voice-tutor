@@ -1,38 +1,30 @@
 # Demo and judge runbook
 
-This is the executable handoff for recording and judge testing. It distinguishes
-what works now from claims that require the real phone line or four additional
-reviewed curriculum packs.
+This is the executable v7 handoff for recording and judge testing. It describes
+the product that exists now: one teacher the learner calls, one open learning
+question, speech/keypad/SMS continuity, and no curriculum menu.
 
-For the exact OpenAI project, webhook, Twilio number, and SIP-trunk sequence, use
-the [real-phone setup guide](PHONE_SETUP.md).
+Use synthetic adults and consented phone numbers. Do not use real child data.
 
 ## Release gates
 
-`npm run phone:preflight` is currently 11/11 for the deployed single-number
-callback configuration. That proves configuration, not the final carrier matrix.
-Use `docs/FINAL_ACCEPTANCE_RUNBOOK.md` for the measured behavior pass.
+Before publishing the number or recording the final take:
 
-Do not publish a phone number or record a “live call” sequence until all of these
-are true:
+- `npm run release:verify` passes from committed `HEAD`.
+- `npm run eval` passes the current 39-case anti-wrapper gate.
+- `npm run eval:live -- --confirm-spend` passes the revision-bound nine-case GPT
+  v7 suite on the commit being deployed.
+- `npm run phone:preflight` reports 11/11.
+- The deployed `/health` reports `open_topic_teacher`, no curriculum requirement,
+  one-time SMS reminders enabled, and the recurring call scheduler disabled.
+- A real carrier journey proves language-first onboarding, open topic, teaching,
+  DTMF, drop/recovery, SMS, and one-time reminder delivery.
+- Five consecutive golden judge journeys pass on the same deployed commit.
 
-- `npm run phone:preflight` reports 11/11, including signed delivery and Mission
-  Control access protection.
-- A real carrier call reaches Continuum through Twilio and OpenAI SIP.
-- Barge-in, unclear-audio recovery, disconnect, and redial have been heard over
-  G.711—not merely unit-tested.
-- At least one complete guided call produces a dashboard session and accurate
-  token usage.
+Automated checks prove software behavior, not speech quality or carrier delivery.
+Public language claims must name only adult-speaker patterns actually heard.
 
-Do not say “five subjects are available” until Science, English, History, and
-Geography have each completed human source review, compilation, independent
-verification, builder spot-check, frozen-pack loading, and voice-menu routing.
-Until then, say: “Math is the reviewed flagship; four official-source briefs are
-prepared and human-gated.”
-
-## Working judge path today
-
-Prerequisite: Node.js 22 or newer.
+## Zero-credit judge path
 
 ```bash
 git clone https://github.com/Tanya-Khanna/nomad-ai.git
@@ -41,102 +33,73 @@ npm ci
 npm run chat -- --name Judge --phone +910000000099 --language en
 ```
 
-Use this misconception exactly:
+Try three unrelated topics, one at a time:
 
-> One fourth is bigger because four is bigger than three.
+- `Help me understand a verb.`
+- `Why does the moon seem to follow a moving car?`
+- `Help me prepare for a chemistry exam.`
 
-Then type `exit`, rerun the same command, and confirm Continuum resumes the saved
-question. This path is deterministic, offline, and uses no API credit. To verify
-the entire distributable archive first, run `npm run verify:fresh`.
+Type `exit`, run the same command again, and verify exact resume. The offline
+adapter exercises state, evidence, memory, and recovery without pretending to
+know arbitrary facts. Run `npm run verify:fresh` for the clean distributable gate.
 
-Optional local surfaces:
+## Final phone judge card
 
-```bash
-npm start
-```
+1. Call `[PUBLIC PHONE NUMBER]` from an ordinary phone.
+2. Choose a language, give a nickname, and explicitly answer the learner-code
+   question. A new learner receives a private six-digit code.
+3. Verify the next question is “What would you like to learn?”—not a menu.
+4. Ask to learn any safe topic. Then give an explanation that reveals a mistaken
+   idea. Notice whether Continuum diagnoses from evidence and teaches one step.
+5. Say the explanation did not help or press 2. The next method must differ.
+6. Press 0 to repeat, 9 for a hint, or star for keypad fallback.
+7. Hang up during a pending question. Call from another consented phone, enter the
+   learner code plus pound, confirm the name, and hear the exact question.
+8. If the phone was pre-enrolled for SMS, request one exam/revision reminder with
+   an explicit date/time and confirm it in a separate yes/no or keypad turn.
 
-- Mission Control, local: `http://localhost:3000/dashboard`
-- Mission Control, deployed:
-  `https://continuum-production-8971.up.railway.app/dashboard#token=<judge-token>`
-- Deterministic gate: `npm run eval` (expected: 25/25)
-- Paid agent proof: the latest complete runtime report is 24/24; do not rerun it
-  casually or replace it with a targeted report.
+Open `[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]` to inspect the anonymized
+diagnosis basis, supported misconception, trusted phase, policy checks, method
+switch, evidence, understanding state, model route, latency, and cost. The token
+belongs in the URL fragment, never the query string.
 
-## Final judge card — fill only after release gates pass
+## Three-minute recording order
 
-**Call Continuum:** `[PUBLIC PHONE NUMBER]`
-
-You are about to be a Grade 6 learner. Choose Math. When Continuum asks you to
-compare one-third and one-fourth, say: “One-fourth is bigger because four is
-bigger.” Notice whether it gives away the answer or diagnoses your reasoning and
-asks a smaller question.
-
-Then try one stress test:
-
-- Ask: “Just tell me the answer.”
-- Switch languages in the middle of a sentence.
-- Ask: “What have we learned together?”
-- Hang up after Continuum asks a question, then call back with the same name.
-- Say that the audio was unclear and verify the pending question is restored
-  without advancing the lesson.
-
-Open `[PUBLIC DASHBOARD URL WITH TOKEN FRAGMENT]` to see the anonymized session,
-diagnosis, mastery evidence, strategy, model route, usage, and eval evidence. Do
-not expose the dashboard publicly with real learner data until the judge Bearer
-token is set and a production retention policy exists. Share the token in the URL
-fragment, not the query string; verify that it disappears from the address bar.
-
-## Three-minute demo recording order
-
-1. **0:00–0:12 — the access problem.** Show an ordinary keypad phone. “No
-   smartphone. No app. No data. Continuum is a tutor a learner can reach through
-   calls, keypad, and SMS.”
-2. **0:12–0:25 — missed-call access.** Meena gives a missed call; the inbound call
-   is visibly rejected, and Continuum calls her back. Do not call this universally
-   free: label the demo callback as sponsor-funded.
-3. **0:25–0:42 — cold start.** Capture Hinglish onboarding, six-digit portable
-   learner code, reviewed Math selection, and a five-minute lesson choice.
-4. **0:42–1:12 — actual teaching.** Meena gives the larger-denominator
-   misconception. The first method fails; Continuum asks whether it helped, accepts
-   “no” or keypad 2, and changes to a concrete local analogy. The visible proof is
-   diagnosis and method change—not model eloquence.
-5. **1:12–1:28 — evidence of learning.** Capture teach-back and a different
-   reviewed transfer item. Show baseline incorrect, hints, transfer result, and the
-   honest mastery state. Never turn a keypad choice alone into secure mastery.
-6. **1:28–1:47 — connectivity failure.** Drop the call while a question is
-   pending. Show the short pause SMS. No completed step may be replayed.
-7. **1:47–2:02 — portable continuity.** Call from another phone, enter the learner
-   code plus pound, confirm the name, and resume the exact unfinished question.
-8. **2:02–2:14 — speech fallback.** Make one answer intentionally unclear, press
-   star for reviewed options, and answer by keypad. Show that state advances only
-   after a valid choice.
-9. **2:14–2:27 — homework loop.** Show the tiny homework SMS and a signed,
-   idempotent reply updating the same learner. If this carrier path is not green,
-   replace it with the labeled deterministic proof and say so.
-10. **2:27–2:39 — proactive retention.** Use an explicit “next day” title card;
-    show one consented scheduled callback beginning with due retrieval or homework.
-11. **2:39–2:48 — breadth without bluffing.** Show the multi-turn Curiosity Trail
-    and the five-subject target. State that only packs passing the human release
-    gate appear in the callable menu.
-12. **2:48–2:57 — implementation.** Show Realtime SIP/DTMF, GPT-5.6 Structured
-    Outputs, frozen packs, selective SQLite memory, access/reliability/learning
-    metrics, and the Codex-built test/eval story.
-13. **2:57–3:00 — close.** “The connection may drop. The learning continues.”
+1. **0:00–0:15 — access.** Show a basic keypad phone. “No smartphone, app,
+   internet, camera, or reading required. If you can make a phone call, school is open.”
+2. **0:15–0:30 — callback.** Give a missed call; show the unanswered inbound ring
+   and sponsor-funded callback. Do not call carrier access universally free.
+3. **0:30–0:47 — no menu.** Choose language, give a name, receive the portable
+   code, then hear “What would you like to learn?”
+4. **0:47–1:17 — teaching.** Bring one topic and reveal one misconception. Show
+   diagnosis basis and the first teaching method.
+5. **1:17–1:35 — adaptation.** Mark the explanation not helpful. Show a genuinely
+   different method, then a short teach-back or transfer check.
+6. **1:35–1:51 — keypad floor.** Make speech unclear, press star, and answer one
+   spoken choice. Label keypad-only evidence as developing, never secure.
+7. **1:51–2:12 — connection drops.** Hang up with a question pending, show the one-
+   segment pause SMS, call from another phone, and resume the exact question.
+8. **2:12–2:30 — relationship thread.** Show one micro-practice reply and one
+   explicit exam-reminder proposal followed by separate consent. Use a labeled
+   time jump to show delivery; recurring tutoring calls are not part of the product.
+9. **2:30–2:50 — not a wrapper.** Show Structured Outputs beside the trusted trace:
+   verified words, phase/activity gate, diagnosis evidence, failed-method switch,
+   mastery cap, exact checkpoint, safety boundary, and selective memory.
+10. **2:50–2:57 — implementation.** Name GPT-5.6 Responses, Realtime SIP/DTMF,
+    SQLite, Twilio, the 39-case eval, and how Codex built and tested the system.
+11. **2:57–3:00 — close.** “The connection may drop. The learning continues.”
 
 ## Recording checklist
 
-- Start from a clean committed revision; save the commit hash in submission
-  notes.
-- Run `npm run verify:fresh` and capture the final pass line.
-- Follow `docs/PHONE_SETUP.md`; capture 11/11 without displaying secret values.
-- Use a new synthetic adult demo profile, never a child’s real data.
-- Confirm SMS recaps are off unless the receiving phone explicitly consented.
-- Keep a backup local REPL take and the checked-in synthetic code-switch sample.
-- Record five consecutive golden judge journeys before recording the final take.
-- Label every time jump, synthetic fixture, and sponsor-funded call visibly.
-- After recording, verify every on-screen number, URL, score, and scope statement.
-- Keep the deployed phone and dashboard revision unchanged except for outage
-  fixes during judging.
+- Record the committed hash and deploy that exact revision.
+- Use a new synthetic adult learner and a consented SMS phone.
+- Pre-enroll SMS with `npm run guardian:enroll` without showing the private code.
+- Record five consecutive golden journeys before the final take.
+- Label sponsor funding, time jumps, and any synthetic proof.
+- Do not show secrets, full phone numbers, learner codes, or dashboard tokens.
+- Do not claim every language, universal free calling, child deployment approval,
+  or population-level learning outcomes.
+- Keep the deployment unchanged during judging except for documented outage fixes.
 
 ## Submission placeholders
 
@@ -146,4 +109,3 @@ fragment, not the query string; verify that it disappears from the address bar.
 - Repository: `https://github.com/Tanya-Khanna/nomad-ai`
 - Main Codex feedback/session ID: `[PENDING FINAL FEEDBACK ACTION]`
 - Deployed commit: `[PENDING RELEASE COMMIT]`
-- Five-subject status: `Math reviewed; four briefs pending human review`

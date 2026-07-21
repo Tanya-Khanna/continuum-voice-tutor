@@ -263,6 +263,14 @@ export class OpenTopicLessonService {
         masteryEvidence: entry.turn.mastery_evidence,
         nextQuestion: entry.turn.next_question,
       })),
+      priorLearningMemory: this.#repository
+        .listLegacyLearningMemories(context.learner.id)
+        .slice(0, 5)
+        .map((memory) => ({
+          topic: memory.topic,
+          summary: memory.summary,
+          legacy: true as const,
+        })),
       responseMode,
       hintCount,
       latestFeedback,
@@ -382,6 +390,21 @@ export class OpenTopicLessonService {
       concept: modelTurn.topicPlan.topic,
       activity,
       diagnosis: modelTurn.diagnosis,
+      diagnosisBasis: modelTurn.diagnosisBasis,
+      misconception: modelTurn.misconception,
+      trustedPhase: phase,
+      transitionAuthority: "trusted_application",
+      policyChecks: [
+        "verified_learner_words",
+        "phase_activity_match",
+        "phase_evidence_match",
+        "diagnosis_evidence",
+        "failed_method_switch",
+        "exact_saved_question",
+        "mastery_evidence_cap",
+        "knowledge_boundary",
+        "voice_native_output",
+      ],
       strategy: turn.next_strategy,
       strategyReason:
         latestFeedback?.helpfulness === "not_helpful"

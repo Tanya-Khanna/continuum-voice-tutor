@@ -95,7 +95,7 @@ three jobs:
 - The application creates an outbound call from the same number to the caller
   and bridges that call to the OpenAI SIP target with inline TwiML.
 - Incoming SMS posts to `https://YOUR_HOST/webhooks/twilio/sms`; outbound
-  homework and controls use the same number as sender.
+  practice, pause notices, and one-time reminders use the same number as sender.
 
 In **Phone Numbers > Manage > Active numbers**, configure the number with:
 
@@ -117,7 +117,9 @@ URLs are configured:
 NOMAD_MISSED_CALL_ENABLED=true
 NOMAD_MISSED_CALL_ADULT_DEMO=true
 NOMAD_SMS_CONTROLS_ENABLED=true
-NOMAD_SCHEDULER_ENABLED=true
+NOMAD_SMS_RECAP_ENABLED=true
+NOMAD_SMS_REMINDERS_ENABLED=true
+NOMAD_SCHEDULER_ENABLED=false
 ```
 
 The adult-demo switch creates a private hackathon test surface for adult judges
@@ -125,16 +127,16 @@ across time zones, so it suspends the deployment quiet-hours gate. Never enable
 it for a child deployment; with the switch off, guardian enrollment and quiet
 hours both remain enforced.
 
-Every application-created call supplies a signed Twilio status-callback URL for
+Every callback call supplies a signed Twilio status-callback URL for
 `initiated`, `ringing`, `answered`, and `completed` events. Continuum stores the
 highest sequence number so late/out-of-order webhooks cannot regress state. On a
 terminal event it records seconds, reconciles the eventually consistent Call
 resource for connectivity price, and retries that reconciliation in the
-background. Scheduled `busy`, `failed`, `no-answer`, or `canceled` calls create
-one short SMS and never create an immediate application retry. Outbound SMS also
+background. The product does not schedule recurring tutoring calls or create an
+immediate application redial. Outbound SMS also
 uses a status callback and records segment count plus delivered/failed state.
 
-The callback and scheduling paths use:
+The callback and SMS paths use:
 
 ```text
 POST https://YOUR_HOST/webhooks/twilio/call-status?receipt_id=OPAQUE_ID
@@ -196,13 +198,15 @@ On real calls, record the deployed commit and verify:
 - barge-in interrupts Continuum cleanly;
 - unclear audio restores the pending prompt without advancing lesson state;
 - missed-call access rejects the inbound call before answer and creates exactly one callback;
-- DTMF identity, reviewed quiz, feedback, repeat, and hint mappings advance only the valid stage;
+- language selection is first, identity requires separate name and code-status turns, and no subject, grade, mode, or duration menu appears;
+- DTMF identity, current-choice answer, feedback, repeat, and hint mappings advance only the valid stage;
 - hang-up and redial with the same name resumes the exact question;
 - a second phone with the learner code resumes the same pending question;
-- pause and homework SMS arrive once and signed replies update the correct learner;
-- scheduled and no-answer calls create lifecycle/cost receipts without an immediate redial;
-- guardian voice controls preserve sibling privacy;
-- a completed guided call appears in Mission Control with usage recorded.
+- pause and micro-practice SMS arrive once and signed replies update the correct learner;
+- a consented one-time reminder respects quiet hours and `STOP` cancels it before send;
+- shared-phone learner profiles preserve sibling privacy;
+- a completed open-topic call appears in Mission Control with diagnosis basis,
+  trusted phase, policy checks, evidence, and usage recorded.
 
 Publish the number or record the final live-call demo only after these checks
 pass. Use the exact ordered matrix and private release receipt in
@@ -216,5 +220,5 @@ pass. Use the exact ordered matrix and private release receipt in
 | No incoming webhook | Confirm the public HTTPS URL, OpenAI project, exact `proj_` SIP URI, and Twilio number association. |
 | Signature rejection | Confirm the webhook belongs to the same project and that `OPENAI_WEBHOOK_SECRET` is the creation-time signing secret. Do not parse or rewrite the raw body upstream. |
 | Call declined or busy | Check the server admission logs, active-call limit, and per-caller hourly limit before retrying. |
-| Call answers but no session appears | Complete name, mode, subject, and placement; then check the authenticated Mission Control Sessions tab. |
+| Call answers but no session appears | Complete language, name, and learner-code status; then ask a topic and check the authenticated Mission Control Sessions tab. |
 | Audio is clipped or interruptions fail | Keep the number private and tune the provisional VAD settings only from measured carrier calls. |

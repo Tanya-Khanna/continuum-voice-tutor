@@ -21,6 +21,8 @@ class TestOpenTopicEngine implements OpenTopicTeachingEngine {
       OpenTopicModelTurn,
       | "learningIntent"
       | "topicPlan"
+      | "diagnosisBasis"
+      | "misconception"
       | "languageMode"
       | "smsFollowUp"
       | "humanSupport"
@@ -45,6 +47,8 @@ class TestOpenTopicEngine implements OpenTopicTeachingEngine {
         transferGoal: "Compare a new pair of unit fractions.",
         knowledgeState: "stable",
       },
+      diagnosisBasis: "learner_reasoning",
+      misconception: null,
       languageMode: "en",
       smsFollowUp: null,
       humanSupport: "none",
@@ -55,6 +59,8 @@ class TestOpenTopicEngine implements OpenTopicTeachingEngine {
         ? {
             ...shared,
             diagnosis: "No fraction reasoning has been supplied yet.",
+            diagnosisBasis: "no_evidence",
+            misconception: null,
             strategy: "ask_reasoning",
             strategyReason: "Start from the learner's current idea.",
             activityKind: "socratic_prompt",
@@ -354,4 +360,5 @@ describe("open-topic lesson service", () => {
     expect(repository.listTurns(repository.listRecentLessons(1)[0]!.id)).toHaveLength(0);
     repository.close();
   });
+
 });

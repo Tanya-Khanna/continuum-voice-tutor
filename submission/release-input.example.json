@@ -12,15 +12,18 @@
     "hindiEnglishLesson": false,
     "spanishEnglishAdultTest": false,
     "frenchEnglishAdultTest": false,
+    "languageFirstOnboarding": false,
+    "openTopicNoMenu": false,
+    "methodSwitchAndFeedback": false,
     "dtmfLearnerCode": false,
-    "dtmfQuizAndFeedback": false,
+    "dtmfAnswerRepeatHintFeedback": false,
     "dropAndPauseSms": false,
     "samePhoneResume": false,
     "crossPhoneResume": false,
-    "homeworkReply": false,
-    "scheduledLesson": false,
-    "missedScheduledLesson": false,
-    "guardianVoiceControls": false
+    "microPracticeReply": false,
+    "examReminderConsentAndSend": false,
+    "stopBeforeDueSend": false,
+    "sharedPhoneSiblingIsolation": false
   },
   "consecutiveGoldenJudgeJourneys": 0
 }

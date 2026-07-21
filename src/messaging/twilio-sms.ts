@@ -30,14 +30,20 @@ export type TwilioSmsConfig = Pick<
 export function resolveTwilioSmsConfig(
   environment: Environment,
 ): TwilioSmsConfig | undefined {
-  if (!environment.NOMAD_SMS_RECAP_ENABLED) return undefined;
+  if (
+    !environment.NOMAD_SMS_RECAP_ENABLED &&
+    !environment.NOMAD_SMS_CONTROLS_ENABLED &&
+    !environment.NOMAD_SMS_REMINDERS_ENABLED
+  ) {
+    return undefined;
+  }
   if (
     !environment.TWILIO_ACCOUNT_SID ||
     !environment.TWILIO_AUTH_TOKEN ||
     !environment.TWILIO_PHONE_NUMBER
   ) {
     throw new Error(
-      "NOMAD_SMS_RECAP_ENABLED requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER.",
+      "An enabled SMS feature requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER.",
     );
   }
   return TwilioSmsRequestSchema.pick({

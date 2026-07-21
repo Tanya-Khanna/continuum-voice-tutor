@@ -11,7 +11,7 @@ import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DEFAULT_VOICE_LANGUAGE_MENU } from "./config/voice-language-menu.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
 import { runOpenTopicOfflineEvaluation } from "./evals/open-topic-offline-evaluator.js";
-import { readAgentEvalReport } from "./evals/agent/report.js";
+import { readOpenTopicLiveEvalReport } from "./evals/open-topic-live-report.js";
 import { hashPhoneNumber } from "./domain/identity.js";
 import {
   resolveTwilioSmsConfig,
@@ -41,6 +41,7 @@ import { GuardianAccessService } from "./guardian/guardian-access-service.js";
 import { OpenTopicSmsService } from "./messaging/open-topic-sms-service.js";
 import { HomeworkService } from "./messaging/homework-service.js";
 import { SmsReminderService } from "./messaging/sms-reminder-service.js";
+import { buildLessonRecapSms } from "./messaging/lesson-recap.js";
 import {
   ProductMetricEventSchema,
   type AccessMode,
@@ -964,9 +965,11 @@ export const server = createServer(async (request, response) => {
     }
 
     if (request.method === "GET" && url.pathname === "/api/dashboard/evals") {
-      const [report, agentReport] = await Promise.all([
+      const [report, liveReport] = await Promise.all([
         runOpenTopicOfflineEvaluation(),
-        readAgentEvalReport(environment.NOMAD_AGENT_EVAL_REPORT_PATH),
+        readOpenTopicLiveEvalReport(
+          environment.NOMAD_OPEN_TOPIC_LIVE_EVAL_REPORT_PATH,
+        ),
       ]);
       response.writeHead(200, {
         "Content-Type": "application/json",
@@ -977,7 +980,7 @@ export const server = createServer(async (request, response) => {
           generated_at: new Date().toISOString(),
           gate: "deterministic_offline",
           ...report,
-          agent_report: agentReport,
+          live_report: liveReport,
         }),
       );
       return;
@@ -1078,23 +1081,35 @@ export const server = createServer(async (request, response) => {
               console.error(`Realtime call ${callId}:`, bridgeError.message),
             ...(environment.NOMAD_SMS_REMINDERS_ENABLED
               ? {
-                  onExamReminderConfirmed: async ({
+                  onSmsReminderConfirmed: async ({
                     callerNumber: recipientPhoneNumber,
                     learner,
+                    kind,
                     topic,
                     dueAt,
                     examAt,
                   }) => {
-                    createSmsReminderService(
+                    const reminders = createSmsReminderService(
                       runtime.repository,
-                    ).scheduleExamReview({
-                      learnerId: learner.id,
-                      recipientPhoneNumber,
-                      topic,
-                      dueAt,
-                      examAt,
-                      consentConfirmed: true,
-                    });
+                    );
+                    if (kind === "exam_review" && examAt) {
+                      reminders.scheduleExamReview({
+                        learnerId: learner.id,
+                        recipientPhoneNumber,
+                        topic,
+                        dueAt,
+                        examAt,
+                        consentConfirmed: true,
+                      });
+                    } else {
+                      reminders.scheduleCallbackNudge({
+                        learnerId: learner.id,
+                        recipientPhoneNumber,
+                        topic,
+                        dueAt,
+                        consentConfirmed: true,
+                      });
+                    }
                   },
                 }
               : {}),
@@ -1115,17 +1130,21 @@ export const server = createServer(async (request, response) => {
                       return;
                     }
                     const draft = runtime.lessonService.homeworkDraft(context);
-                    if (!draft) return;
-                    const homework = runtime.homework.assign({
-                      learnerId: context.learner.id,
-                      sessionId: context.session.id,
-                      recipientPhoneNumber: to,
-                      draft,
-                    });
+                    const body = draft
+                      ? runtime.homework.assign({
+                          learnerId: context.learner.id,
+                          sessionId: context.session.id,
+                          recipientPhoneNumber: to,
+                          draft,
+                        }).smsText
+                      : buildLessonRecapSms({
+                          topic: context.session.concept,
+                          understanding: context.session.masteryStatus,
+                        });
                     await sendTrackedSms({
                       repository: runtime.repository,
                       to,
-                      body: homework.smsText,
+                      body,
                       learnerId: context.learner.id,
                       accessMode: context.session.accessMode,
                     });

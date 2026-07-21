@@ -4,6 +4,10 @@ import { join } from "node:path";
 import Database from "better-sqlite3";
 import { describe, expect, it } from "vitest";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
+import { OPEN_TOPIC_V7_MIGRATION } from "../src/domain/product-migration.js";
+import type { OpenTopicRequest } from "../src/domain/open-topic.js";
+import { OfflineOpenTopicEngine } from "../src/engine/offline-open-topic-engine.js";
+import { OpenTopicLessonService } from "../src/lesson/open-topic-lesson-service.js";
 
 describe("SQLite learning migrations", () => {
   it("adds a nullable anchor object to an existing lesson database", async () => {
@@ -61,6 +65,41 @@ describe("SQLite learning migrations", () => {
       anchorObject: null,
       accessMode: "unknown",
     });
+    expect(repository.hasProductMigration(OPEN_TOPIC_V7_MIGRATION)).toBe(true);
+    expect(repository.listLegacyLearningMemories("learner_legacy")).toEqual([
+      expect.objectContaining({
+        sourceSessionId: "lesson_legacy",
+        sourcePackId: "legacy",
+        topic: "comparing_unit_fractions",
+        legacyMasteryStatus: "needs_support",
+        summary: "Historical diagnosis No evidence",
+      }),
+    ]);
+    let captured: OpenTopicRequest | undefined;
+    const offline = new OfflineOpenTopicEngine();
+    const service = new OpenTopicLessonService({
+      repository,
+      engine: {
+        modelRoute: "migration-capture",
+        async teachOpenTopic(request) {
+          captured = request;
+          return offline.teachOpenTopic(request);
+        },
+      },
+      phoneHashSecret: "migration-test-phone-secret",
+    });
+    const learner = repository.findLearner("learner_legacy")!;
+    await service.respond(
+      service.beginOrResumeLearner(learner),
+      "Can we continue learning?",
+    );
+    expect(captured?.priorLearningMemory).toEqual([
+      expect.objectContaining({
+        topic: "comparing_unit_fractions",
+        legacy: true,
+      }),
+    ]);
+    expect(captured?.previousMastery).toBe("needs_support");
     repository.close();
   });
 });
