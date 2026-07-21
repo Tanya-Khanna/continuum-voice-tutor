@@ -42,15 +42,15 @@ The engine contains no Hindi, India, Math, or fixed language-pair branch. A
 deployment supplies reviewed curriculum packs and metadata; the validated catalog
 builds the subject menu and routes placement, history, and resume state by pack.
 India Grade 6 Math is the reviewed flagship today. Four official-source briefs are
-prepared for Science, English, History, and Geography, but they will not become
-callable until human review, compilation, independent verification, and spot-check
-all pass.
+prepared and released for Science, English, History, and Geography after human
+source review, compilation, independent verification, builder spot-check, and
+digest-bound freeze all passed.
 
 Codex built the telephony bridge, state machine, curriculum compiler, evaluation
 harness, dashboard, tests, privacy gates, and documentation in one continuous task
 with inspectable milestone commits. GPT-5.6 powers live teaching, curriculum
 compilation/verification, and a separate simulated-learner/evaluator suite. The
-current evidence is 181/181 automated tests, 25/25 deterministic teaching cases,
+current evidence is 185/185 automated tests, 25/25 deterministic teaching cases,
 and a historical complete 24/24 paid agent run. The repository's clean-clone gate
 installs from the lockfile, runs every zero-credit check, seeds a synthetic paused
 lesson, and proves exact resume without local secrets or prior state.
@@ -116,11 +116,11 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 
 | Claim | Current evidence | Publication rule |
 |---|---|---|
-| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 181/181 tests; 25/25 deterministic gate | Safe now |
+| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 185/185 tests; 25/25 deterministic gate | Safe now |
 | GPT-5.6 at the teaching core | Structured Responses teacher plus 24/24 historical paid agent suite | Safe now; capture the saved scorecard before submission |
 | Universal product architecture | Open language tags; pack/catalog routing; no language-pair or subject branch | Say “universal architecture,” not “every language proven” |
 | Multilingual/code-switching behavior | Selected live Hindi/English, Spanish/English, French/English checks plus deterministic fixtures | Name tested patterns; do not claim every accent/noise condition |
-| Five guided subjects | Runtime can route any reviewed catalog; only Math is reviewed and callable | Blocked until four packs pass human review and freeze |
+| Five guided subjects | Five-pack release gate validates Math, Science, English, History, and Geography with digest-bound human/model receipts | Safe after the five-pack production deployment is verified |
 | Works over a normal phone | Signed SIP delivery, 11/11 configuration, and one measured carrier call; callback-only access is deployed | Publish only after the final callback/DTMF/SMS/recovery matrix passes |
 | Drop and exact resume | Service, Realtime close, tests, and clean-clone paused fixture | Safe for software behavior; call it carrier-proven only after redial test |
 | Live judge dashboard | Token-protected deployed Mission Control plus local HTTP smoke | Safe after the final revision and judge fragment URL are verified |

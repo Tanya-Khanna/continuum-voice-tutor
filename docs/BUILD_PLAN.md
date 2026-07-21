@@ -53,12 +53,13 @@ Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-
 - Signed scheduled-duration and access-mode relay into Realtime plus idempotent Twilio call lifecycle callbacks, no-answer handling, duration/price reconciliation, SMS segment/delivery receipts, sponsor-versus-learner-paid completion evidence, and aggregate cost-per-completed-lesson and retained-concept evidence.
 - Evidence-backed product proof now includes shared-phone completion, keypad-fallback conversion, exact drop/resume recovery, unclear-audio recovery, application response-latency percentiles, diagnostic-to-transfer improvement, hint reduction, teach-back success, strategy-switch success, and learner-reported helpfulness.
 - Offline demo, deterministic evaluator, strict TypeScript, and automated unit/integration tests remain zero-credit runnable.
+- Five Grade 6 starter packs now pass the complete release chain: official-source approval, GPT-5.6 compilation, independent verification, builder spot-check, digest-bound freeze, and 5/5 catalog validation.
 
 ### Still gated before a public claim
 
 - A second measured carrier call must prove the corrected onboarding and teaching state machine.
 - Live missed-call callback, DTMF code, reviewed quiz, feedback, drop SMS, same/cross-phone resume, homework reply, schedule, no-answer, and guardian menu require carrier smoke tests.
-- Science, English, History, and Geography source briefs are human-approved and their digest-bound candidates pass the independent verifier. Builder spot-check and freeze are still required. Until then the public guided menu must expose Math only.
+- The five-pack catalog is released in the repository; its exact production configuration and carrier menu still require deployment verification.
 - Carrier status callbacks and priced usage receipt collection are implemented; real completed/no-answer receipts must be captured before claiming measured call-completion or cost-per-lesson values.
 - English, Hindi-English, Spanish-English, and French-English must be described only as named tested adult-speaker patterns after the actual carrier matrix passes.
 - Demo recording, YouTube upload, Devpost team acceptance, human-written submission copy, `/feedback` Session ID, clean-clone proof, and final repository sharing remain human submission gates.
@@ -284,9 +285,9 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 
 **Teaching (the authored layer: system prompt + curriculum packs)**
 - ~~**F20 Curious Sandbox mode** — Socratic, fact-hedging, no pack; eval-covered (`sandbox.ts`, sandbox hedging cases).~~ ✅
-- ⏳ **F21 Guided Path, five subjects** — ~~Math flagship fractions pack, hand-built + schema-frozen~~ ✅ · **Science,
-  English, History, and Geography source briefs are human-approved; candidates are compiled and independently verified.
-  They now await builder candidate spot-check → freeze.** The release target is five genuinely callable guided subjects, each with at least
+- ~~**F21 Guided Path, five subjects** — Math flagship plus Science, English, History, and Geography passed source review,
+  compilation, independent verification, builder spot-check, digest-bound freeze, and the 5/5 release gate.~~ ✅ The released catalog contains
+  five genuinely callable guided subjects, each with at least
   one coherent voice-first starter lesson, placement evidence, misconception handling, and a safe completion path—not
   empty menu labels or unreviewed flavored Sandbox. If a pack misses its gate, hide that subject and state the
   smaller verified menu honestly.
@@ -320,7 +321,7 @@ code-switching as documented open problem (Cameroon paper), honest limitations s
 **Intelligence & integrity**
 - ~~**F42 Hybrid routing (two-layer architecture)** — offline deterministic + live GPT-5.6 Structured-Outputs adapters (`store:false`); trusted code validates every turn against the frozen pack before speech/persist.~~ ✅
 - ~~**F37 Controlled curriculum grounding** — frozen reviewed packs only; no live web lookup during lessons.~~ ✅
-- ⏳ **F38/F39 Curriculum Compiler + G3** — ~~compiler + schema + source review + compile + independent verification~~ ✅ · **execution pending: builder candidate spot-check → freeze.**
+- ~~**F38/F39 Curriculum Compiler + G3** — compiler + schema + source review + compile + independent verification + builder spot-check + freeze.~~ ✅
 - ~~**F52 Computed math truth** — deterministic verification in engine + tests.~~ ✅
 - ~~**F56 Uncertainty honesty** — insufficient-evidence eval cases ×4 passing.~~ ✅
 
@@ -440,8 +441,8 @@ GPT-5.6 for submission-relevant reasoning. "Best" below = Sol if available, else
 **Evening:**
 - ~~Dashboard skeleton~~ ✅ *(exceeded: full Mission Control — Sessions/Eval/Sample/Release tabs, token-protected, browser-verified desktop+mobile)*.
 - ~~**Decisions due: tutor persona name + product name**~~ ✅ **CONTINUUM** *(human-selected Jul 17)*.
-- **Exit: five subjects callable (⏳ OPEN — needs candidate spot-check and freeze) · ~~eval green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard~~ ✅.**
-- **📦 Features landing today:** ~~F38/F39 compiler + G3 review gate (code) · F37 frozen-pack grounding · F20 sandbox · F24 anchor objects · F32-flavor · F47 callback · F41-query history · F18 universal language architecture · F51 eval harness · §7.5 REPL · F45 dashboard · F15-persona (Continuum)~~ **✅ 12 DONE** · ⏳ **F21-full + F22 five-subject menu — the 4 model-verified candidates await YOUR spot-check → freeze**
+- **Exit: ~~five subjects released~~ ✅ · ~~eval green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard~~ ✅ · ⏳ carrier-menu verification.**
+- **📦 Features landing today:** ~~F38/F39 compiler + G3 review gate · F37 frozen-pack grounding · F20 sandbox · F24 anchor objects · F32-flavor · F47 callback · F41-query history · F18 universal language architecture · F51 eval harness · §7.5 REPL · F45 dashboard · F15-persona · F21 five released subjects~~ **✅** · ⏳ **F22 production carrier-menu verification**
 
 ### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
 **Morning:**
@@ -477,7 +478,7 @@ truth · commit at every milestone · CODEX_NOTES 10 min every evening · all co
 1. **📞 THE PHONE LEG** — F1, F7, F9, F10, F12, F13/50-live, F14-live, F15-live, F19 all unblock together when
    preflight has reached ~~7/11 → 10/11 → one signed-webhook smoke call → 11/11~~ ✅ → measured real-carrier checks (PHONE_SETUP.md has the sequence;
    prerequisites complete: ~~public HTTPS deploy~~ ✅, ~~OpenAI project/webhook~~ ✅, ~~Twilio upgrade + number + trunk~~ ✅)
-2. **📚 PACK REVIEW** — F21-full + F22: ~~review 4 source briefs → compile → verify~~ ✅ · spot-check the generated candidate packet → freeze
+2. ~~**📚 PACK REVIEW** — F21-full: source review → compile → verify → spot-check → freeze → 5/5 release check.~~ ✅
 3. **🎙️ HINGLISH SAMPLE** — your voice, replaces synthetic Spanish-English exhibit
 4. **🎬 DEMO VIDEO + human rewrite** of Devpost copy (authorship gate)
 5. **🌐 PRODUCT SURFACE** — F60 static/mobile-first landing page after the phone gate; GSAP and audio remain optional

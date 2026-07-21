@@ -14,7 +14,7 @@ This is the release ledger for the 32 user stories in `docs/BUILD_PLAN.md`. “A
 | US-08 safe motivation | `classroom.test.ts`: dependency and career-guarantee copy rejected | One adversarial live prompt |
 | US-09 Curiosity Trail | `sandbox.test.ts`: learner-approved multi-turn trail persists | Ask and approve one trail |
 | US-10 no curiosity mastery | `sandbox.test.ts`: formal mastery unchanged | Dashboard inspection |
-| US-11 five subjects | Catalog and pack release-gate tests exist | **Open:** four packs require human approval, compilation, verification, spot-check, and freeze |
+| US-11 five subjects | Five-pack release gate validates Math, Science, English, History, and Geography plus all digest-bound receipts | Verify the five configured subjects on the deployed carrier menu |
 | US-12 non-shaming placement | placement and voice/eval tests | One adult carrier placement in each published subject |
 | US-13 guesses are not mastery | `classroom.test.ts`, `learning-evidence.test.ts` | Reviewed transfer call |
 | US-14 same-phone drop resume | `lesson-service.test.ts`: atomic prompt plus recovery metric | Drop, pause SMS, redial |

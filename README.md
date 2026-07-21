@@ -39,7 +39,7 @@ Realtime owns listening, speech, interruption, and tool choice. GPT-5.6 owns dia
 - Ask Anything is multi-turn and can save a learner-approved Curiosity Trail, but it cannot silently award curriculum mastery.
 - Product metrics are divided into access, reliability, and learning; synthetic fixtures and live events are labeled separately.
 
-The checked-in public guided menu contains only the human-reviewed Math pack. Science, English, History, and Geography stay hidden until their official-source briefs pass human approval, compilation, independent verification, builder spot-checking, and freeze.
+The checked-in guided catalog contains five human-released Grade 6 starter packs: Math, Science, English, History, and Geography. The four compiled packs each carry an official-source approval, independent model-verification receipt, builder spot-check receipt, and immutable frozen artifact. Production exposes only the catalog configured by `NOMAD_CURRICULUM_PATHS`.
 
 See the [v6 build plan](docs/BUILD_PLAN.md), [32-story proof matrix](docs/USER_STORY_MATRIX.md), [five-subject release guide](docs/CURRICULUM_RELEASE.md), and [final acceptance runbook](docs/FINAL_ACCEPTANCE_RUNBOOK.md) for the exact automated, carrier, curriculum-review, and submission gates.
 

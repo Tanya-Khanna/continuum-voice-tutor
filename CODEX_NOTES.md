@@ -653,3 +653,10 @@
 - Added a reusable candidate-only verification CLI and a generated 421-line human review packet. The packet validates candidate and source digests and exposes objectives, facts, diagnostics, analogies, voice scaffolds, keypad/SMS answer keys, and safety language. It remains an aid, not an approval receipt.
 - Made keypad/SMS parity deterministic: every feature-phone SMS must list every rendered keypad option, and the compiler now requires a novel transfer case. Strict TypeScript and 185/185 automated tests pass.
 - Honest gate: the four candidates are not frozen or public until Tanya reviews `docs/CURRICULUM_CANDIDATE_REVIEW.md` and explicitly confirms the candidate-level spot-check. Production therefore remains Math-only.
+
+## 2026-07-20 — Five-subject curriculum release
+
+- Tanya explicitly confirmed: “I spot-checked all four candidate packs and approve them to freeze.” Used that approval—without broadening it—to create four create-only frozen packs and digest-bound release receipts under her name.
+- The release chain now passes 5/5: built-in reviewed Math plus released Science, English, History, and Geography. Every compiled entry validates its approved source digest, candidate digest, independent-verification receipt, builder receipt, pack metadata, required vocabulary, and immutable frozen artifact.
+- Updated the README, submission evidence, user-story matrix, and active build-plan ledger to distinguish repository release from the remaining production/carrier verification.
+- The production catalog will be configured only from the exact `NOMAD_CURRICULUM_PATHS` emitted by the successful release gate; no unreviewed pack or candidate path is eligible.

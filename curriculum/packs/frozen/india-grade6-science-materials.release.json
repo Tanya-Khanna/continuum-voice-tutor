@@ -1,0 +1,21 @@
+{
+  "sourceBriefId": "india-grade6-science-materials-v1",
+  "packId": "india-grade6-science-materials-v1",
+  "packVersion": "1.0.1",
+  "subject": "Science",
+  "sourceBriefSha256": "642d663e896512c2297157a4664de22b830fe39d112535958eb1ded378505f9c",
+  "packSha256": "b6c1cf33d58e244725168295c2a0aced7b66b153764a6219d70dd6ffb68f7095",
+  "compileReceiptSha256": "1ff13942ad187f93008e99412ce3b438682a87261432dc22917e032d6bb6c9df",
+  "releasedBy": "Tanya Khanna",
+  "releasedAt": "2026-07-21T02:15:56.024Z",
+  "checklist": {
+    "sourceScope": true,
+    "factualAnswers": true,
+    "voiceAndOneQuestion": true,
+    "keypadAndSms": true,
+    "safetyAndOriginality": true
+  },
+  "notes": [
+    "Spot-checked source scope, factual answers, voice, keypad, SMS, safety, and originality."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "sourceBriefId": "india-grade6-history-sources-v1",
+  "packId": "india-grade6-history-sources-v1-pack",
+  "packVersion": "1.0.0",
+  "subject": "History",
+  "sourceBriefSha256": "123070e6c975de48e983c5e5c45020af7d7eb68d4c143971d0a62a7b88d02d55",
+  "packSha256": "bb4b516be34a5fc8158e347e40fa3a2aaef625b7697862139f22f164eb88e76c",
+  "compileReceiptSha256": "50929321a6969b3aef7c331fa1f5d680fa711e39a18af4f25fab7f3b6b76732d",
+  "releasedBy": "Tanya Khanna",
+  "releasedAt": "2026-07-21T02:15:57.697Z",
+  "checklist": {
+    "sourceScope": true,
+    "factualAnswers": true,
+    "voiceAndOneQuestion": true,
+    "keypadAndSms": true,
+    "safetyAndOriginality": true
+  },
+  "notes": [
+    "Spot-checked source scope, factual answers, voice, keypad, SMS, safety, and originality."
+  ]
+}
