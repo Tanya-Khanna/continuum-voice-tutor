@@ -11,6 +11,7 @@ import { normalizeLearnerName } from "../domain/identity.js";
 import type { LearnerProfile } from "../domain/learner.js";
 import type { PortableIdentityService } from "../domain/portable-identity.js";
 import type { AccessMode } from "../domain/product-metrics.js";
+import { OPEN_TOPIC_PROMPT } from "../domain/open-topic.js";
 import { ResolvedLanguageModeSchema, type TeachingTurn } from "../domain/teaching.js";
 import { ModelUsageSchema, type ModelUsage } from "../domain/usage.js";
 import type {
@@ -34,6 +35,7 @@ import {
 } from "../language/voice-language-menu.js";
 import {
   buildOpenTopicToolUpdate,
+  openTopicToolAllowedAtStage,
   type OpenTopicRealtimeStage,
 } from "./open-topic-realtime.js";
 
@@ -68,6 +70,7 @@ const FunctionCallItemSchema = z.object({
 });
 const OutputItemDoneSchema = z.object({
   type: z.literal("response.output_item.done"),
+  response_id: z.string().min(1).optional(),
   item: FunctionCallItemSchema,
 });
 const ResponseDoneSchema = z.object({
@@ -102,7 +105,12 @@ const ResponseDoneSchema = z.object({
       .optional(),
   }),
 });
-const ResponseCreatedSchema = z.object({ type: z.literal("response.created") }).passthrough();
+const ResponseCreatedSchema = z
+  .object({
+    type: z.literal("response.created"),
+    response: z.object({ id: z.string().min(1) }).passthrough().optional(),
+  })
+  .passthrough();
 const AudioStartedSchema = z.object({ type: z.literal("output_audio_buffer.started") }).passthrough();
 const AudioStoppedSchema = z
   .object({
@@ -159,6 +167,13 @@ function functionCallsFromEvent(event: unknown) {
     const parsed = FunctionCallItemSchema.safeParse(candidate);
     return parsed.success ? [parsed.data] : [];
   });
+}
+
+function responseIdFromFunctionEvent(event: unknown): string | undefined {
+  const item = OutputItemDoneSchema.safeParse(event);
+  if (item.success) return item.data.response_id;
+  const response = ResponseDoneSchema.safeParse(event);
+  return response.success ? response.data.response.id : undefined;
 }
 
 function toolOutputEvent(
@@ -285,6 +300,7 @@ export class OpenTopicRealtimeController {
     | undefined;
   readonly #handledCallIds = new Set<string>();
   readonly #handledUsageIds = new Set<string>();
+  readonly #cancelledResponseIds = new Set<string>();
   readonly #sideEffects = new Set<Promise<void>>();
   #context: OpenTopicLessonContext | undefined;
   #learner: LearnerProfile | undefined;
@@ -302,6 +318,7 @@ export class OpenTopicRealtimeController {
     | { pendingPrompt: string; objectiveResult: z.infer<typeof EvidenceResultSchema> }
     | undefined;
   #responseInProgress = false;
+  #activeResponseId: string | undefined;
   #audioPlaying = false;
   #completionNotified = false;
   #closed = false;
@@ -350,8 +367,10 @@ export class OpenTopicRealtimeController {
   ): Promise<void> {
     this.#queue = this.#queue
       .then(async () => {
-        if (ResponseCreatedSchema.safeParse(event).success) {
+        const created = ResponseCreatedSchema.safeParse(event);
+        if (created.success) {
           this.#responseInProgress = true;
+          this.#activeResponseId = created.data.response?.id;
           return;
         }
         if (AudioStartedSchema.safeParse(event).success) {
@@ -362,8 +381,16 @@ export class OpenTopicRealtimeController {
           this.#audioPlaying = false;
           return;
         }
-        if (ResponseDoneSchema.safeParse(event).success) {
-          this.#responseInProgress = false;
+        const done = ResponseDoneSchema.safeParse(event);
+        if (done.success) {
+          if (
+            !this.#activeResponseId ||
+            !done.data.response.id ||
+            done.data.response.id === this.#activeResponseId
+          ) {
+            this.#responseInProgress = false;
+            this.#activeResponseId = undefined;
+          }
         }
         const dtmf = DtmfEventSchema.safeParse(event);
         if (dtmf.success) {
@@ -403,6 +430,14 @@ export class OpenTopicRealtimeController {
           }
           this.#pendingUsage.push(usage);
         }
+        const functionResponseId = responseIdFromFunctionEvent(event);
+        if (
+          functionResponseId &&
+          this.#cancelledResponseIds.has(functionResponseId)
+        ) {
+          this.#cancelledResponseIds.delete(functionResponseId);
+          return;
+        }
         for (const call of functionCallsFromEvent(event)) {
           await this.#handleFunctionCall(call, send);
         }
@@ -418,8 +453,12 @@ export class OpenTopicRealtimeController {
 
   #interruptAudio(send: OpenTopicRealtimeSender): void {
     if (this.#responseInProgress) {
+      if (this.#activeResponseId) {
+        this.#cancelledResponseIds.add(this.#activeResponseId);
+      }
       send({ type: "response.cancel" });
       this.#responseInProgress = false;
+      this.#activeResponseId = undefined;
     }
     if (this.#audioPlaying) {
       send({ type: "output_audio_buffer.clear" });
@@ -551,6 +590,25 @@ export class OpenTopicRealtimeController {
   ): Promise<void> {
     if (this.#handledCallIds.has(call.call_id)) return;
     this.#handledCallIds.add(call.call_id);
+    if (!openTopicToolAllowedAtStage(this.#stage, call.name)) {
+      const spokenResponse =
+        this.#stage === "language"
+          ? buildVoiceLanguageMenuPrompt(this.#languageMenu)
+          : this.#stage === "identity"
+            ? this.#pendingLearnerName
+              ? "Do you already have a six-digit learner code? If yes, say all six digits. If not, say no."
+              : "What name would you like me to use?"
+            : this.#context?.session.lastPrompt ?? OPEN_TOPIC_PROMPT;
+      send(
+        toolOutputEvent(call.call_id, {
+          ok: false,
+          state_changed: false,
+          spoken_response: spokenResponse,
+        }),
+      );
+      send(speakToolOutputEvent("localize_recovery"));
+      return;
+    }
     try {
       let output: Record<string, unknown>;
       let policy: "exact" | "localize_onboarding" | "localize_recovery" = "exact";

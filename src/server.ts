@@ -10,7 +10,7 @@ import {
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DEFAULT_VOICE_LANGUAGE_MENU } from "./config/voice-language-menu.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
-import { runOfflineEvaluation } from "./evals/offline-evaluator.js";
+import { runOpenTopicOfflineEvaluation } from "./evals/open-topic-offline-evaluator.js";
 import { readAgentEvalReport } from "./evals/agent/report.js";
 import { hashPhoneNumber } from "./domain/identity.js";
 import {
@@ -929,7 +929,7 @@ export const server = createServer(async (request, response) => {
 
     if (request.method === "GET" && url.pathname === "/api/dashboard/evals") {
       const [report, agentReport] = await Promise.all([
-        runOfflineEvaluation(),
+        runOpenTopicOfflineEvaluation(),
         readAgentEvalReport(environment.NOMAD_AGENT_EVAL_REPORT_PATH),
       ]);
       response.writeHead(200, {
@@ -1042,6 +1042,16 @@ export const server = createServer(async (request, response) => {
                     callerNumber: to,
                     context,
                   }) => {
+                    const smsAuthorization = runtime.repository.findGuardianAuthorization(
+                      context.learner.id,
+                    );
+                    if (
+                      !smsAuthorization?.smsAllowed ||
+                      smsAuthorization.guardianPhoneHash !==
+                        hashPhoneNumber(to, environment.NOMAD_PHONE_HASH_SECRET)
+                    ) {
+                      return;
+                    }
                     const draft = runtime.lessonService.homeworkDraft(context);
                     if (!draft) return;
                     const homework = runtime.homework.assign({
@@ -1063,6 +1073,16 @@ export const server = createServer(async (request, response) => {
                     context,
                     pendingQuestionNumber,
                   }) => {
+                    const smsAuthorization = runtime.repository.findGuardianAuthorization(
+                      context.learner.id,
+                    );
+                    if (
+                      !smsAuthorization?.smsAllowed ||
+                      smsAuthorization.guardianPhoneHash !==
+                        hashPhoneNumber(to, environment.NOMAD_PHONE_HASH_SECRET)
+                    ) {
+                      return;
+                    }
                     await sendTrackedSms({
                       repository: runtime.repository,
                       to,

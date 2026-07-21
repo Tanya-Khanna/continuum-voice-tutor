@@ -176,6 +176,13 @@ const TOOL_NAMES_BY_STAGE = {
   ],
 } as const satisfies Record<OpenTopicRealtimeStage, readonly string[]>;
 
+export function openTopicToolAllowedAtStage(
+  stage: OpenTopicRealtimeStage,
+  toolName: string,
+): boolean {
+  return (TOOL_NAMES_BY_STAGE[stage] as readonly string[]).includes(toolName);
+}
+
 export function buildOpenTopicToolUpdate(stage: OpenTopicRealtimeStage) {
   const names = new Set<string>(TOOL_NAMES_BY_STAGE[stage]);
   return {

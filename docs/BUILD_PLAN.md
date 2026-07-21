@@ -822,7 +822,7 @@ Migration rules:
 
 - ~~Map DTMF to language, identity, repeat, hint, answer, feedback, and fallback stages.~~
 - ~~Preserve speech-first interaction and keypad evidence caps.~~
-- Make input cancellation and stale-response protection deterministic.
+- ~~Make input cancellation and stale-response protection deterministic.~~
 - ~~Verify atomic drop recovery and cross-phone identity in deterministic integration tests.~~
 
 **Exit:** a noisy-line golden journey completes and a dropped question resumes exactly from another phone.
@@ -849,7 +849,7 @@ Migration rules:
 - Run the full carrier and language matrix.
 - Run five consecutive golden judge journeys.
 - ~~Update the landing page to the exact locked definition.~~
-- Update the README to the exact locked definition.
+- ~~Update the README to the exact locked definition.~~
 - Record the demonstration only after the tested deployment revision is pinned.
 - Freeze features and preserve call/SMS budget.
 

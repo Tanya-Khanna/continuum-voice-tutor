@@ -289,7 +289,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       const copy = text('div', '', 'hero-copy');
       copy.append(text('div', 'Deterministic / zero API spend', 'eyebrow'));
       copy.append(text('h2', report.passed === report.total ? 'Teaching gate is green.' : 'Teaching gate needs attention.'));
-      copy.append(text('p', 'Frozen cases for pedagogy, language, safety, and voice formatting.'));
+      copy.append(text('p', 'Open-topic anti-wrapper gates for product contract, pedagogy, evidence, privacy, safety, continuity, and voice.'));
       hero.append(copy);
       for (const [label, value] of [['Cases', report.passed + '/' + report.total], ['Pass rate', Math.round(report.passRate * 100) + '%'], ['Voice friendly', Math.round(report.voiceFriendlyRate * 100) + '%']]) {
         const metric = text('div', '', 'metric'); metric.append(text('span', label)); metric.append(text('strong', value)); hero.append(metric);
@@ -306,7 +306,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       root.append(hero, list);
       const agent = report.agent_report;
       const agentHead = text('div', '', 'eval-section');
-      agentHead.append(text('div', 'GPT-5.6 simulated learner + evaluator', 'eyebrow'));
+      agentHead.append(text('div', 'Historical curriculum agent report · not the v7 release gate', 'eyebrow'));
       if (!agent) {
         agentHead.append(text('h2', 'Agent evaluation has not been run.'));
         agentHead.append(text('p', 'Opt-in only: npm run eval:agents -- --confirm-spend --case <id>', 'count'));

@@ -266,6 +266,10 @@ export function assertSafeEducationalMotivation(spokenResponse: string): void {
     /guarantee(?:s|d)? (?:your|that you|a) /iu,
     /this lesson will make you (?:a|an) /iu,
     /you will definitely become/iu,
+    /keep (?:this|it) secret (?:from|between)/iu,
+    /do not tell (?:your|any) (?:parent|guardian|teacher)|don't tell (?:your|any) (?:parent|guardian|teacher)/iu,
+    /you only need me|i(?:'m| am) all you need/iu,
+    /i love you|be my (?:girlfriend|boyfriend|partner)/iu,
   ];
   if (prohibited.some((pattern) => pattern.test(spokenResponse))) {
     throw new Error(

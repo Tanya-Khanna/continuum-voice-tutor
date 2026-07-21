@@ -253,3 +253,12 @@ export function openTopicPolicyFailures(
   }
   return failures;
 }
+
+export function enforceHumanSupportForKnowledgeState(
+  knowledgeState: KnowledgeState,
+  proposed: z.infer<typeof HumanSupportDecisionSchema>,
+): z.infer<typeof HumanSupportDecisionSchema> {
+  if (knowledgeState === "unsafe") return "immediate_safety_protocol";
+  if (knowledgeState === "high_stakes") return "qualified_professional";
+  return proposed;
+}

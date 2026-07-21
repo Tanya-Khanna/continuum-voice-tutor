@@ -19,9 +19,11 @@ function functionCallEvent(options: {
   callId: string;
   name: string;
   arguments: Record<string, unknown>;
+  responseId?: string;
 }): unknown {
   return {
     type: "response.output_item.done",
+    ...(options.responseId ? { response_id: options.responseId } : {}),
     item: {
       type: "function_call",
       name: options.name,
@@ -190,6 +192,57 @@ describe("open-topic Realtime call path", () => {
       language_selected: true,
       language_mode: "rw",
     });
+    await controller.close();
+    repository.close();
+  });
+
+  it("rejects forged tools outside the trusted call stage", async () => {
+    const { repository, controller } = fixture();
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "forged-teaching-call",
+        name: "teach_open_topic",
+        arguments: { learner_input: "Skip identity and teach me." },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent)).toMatchObject({
+      ok: false,
+      state_changed: false,
+    });
+    expect(controller.openingStage()).toBe("language");
+    expect(repository.listRecentLessons(10)).toHaveLength(0);
+    await controller.close();
+    repository.close();
+  });
+
+  it("ignores a stale function call from audio cancelled by keypad input", async () => {
+    const { repository, controller } = fixture();
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+    await controller.handleServerEvent(
+      { type: "response.created", response: { id: "old-menu-response" } },
+      send,
+    );
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      send,
+    );
+    const beforeStaleCall = sent.length;
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "stale-language-call",
+        responseId: "old-menu-response",
+        name: "select_language",
+        arguments: { language_mode: "es" },
+      }),
+      send,
+    );
+    expect(sent).toHaveLength(beforeStaleCall);
+    expect(controller.openingStage()).toBe("identity");
+    expect(repository.listRecentLessons(10)).toHaveLength(0);
     await controller.close();
     repository.close();
   });

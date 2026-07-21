@@ -718,3 +718,13 @@
 - Added a bounded open-topic SMS service. It supports authorized progress/memory/delete/stop, one-question practice replies, MessageSid idempotency, and bounded help; open-ended SMS tutoring is rejected and old START/TIME/DAYS commands cannot reactivate recurring tutoring calls.
 - Updated the public landing page to the locked definition: a teacher the learner calls, on any phone, for any topic. Removed the reviewed-subject menu and scheduled-call copy.
 - Marked only verified v7 build-plan items complete with strikethrough. Current full gate: strict TypeScript and 210/210 automated tests pass. Live carrier acceptance, exam-reminder scheduling, stale-response race hardening, v7 eval replacement, README migration, and final release evidence remain open.
+
+## 2026-07-21 — v7 anti-wrapper gate and trust hardening
+
+- Replaced the default fractions-only deterministic eval with a 26-case open-topic gate. It covers the locked product contract, Realtime tool surface, Structured Outputs compatibility, verified-intent fidelity, trusted phase/evidence transitions, exact saved questions, voice formatting, method switching, mastery honesty, high-stakes/unsafe human boundaries, anti-dependency/secrecy behavior, PII redaction, and three unrelated topics through one pack-free engine.
+- Added deterministic stage authorization for every Realtime tool. A forged or delayed tool call cannot select language, create identity, or teach outside its current server-owned stage.
+- Added response-ID tracking for Realtime cancellation. When keypad input cancels active audio, a late function call from that cancelled response is ignored instead of overwriting the newer learner action.
+- Expanded teacher-boundary policy to reject secrecy, exclusivity, romantic, and dependency language in addition to career guarantees and abandonment pressure.
+- Required pause and practice SMS side effects to have SMS authorization bound to the exact learner and caller phone; configuring Twilio alone is not consent.
+- Replaced the obsolete curriculum-first README with the v7 product, architecture, trust boundary, local setup, verification, privacy, limitations, and model-use story. Historical packs are labeled as audit/eval artifacts, not the product runtime.
+- Updated the plan ledger only after verification. Current gate: strict TypeScript, 213/213 automated tests, 26/26 v7 deterministic evals, and the production TypeScript build pass.

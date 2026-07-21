@@ -31,6 +31,7 @@ import {
   OPEN_TOPIC_PROMPT,
   OpenTopicRequestSchema,
   evidenceKindForOpenTopicPhase,
+  enforceHumanSupportForKnowledgeState,
   nextOpenTopicPhase,
   openTopicPolicyFailures,
 } from "../domain/open-topic.js";
@@ -296,12 +297,10 @@ export class OpenTopicLessonService {
         ? "developing"
         : modelTurn.masteryStatus;
     const shouldEnd = phase === "recap" && modelTurn.shouldEndSession;
-    const humanSupport =
-      modelTurn.topicPlan.knowledgeState === "unsafe"
-        ? "immediate_safety_protocol"
-        : modelTurn.topicPlan.knowledgeState === "high_stakes"
-          ? "qualified_professional"
-          : modelTurn.humanSupport;
+    const humanSupport = enforceHumanSupportForKnowledgeState(
+      modelTurn.topicPlan.knowledgeState,
+      modelTurn.humanSupport,
+    );
     const turn = TeachingTurnSchema.parse({
       learner_id: context.learner.id,
       concept: modelTurn.topicPlan.topic,
