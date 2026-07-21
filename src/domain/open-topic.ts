@@ -184,6 +184,50 @@ export type OpenTopicPlan = z.infer<typeof OpenTopicPlanSchema>;
 export type OpenTopicRequest = z.infer<typeof OpenTopicRequestSchema>;
 export type OpenTopicModelTurn = z.infer<typeof OpenTopicModelTurnSchema>;
 
+export function applyTrustedOpenTopicInvariants(
+  request: OpenTopicRequest,
+  proposed: OpenTopicModelTurn,
+): OpenTopicModelTurn {
+  const flags = new Set(proposed.learningIntent.safetyFlags);
+  const unsafe = ["abuse", "immediate_danger", "unsafe_request"].some(
+    (flag) => flags.has(flag as "abuse" | "immediate_danger" | "unsafe_request"),
+  );
+  const highStakes = ["medical", "legal", "financial", "crisis"].some(
+    (flag) => flags.has(flag as "medical" | "legal" | "financial" | "crisis"),
+  );
+  const knowledgeState = unsafe
+    ? "unsafe"
+    : highStakes
+      ? "high_stakes"
+      : flags.has("current_or_disputed")
+        ? "current_or_disputed"
+        : proposed.topicPlan.knowledgeState;
+  const initial = request.phase === "diagnose";
+  return OpenTopicModelTurnSchema.parse({
+    ...proposed,
+    topicPlan: {
+      ...proposed.topicPlan,
+      knowledgeState,
+    },
+    ...(initial
+      ? {
+          diagnosis:
+            "The learner has named a topic or need, but understanding evidence has not been collected yet.",
+          diagnosisBasis: "no_evidence",
+          misconception: null,
+          evidenceResult: "unclear",
+          masteryStatus: "needs_support",
+          masteryEvidence:
+            "The initial learner turn is not evidence of understanding.",
+        }
+      : {}),
+    humanSupport: enforceHumanSupportForKnowledgeState(
+      knowledgeState,
+      proposed.humanSupport,
+    ),
+  });
+}
+
 export function nextOpenTopicPhase(options: {
   turnCount: number;
   previousStrategy: z.infer<typeof TeachingStrategySchema>;

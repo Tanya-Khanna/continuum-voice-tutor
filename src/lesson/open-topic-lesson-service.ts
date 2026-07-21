@@ -29,6 +29,7 @@ import {
   OPEN_TOPIC_NAMESPACE,
   OPEN_TOPIC_PLACEHOLDER,
   OPEN_TOPIC_PROMPT,
+  applyTrustedOpenTopicInvariants,
   OpenTopicRequestSchema,
   evidenceKindForOpenTopicPhase,
   enforceHumanSupportForKnowledgeState,
@@ -277,7 +278,7 @@ export class OpenTopicLessonService {
       consentedPreferences,
     });
     const generated = await this.#engine.teachOpenTopic(request);
-    const modelTurn = generated.value;
+    const modelTurn = applyTrustedOpenTopicInvariants(request, generated.value);
     const policyFailures = openTopicPolicyFailures(request, modelTurn);
     if (policyFailures.length > 0) {
       throw new Error(
