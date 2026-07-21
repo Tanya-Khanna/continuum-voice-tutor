@@ -238,6 +238,16 @@ export function applyTrustedOpenTopicInvariants(
         ? "current_or_disputed"
         : proposed.topicPlan.knowledgeState;
   const initial = request.phase === "diagnose";
+  const spokenQuestions = proposed.spokenResponse.match(/[?？؟]/gu)?.length ?? 0;
+  const finalQuestionMatch = proposed.spokenResponse.match(
+    /([^?？؟.!。！।\n]+[?？؟])\s*$/u,
+  );
+  const exactFinalQuestion =
+    !proposed.shouldEndSession &&
+    spokenQuestions === 1 &&
+    finalQuestionMatch?.[1]
+      ? finalQuestionMatch[1].trim()
+      : null;
   return OpenTopicModelTurnSchema.parse({
     ...proposed,
     topicPlan: {
@@ -256,6 +266,7 @@ export function applyTrustedOpenTopicInvariants(
             "The initial learner turn is not evidence of understanding.",
         }
       : {}),
+    ...(exactFinalQuestion ? { nextQuestion: exactFinalQuestion } : {}),
     humanSupport: enforceHumanSupportForKnowledgeState(
       knowledgeState,
       proposed.humanSupport,

@@ -90,4 +90,19 @@ describe("trusted open-topic invariants", () => {
       "spoken response had 2 questions; expected 1",
     );
   });
+
+  it("derives the exact checkpoint from one final spoken question", () => {
+    const { request, proposed } = fixture();
+    const drifted = OpenTopicModelTurnSchema.parse({
+      ...proposed,
+      spokenResponse:
+        "I cannot choose a medicine dose for you. Can you ask a trusted adult or clinician now?",
+      nextQuestion: "Could you contact a medical professional?",
+    });
+    const turn = applyTrustedOpenTopicInvariants(request, drifted);
+    expect(turn.nextQuestion).toBe(
+      "Can you ask a trusted adult or clinician now?",
+    );
+    expect(openTopicVoicePolicyFailures(turn)).toEqual([]);
+  });
 });
