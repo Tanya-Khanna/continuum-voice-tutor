@@ -196,6 +196,33 @@ describe("open-topic Realtime call path", () => {
     expect(JSON.stringify(languageUpdate)).toContain(
       "Do not fall back to English",
     );
+    const hindiIdentityPrompt = [...sent].reverse().find(
+      (event) => event.type === "response.create",
+    );
+    expect(hindiIdentityPrompt).toMatchObject({
+      type: "response.create",
+      response: {
+        conversation: "none",
+        output_modalities: ["audio"],
+        tools: [],
+        tool_choice: "none",
+        input: [
+          {
+            type: "message",
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: "कॉन्टिन्यूअम में आपका स्वागत है। मैं आपको किस नाम से बुलाऊँ?",
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(JSON.stringify(hindiIdentityPrompt)).toContain(
+      "Do not translate, paraphrase",
+    );
 
     await controller.handleServerEvent(
       transcription("hindi-name", "मेरा नाम मीना है"),

@@ -236,6 +236,7 @@ function toolOutputEvent(
 }
 
 function speakToolOutputEvent(
+  text: string,
   policy: "exact" | "localize_onboarding" | "localize_recovery" = "exact",
   language?: VoiceLanguageOption,
 ): OpenTopicRealtimeClientEvent {
@@ -248,28 +249,52 @@ function speakToolOutputEvent(
       : policy === "localize_onboarding"
         ? `Localize only the latest authoritative onboarding spoken_response into the selected language. Preserve every name, digit, and question. Add nothing, then wait.${languageContract}`
         : `Briefly localize the retry lead, then repeat pending_prompt faithfully. Add nothing, then wait.${languageContract}`;
-  return { type: "response.create", response: { instructions } };
+  return authoritativeSpeechEvent(text, instructions);
 }
 
-function speakExactTextEvent(text: string): OpenTopicRealtimeClientEvent {
+function authoritativeSpeechEvent(
+  text: string,
+  instructions: string,
+): OpenTopicRealtimeClientEvent {
   return {
     type: "response.create",
     response: {
-      instructions: `Speak this authoritative server text exactly and add nothing: ${JSON.stringify(text)}`,
+      conversation: "none",
+      output_modalities: ["audio"],
+      tools: [],
+      tool_choice: "none",
+      instructions,
+      input: [
+        {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text,
+            },
+          ],
+        },
+      ],
     },
   };
+}
+
+function speakExactTextEvent(text: string): OpenTopicRealtimeClientEvent {
+  return authoritativeSpeechEvent(
+    text,
+    "Render the supplied input text as speech verbatim. Do not translate, paraphrase, answer, or add any words.",
+  );
 }
 
 function speakLocalizedOnboardingTextEvent(
   text: string,
   language: Pick<VoiceLanguageOption, "displayName" | "languageMode">,
 ): OpenTopicRealtimeClientEvent {
-  return {
-    type: "response.create",
-    response: {
-      instructions: `Localize only this authoritative onboarding text into ${language.displayName} (${language.languageMode}). Speak only in ${language.displayName}; do not fall back to English. Preserve every name, digit, and question. Add nothing, then wait: ${JSON.stringify(text)}`,
-    },
-  };
+  return authoritativeSpeechEvent(
+    text,
+    `Translate the supplied input text into ${language.displayName} (${language.languageMode}) and render only that translation as speech. Speak only in ${language.displayName}; do not fall back to English. Preserve every name, digit, and question. Do not answer, explain, or add words.`,
+  );
 }
 
 function respondToTranscriptEvent(
@@ -732,7 +757,13 @@ export class OpenTopicRealtimeController {
           spoken_response: spokenResponse,
         }),
       );
-      send(speakToolOutputEvent("localize_recovery", this.#selectedLanguage));
+      send(
+        speakToolOutputEvent(
+          spokenResponse,
+          "localize_recovery",
+          this.#selectedLanguage,
+        ),
+      );
       return;
     }
     try {
@@ -812,7 +843,13 @@ export class OpenTopicRealtimeController {
           }
           this.#lastVerifiedTranscript = undefined;
           send(toolOutputEvent(call.call_id, output));
-          send(speakToolOutputEvent("localize_onboarding", this.#selectedLanguage));
+          send(
+            speakToolOutputEvent(
+              String(output.spoken_response),
+              "localize_onboarding",
+              this.#selectedLanguage,
+            ),
+          );
           return;
         } else {
           const confirmedName = this.#pendingLearnerName ?? args.learner_name;
@@ -828,7 +865,13 @@ export class OpenTopicRealtimeController {
             };
             this.#lastVerifiedTranscript = undefined;
             send(toolOutputEvent(call.call_id, output));
-            send(speakToolOutputEvent("localize_onboarding", this.#selectedLanguage));
+            send(
+              speakToolOutputEvent(
+                String(output.spoken_response),
+                "localize_onboarding",
+                this.#selectedLanguage,
+              ),
+            );
             return;
           }
           let issuedCode: string | undefined;
@@ -841,7 +884,13 @@ export class OpenTopicRealtimeController {
               };
               this.#lastVerifiedTranscript = undefined;
               send(toolOutputEvent(call.call_id, output));
-              send(speakToolOutputEvent("localize_onboarding", this.#selectedLanguage));
+              send(
+                speakToolOutputEvent(
+                  String(output.spoken_response),
+                  "localize_onboarding",
+                  this.#selectedLanguage,
+                ),
+              );
               return;
             }
             const verified = this.#portableIdentity.verify({
@@ -860,7 +909,13 @@ export class OpenTopicRealtimeController {
                 spoken_response: "That code and name did not match. Please try again.",
               };
               send(toolOutputEvent(call.call_id, output));
-              send(speakToolOutputEvent("localize_onboarding", this.#selectedLanguage));
+              send(
+                speakToolOutputEvent(
+                  String(output.spoken_response),
+                  "localize_onboarding",
+                  this.#selectedLanguage,
+                ),
+              );
               return;
             }
             this.#learner = {
@@ -889,7 +944,13 @@ export class OpenTopicRealtimeController {
             };
             this.#lastVerifiedTranscript = undefined;
             send(toolOutputEvent(call.call_id, output));
-            send(speakToolOutputEvent("localize_onboarding", this.#selectedLanguage));
+            send(
+              speakToolOutputEvent(
+                String(output.spoken_response),
+                "localize_onboarding",
+                this.#selectedLanguage,
+              ),
+            );
             return;
           }
           this.#pendingLearnerName = undefined;
@@ -1204,7 +1265,13 @@ export class OpenTopicRealtimeController {
 
       send(toolOutputEvent(call.call_id, output));
       if (nextStage) this.#setStage(nextStage, send);
-      send(speakToolOutputEvent(policy, this.#selectedLanguage));
+      send(
+        speakToolOutputEvent(
+          String(output.spoken_response),
+          policy,
+          this.#selectedLanguage,
+        ),
+      );
     } catch (error) {
       this.#onError(error instanceof Error ? error : new Error("Realtime tool failed"));
       const spokenResponse =
@@ -1226,7 +1293,13 @@ export class OpenTopicRealtimeController {
           spoken_response: spokenResponse,
         }),
       );
-      send(speakToolOutputEvent("localize_recovery", this.#selectedLanguage));
+      send(
+        speakToolOutputEvent(
+          spokenResponse,
+          "localize_recovery",
+          this.#selectedLanguage,
+        ),
+      );
     }
   }
 
