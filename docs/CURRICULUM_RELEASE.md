@@ -12,10 +12,14 @@ local examples, and exclusions in the matching draft:
 
 | Subject | Official source | Draft |
 |---|---|---|
-| Science | [NCERT ePathshala: Materials Around Us](https://epathshala.nic.in/topicc.php?id=0677CH06) | `curriculum/source-briefs/drafts/india-grade6-science-materials.json` |
-| English | [NCERT ePathshala: Fables and Folk Tales](https://epathshala.nic.in/topic.php?id=0673CH01) | `curriculum/source-briefs/drafts/india-grade6-english-oral-narratives.json` |
-| History | [NCERT ePathshala: Timeline and Sources of History](https://epathshala.nic.in/topicc.php?id=0681CH04) | `curriculum/source-briefs/drafts/india-grade6-history-sources.json` |
-| Geography | [NCERT ePathshala: Locating Places on the Earth](https://epathshala.nic.in/topicc.php?id=0681CH01) | `curriculum/source-briefs/drafts/india-grade6-geography-maps.json` |
+| Science | [NCERT direct PDF: Materials Around Us](https://ncert.nic.in/textbook/pdf/fecu106.pdf) | `curriculum/source-briefs/drafts/india-grade6-science-materials.json` |
+| English | [NCERT direct PDF: Fables and Folk Tales](https://ncert.nic.in/textbook/pdf/fepr101.pdf) | `curriculum/source-briefs/drafts/india-grade6-english-oral-narratives.json` |
+| History | [NCERT direct PDF: Timeline and Sources of History](https://ncert.nic.in/textbook/pdf/fees104.pdf) | `curriculum/source-briefs/drafts/india-grade6-history-sources.json` |
+| Geography | [NCERT direct PDF: Locating Places on the Earth](https://ncert.nic.in/textbook/pdf/fees101.pdf) | `curriculum/source-briefs/drafts/india-grade6-geography-maps.json` |
+
+These are large official chapter PDFs. If a browser preview is slow, download the
+file and open it locally. The [NCERT textbook catalog](https://ncert.nic.in/textbook.php)
+is the official fallback index.
 
 For each subject, run the create-only review command documented in
 `curriculum/source-briefs/README.md`. Use your real name, a specific scope note,
