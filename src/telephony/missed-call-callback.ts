@@ -209,11 +209,11 @@ export class MissedCallCallbackService {
     if (!enrolled && !this.#allowAdultDemo) {
       return { status: "blocked", reason: "guardian_enrollment_required" };
     }
-    // Quiet hours protect enrolled learner profiles. An explicitly enabled,
-    // unregistered adult demo caller may test from another timezone without
-    // weakening the schedule policy for guardian-enrolled learners.
+    // Quiet hours protect the normal learner deployment. The explicit adult
+    // hackathon mode is a private test surface whose judges may be in any
+    // timezone, so it suspends this deployment-level gate.
     if (
-      enrolled &&
+      !this.#allowAdultDemo &&
       isQuietHour(
         localHour(nowDate, this.#timeZone),
         this.#quietStartHour,

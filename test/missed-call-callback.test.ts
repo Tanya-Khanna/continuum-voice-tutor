@@ -118,7 +118,7 @@ describe("missed-call callback access", () => {
     repository.close();
   });
 
-  it("still blocks an enrolled learner during deployment quiet hours", () => {
+  it("blocks an enrolled learner during quiet hours outside adult demo mode", () => {
     const repository = new SqliteLearningRepository(":memory:");
     const phoneHashSecret = "phone-hash-test-secret";
     repository.saveLearner(
@@ -143,7 +143,7 @@ describe("missed-call callback access", () => {
       quietEndHour: 7,
       perNumberDailyLimit: 3,
       globalDailyLimit: 100,
-      allowAdultDemo: true,
+      allowAdultDemo: false,
       clock: () => new Date("2026-07-18T17:00:00.000Z"),
       makeId: () => "learner-callback",
     });

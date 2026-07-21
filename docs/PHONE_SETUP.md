@@ -120,9 +120,10 @@ NOMAD_SMS_CONTROLS_ENABLED=true
 NOMAD_SCHEDULER_ENABLED=true
 ```
 
-The adult-demo switch permits unregistered adult judges to self-request a
-callback outside learner quiet hours. Guardian-enrolled learners remain subject
-to deployment quiet hours.
+The adult-demo switch creates a private hackathon test surface for adult judges
+across time zones, so it suspends the deployment quiet-hours gate. Never enable
+it for a child deployment; with the switch off, guardian enrollment and quiet
+hours both remain enforced.
 
 Set these attestations to `true` only after the corresponding Console save
 succeeds:

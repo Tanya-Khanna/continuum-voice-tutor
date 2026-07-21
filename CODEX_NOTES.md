@@ -605,5 +605,5 @@
 ## 2026-07-20 — Single-number callback deployment
 
 - Locked the no-extra-number constraint: the existing Twilio number becomes callback-only for inbound voice, then originates the teaching callback and remains the SMS sender. Direct answered inbound tutoring is deferred, not treated as a second-number prerequisite.
-- Preserved learner quiet hours while allowing explicitly enabled, unregistered adult hackathon judges to request a callback across time zones; added deterministic coverage for both adult-demo access and enrolled-learner blocking.
+- Preserved guardian enrollment and learner quiet hours in normal deployment while allowing the explicitly enabled private adult hackathon surface to accept judge callbacks across time zones; added deterministic coverage for both modes.
 - Updated the current build plan and phone runbook with the reversible trunk-to-webhook routing sequence. Live carrier claims remain gated until the route is enabled and the documented smoke journey passes.
