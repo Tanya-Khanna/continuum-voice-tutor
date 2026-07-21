@@ -25,6 +25,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "For English, press 1.",
     identityPrompt: "Welcome to Continuum. What name would you like me to use for you?",
     languageAliases: ["English"],
+    noLearnerCodeAliases: ["no", "no code", "i do not have a code", "i don't have a code"],
     subjectAliases: sharedSubjects,
     curiosityAliases: ["curious sandbox", "ask anything", "curious"],
     durationAliases: sharedDurations,
@@ -34,8 +35,9 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     languageMode: "hi",
     displayName: "Hindi",
     selectionPrompt: "हिंदी के लिए 2 दबाएँ।",
-    identityPrompt: "Continuum में आपका स्वागत है। मैं आपको किस नाम से बुलाऊँ?",
+    identityPrompt: "कॉन्टिन्यूअम में आपका स्वागत है। मैं आपको किस नाम से बुलाऊँ?",
     languageAliases: ["Hindi", "हिंदी", "हिन्दी"],
+    noLearnerCodeAliases: ["नहीं", "नही", "कोड नहीं", "मेरे पास कोड नहीं", "no"],
     subjectAliases: {
       Math: ["गणित", "math"],
       Science: ["विज्ञान", "science"],
@@ -57,6 +59,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "Para español, oprime 3.",
     identityPrompt: "Bienvenido a Continuum. ¿Qué nombre quieres que use para ti?",
     languageAliases: ["Spanish", "español", "espanol"],
+    noLearnerCodeAliases: ["no", "no tengo código", "no tengo codigo", "sin código", "sin codigo"],
     subjectAliases: {
       Math: ["matemáticas", "matematicas"],
       Science: ["ciencias", "ciencia"],
@@ -78,6 +81,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "Pour le français, appuyez sur 4.",
     identityPrompt: "Bienvenue sur Continuum. Quel nom veux-tu que j'utilise?",
     languageAliases: ["French", "français", "francais"],
+    noLearnerCodeAliases: ["non", "je n'ai pas de code", "pas de code"],
     subjectAliases: {
       Math: ["mathématiques", "mathematiques", "maths"],
       Science: ["sciences"],
@@ -96,9 +100,10 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     key: "5",
     languageMode: "sw",
     displayName: "Kiswahili",
-    selectionPrompt: "Kwa Kiswahili, bonyeza 5.",
+    selectionPrompt: "Kwa Kiswahili, bonyeza tano, nambari 5.",
     identityPrompt: "Karibu Continuum. Ungependa nikuitaje?",
     languageAliases: ["Swahili", "Kiswahili"],
+    noLearnerCodeAliases: ["hapana", "sina msimbo", "sina nambari", "sina code", "no"],
     subjectAliases: {
       Math: ["hisabati"],
       Science: ["sayansi"],
@@ -120,6 +125,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "தமிழுக்கு 6 அழுத்தவும்.",
     identityPrompt: "Continuum-க்கு வரவேற்கிறோம். உங்களை எந்தப் பெயரில் அழைக்கலாம்?",
     languageAliases: ["Tamil", "தமிழ்"],
+    noLearnerCodeAliases: ["இல்லை", "குறியீடு இல்லை", "கோடு இல்லை", "no"],
     subjectAliases: {
       Math: ["கணிதம்"],
       Science: ["அறிவியல்"],
@@ -141,6 +147,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "বাংলার জন্য 7 চাপুন।",
     identityPrompt: "Continuum-এ স্বাগতম। আমি তোমাকে কোন নামে ডাকব?",
     languageAliases: ["Bengali", "Bangla", "বাংলা"],
+    noLearnerCodeAliases: ["না", "কোড নেই", "no"],
     subjectAliases: {
       Math: ["গণিত"],
       Science: ["বিজ্ঞান"],
@@ -162,6 +169,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "للعربية اضغط 8.",
     identityPrompt: "مرحبًا بك في Continuum. ما الاسم الذي تريدني أن أناديك به؟",
     languageAliases: ["Arabic", "العربية", "عربي"],
+    noLearnerCodeAliases: ["لا", "ليس لدي رمز", "ما عندي رمز", "no"],
     subjectAliases: {
       Math: ["الرياضيات"],
       Science: ["العلوم"],
@@ -183,6 +191,7 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     selectionPrompt: "اردو کے لیے 9 دبائیں۔",
     identityPrompt: "Continuum میں خوش آمدید۔ میں آپ کو کس نام سے پکاروں؟",
     languageAliases: ["Urdu", "اردو"],
+    noLearnerCodeAliases: ["نہیں", "کوڈ نہیں", "میرے پاس کوڈ نہیں", "no"],
     subjectAliases: {
       Math: ["ریاضی"],
       Science: ["سائنس"],

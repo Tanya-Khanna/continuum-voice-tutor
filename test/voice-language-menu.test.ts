@@ -39,7 +39,7 @@ describe("voice language menu", () => {
     expect(prompt).toContain("For English, press 1");
     expect(prompt).toContain("हिंदी के लिए 2 दबाएँ");
     expect(prompt).toContain("Para español, oprime 3");
-    expect(prompt).toContain("Kwa Kiswahili, bonyeza 5");
+    expect(prompt).toContain("Kwa Kiswahili, bonyeza tano, nambari 5");
     expect(prompt).toContain("اردو کے لیے 9 دبائیں");
   });
 

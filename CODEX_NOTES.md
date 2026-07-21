@@ -688,3 +688,12 @@
 - Added explicit evidence gates for language, subject, Curious Sandbox, and lesson duration. Speech choices must match localized configured aliases, while DTMF choices follow stage-aware deterministic routing. A model function call cannot turn `background noise`, a learner name, or silence into Science.
 - Split multi-subject guided onboarding into two independently verified turns: first subject, then 3/5/10-minute duration. The selected language is persisted on new and portable profiles and governs localized onboarding responses.
 - Verification basis: OpenAI's official Realtime VAD, input-audio transcription event, and SIP DTMF contracts. Strict TypeScript, 190/190 automated tests, the 25/25 deterministic teaching gate with 100% voice-friendly output, the 5/5 curriculum release check, the production build, and production smoke all pass.
+
+## 2026-07-21 — Carrier-observed language-menu and identity hardening
+
+- Tanya's next live call confirmed that silence no longer selected Science, but exposed a replayed language-menu prefix and an unsafe identity shortcut: after hearing only “Tanya,” the model created a new code without asking whether an existing learner code was available.
+- Blank input transcriptions now clear stale evidence and produce no new response. This prevents tiny carrier/VAD audio fragments from replaying a menu that is already speaking.
+- The controller tracks Realtime response generation and SIP output playback. Any DTMF input sends `response.cancel` and `output_audio_buffer.clear` when applicable before stage routing, so a language selection immediately discards the unplayed remainder of the language menu.
+- Identity is now a trusted two-turn state machine. The first verified name saves only a pending name and asks the learner-code question. A second verified turn must contain a configured localized “no” phrase or the exact six code digits before a learner is created or loaded. Recovery repeats the code question while that answer is pending.
+- Improved Hindi brand pronunciation with a Devanagari transliteration and made the Kiswahili key unambiguous by speaking both “tano” and “nambari 5.”
+- Focused strict TypeScript and 30/30 language-menu, Realtime, SIP, and multi-subject catalog tests pass. The cancellation behavior follows OpenAI's documented WebRTC/SIP procedure for canceling an in-progress response and clearing unplayed output audio.

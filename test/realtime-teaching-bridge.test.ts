@@ -74,6 +74,38 @@ async function makePlacedLearner(options: {
   return placed.context.learner;
 }
 
+async function prepareNewLearnerWithoutCode(options: {
+  controller: RealtimeTeachingController;
+  learnerName: string;
+  callId: string;
+}): Promise<void> {
+  const discard = () => undefined;
+  await options.controller.handleServerEvent(
+    {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: `${options.callId}_name_audio`,
+      transcript: options.learnerName,
+    },
+    discard,
+  );
+  await options.controller.handleServerEvent(
+    functionCallEvent({
+      callId: `${options.callId}_save_name`,
+      name: "start_lesson",
+      arguments: { learner_name: options.learnerName },
+    }),
+    discard,
+  );
+  await options.controller.handleServerEvent(
+    {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: `${options.callId}_no_code_audio`,
+      transcript: "No, I do not have a code.",
+    },
+    discard,
+  );
+}
+
 describe("Realtime teaching controller", () => {
   it("introduces the human-selected Continuum identity", () => {
     expect(buildRealtimeOpeningEvent(DEFAULT_VOICE_LANGUAGE_MENU)).toMatchObject({
@@ -109,12 +141,13 @@ describe("Realtime teaching controller", () => {
       "हिंदी के लिए 2",
     );
     expect(JSON.stringify(productionController.openingEvent())).toContain(
-      "Kwa Kiswahili, bonyeza 5",
+      "Kwa Kiswahili, bonyeza tano, nambari 5",
     );
     expect(JSON.stringify(productionController.openingEvent())).toContain(
       "اردو کے لیے 9",
     );
 
+    const beforeSilence = sent.length;
     await productionController.handleServerEvent(
       {
         type: "conversation.item.input_audio_transcription.completed",
@@ -124,18 +157,66 @@ describe("Realtime teaching controller", () => {
       send,
     );
     expect(productionController.openingToolStage()).toBe("language");
-    expect(JSON.stringify(sent.at(-1))).toContain("Choose your language");
+    expect(sent).toHaveLength(beforeSilence);
+
+    await productionController.handleServerEvent(
+      { type: "response.created", response: { id: "menu_response" } },
+      send,
+    );
+    await productionController.handleServerEvent(
+      { type: "output_audio_buffer.started", response_id: "menu_response" },
+      send,
+    );
 
     await productionController.handleServerEvent(
       { type: "input_audio_buffer.dtmf_event_received", event: "3" },
       send,
     );
     expect(productionController.openingToolStage()).toBe("identity");
+    expect(sent.slice(-4, -2)).toEqual([
+      { type: "response.cancel" },
+      { type: "output_audio_buffer.clear" },
+    ]);
     expect(JSON.stringify(sent.at(-1))).toContain("Bienvenido a Continuum");
 
     await productionController.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "spanish_name_audio",
+        transcript: "Daniel",
+      },
+      send,
+    );
+    await productionController.handleServerEvent(
       functionCallEvent({
-        callId: "spanish_name",
+        callId: "spanish_save_name",
+        name: "start_lesson",
+        arguments: { learner_name: "Daniel" },
+      }),
+      send,
+    );
+    const identityPending = parseToolOutput(
+      sent.filter((event) => event.type === "conversation.item.create").at(-1)!,
+    );
+    expect(identityPending).toMatchObject({
+      ok: true,
+      identity_complete: false,
+      learner_name_saved: true,
+    });
+    expect(identityPending.spoken_response).toContain("learner code");
+    expect(repository.listLearnersForPhone("a".repeat(64))).toHaveLength(0);
+
+    await productionController.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "spanish_no_code_audio",
+        transcript: "No tengo código",
+      },
+      send,
+    );
+    await productionController.handleServerEvent(
+      functionCallEvent({
+        callId: "spanish_complete_identity",
         name: "start_lesson",
         arguments: { learner_name: "Daniel" },
       }),
@@ -292,6 +373,11 @@ describe("Realtime teaching controller", () => {
       modelRoute: "gpt-realtime-2.1-mini",
     });
     const sent: RealtimeClientEvent[] = [];
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Meena",
+      callId: "guardian_identity",
+    });
     await controller.handleServerEvent(
       functionCallEvent({
         callId: "guardian-start",
@@ -532,6 +618,12 @@ describe("Realtime teaching controller", () => {
       (event) => sent.push(event),
     );
 
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Ravi",
+      callId: "ravi_identity",
+    });
+
     await controller.handleServerEvent(
       functionCallEvent({
         callId: "call_start",
@@ -682,6 +774,11 @@ describe("Realtime teaching controller", () => {
       modelRoute: "gpt-realtime-2.1-mini",
     });
     const send = vi.fn<(event: RealtimeClientEvent) => void>();
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Asha",
+      callId: "duplicate_identity",
+    });
     const item = {
       type: "function_call",
       name: "start_lesson",
@@ -718,6 +815,12 @@ describe("Realtime teaching controller", () => {
     });
     const sent: RealtimeClientEvent[] = [];
     const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Mode Tester",
+      callId: "mode_identity",
+    });
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -762,6 +865,12 @@ describe("Realtime teaching controller", () => {
     });
     const sent: RealtimeClientEvent[] = [];
     const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Tanya",
+      callId: "tanya_identity",
+    });
 
     await controller.handleServerEvent(
       functionCallEvent({
@@ -899,6 +1008,12 @@ describe("Realtime teaching controller", () => {
       ok: true,
       recovery_stage: "identity",
       pending_prompt: "What name would you like me to use?",
+    });
+
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Recovery Learner",
+      callId: "recovery_identity",
     });
 
     await controller.handleServerEvent(
@@ -1058,6 +1173,12 @@ describe("Realtime teaching controller", () => {
     const sent: RealtimeClientEvent[] = [];
     const send = (event: RealtimeClientEvent) => sent.push(event);
 
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Mina",
+      callId: "recap_identity",
+    });
+
     await controller.handleServerEvent(
       functionCallEvent({
         callId: "recap_start",
@@ -1141,6 +1262,12 @@ describe("Realtime teaching controller", () => {
     });
     const sent: RealtimeClientEvent[] = [];
     const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Safety Test",
+      callId: "safety_identity",
+    });
 
     await controller.handleServerEvent(
       functionCallEvent({

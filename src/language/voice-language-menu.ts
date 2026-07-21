@@ -20,6 +20,7 @@ export const VoiceLanguageOptionSchema = z.object({
   selectionPrompt: z.string().trim().min(1).max(240),
   identityPrompt: z.string().trim().min(1).max(240),
   languageAliases: z.array(z.string().trim().min(1).max(80)).min(1),
+  noLearnerCodeAliases: z.array(z.string().trim().min(1).max(120)).min(1),
   subjectAliases: z.record(
     z.string().trim().min(1).max(80),
     z.array(z.string().trim().min(1).max(80)).min(1),
@@ -108,6 +109,35 @@ export function transcriptSelectsLanguage(
   option: VoiceLanguageOption,
 ): boolean {
   return includesAlias(transcript, option.languageAliases);
+}
+
+export function transcriptConfirmsLearnerName(
+  transcript: string,
+  learnerName: string,
+): boolean {
+  return includesAlias(transcript, [learnerName]);
+}
+
+export function transcriptSaysNoLearnerCode(
+  transcript: string,
+  languageOption?: VoiceLanguageOption,
+): boolean {
+  return includesAlias(
+    transcript,
+    languageOption?.noLearnerCodeAliases ?? [
+      "no",
+      "no code",
+      "i do not have a code",
+      "i don't have a code",
+    ],
+  );
+}
+
+export function transcriptContainsLearnerCode(
+  transcript: string,
+  learnerCode: string,
+): boolean {
+  return transcript.replace(/\D/gu, "") === learnerCode;
 }
 
 export function transcriptSelectsSubject(options: {

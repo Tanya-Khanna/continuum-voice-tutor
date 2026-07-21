@@ -37,6 +37,9 @@ import {
   transcriptSelectsDuration,
   transcriptSelectsLanguage,
   transcriptSelectsSubject,
+  transcriptConfirmsLearnerName,
+  transcriptContainsLearnerCode,
+  transcriptSaysNoLearnerCode,
   VoiceLanguageMenuSchema,
   VoiceLanguageOptionSchema,
   type VoiceLanguageMenu,
@@ -147,6 +150,23 @@ const ResponseDoneSchema = z.object({
       .optional(),
   }),
 });
+
+const ResponseCreatedSchema = z
+  .object({ type: z.literal("response.created") })
+  .passthrough();
+
+const OutputAudioBufferStartedSchema = z
+  .object({ type: z.literal("output_audio_buffer.started") })
+  .passthrough();
+
+const OutputAudioBufferStoppedSchema = z
+  .object({
+    type: z.union([
+      z.literal("output_audio_buffer.stopped"),
+      z.literal("output_audio_buffer.cleared"),
+    ]),
+  })
+  .passthrough();
 
 const DtmfEventSchema = z
   .object({
@@ -401,6 +421,9 @@ export class RealtimeTeachingController {
   #selectedLanguage: VoiceLanguageOption | undefined;
   #allowUnlistedLanguage = false;
   #lastVerifiedTranscript: string | undefined;
+  #pendingLearnerName: string | undefined;
+  #responseInProgress = false;
+  #outputAudioPlaying = false;
   #pendingLearningSelection:
     | { mode: "guided"; subject: string }
     | undefined;
@@ -517,8 +540,24 @@ export class RealtimeTeachingController {
   ): Promise<void> {
     this.#queue = this.#queue
       .then(async () => {
+        if (ResponseCreatedSchema.safeParse(event).success) {
+          this.#responseInProgress = true;
+          return;
+        }
+        if (OutputAudioBufferStartedSchema.safeParse(event).success) {
+          this.#outputAudioPlaying = true;
+          return;
+        }
+        if (OutputAudioBufferStoppedSchema.safeParse(event).success) {
+          this.#outputAudioPlaying = false;
+          return;
+        }
+        if (ResponseDoneSchema.safeParse(event).success) {
+          this.#responseInProgress = false;
+        }
         const dtmf = DtmfEventSchema.safeParse(event);
         if (dtmf.success) {
+          this.#interruptAssistantAudio(send);
           await this.#handleDtmf(dtmf.data.event, send);
           return;
         }
@@ -526,11 +565,7 @@ export class RealtimeTeachingController {
         if (transcription.success) {
           const transcript = transcription.data.transcript.trim();
           if (!hasMeaningfulTranscript(transcript)) {
-            const recovery =
-              this.#toolStage === "language"
-                ? buildVoiceLanguageMenuPrompt(this.#languageMenu)
-                : "I did not catch any words. Please say that again, or use the keypad.";
-            send(speakExactTextEvent(recovery));
+            this.#lastVerifiedTranscript = undefined;
             return;
           }
           this.#lastVerifiedTranscript = transcript;
@@ -567,6 +602,17 @@ export class RealtimeTeachingController {
         );
       });
     return this.#queue;
+  }
+
+  #interruptAssistantAudio(send: RealtimeEventSender): void {
+    if (this.#responseInProgress) {
+      send({ type: "response.cancel" });
+      this.#responseInProgress = false;
+    }
+    if (this.#outputAudioPlaying) {
+      send({ type: "output_audio_buffer.clear" });
+      this.#outputAudioPlaying = false;
+    }
   }
 
   async #handleDtmf(
@@ -1124,6 +1170,7 @@ export class RealtimeTeachingController {
               identityPrompt:
                 "Welcome to Continuum. What name would you like me to use for you?",
               languageAliases: [transcript],
+              noLearnerCodeAliases: ["no", "no code", "i do not have a code"],
               subjectAliases: {},
               curiosityAliases: ["curious sandbox", "ask anything"],
               durationAliases: {
@@ -1145,6 +1192,7 @@ export class RealtimeTeachingController {
         this.#lastVerifiedTranscript = undefined;
       } else if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
+        const verifiedTranscript = this.#lastVerifiedTranscript ?? "";
         if (!this.#selectedLanguage) {
           output = {
             ok: false,
@@ -1160,6 +1208,48 @@ export class RealtimeTeachingController {
           };
           speechPolicy = "localize_onboarding";
         } else {
+          if (!this.#pendingCodeLearner && !this.#pendingLearnerName) {
+            if (!transcriptConfirmsLearnerName(verifiedTranscript, args.learner_name)) {
+              output = {
+                ok: false,
+                identity_complete: false,
+                state_changed: false,
+                spoken_response: "What name would you like me to use?",
+              };
+            } else {
+              this.#pendingLearnerName = args.learner_name;
+              output = {
+                ok: true,
+                identity_complete: false,
+                learner_name_saved: true,
+                spoken_response:
+                  "Do you already have a six-digit learner code? If yes, say all six digits. If not, say no.",
+              };
+            }
+            this.#lastVerifiedTranscript = undefined;
+            send(toolOutputEvent(call.call_id, output));
+            send(speakToolOutputEvent("localize_onboarding"));
+            return;
+          }
+
+          const confirmedName = this.#pendingLearnerName ?? args.learner_name;
+          if (
+            normalizeLearnerName(confirmedName) !==
+            normalizeLearnerName(args.learner_name)
+          ) {
+            output = {
+              ok: false,
+              identity_complete: false,
+              state_changed: false,
+              spoken_response:
+                "Please answer the learner-code question for the same learner name.",
+            };
+            this.#lastVerifiedTranscript = undefined;
+            send(toolOutputEvent(call.call_id, output));
+            send(speakToolOutputEvent("localize_onboarding"));
+            return;
+          }
+
           let portableCodeIssued: string | undefined;
           if (this.#pendingCodeLearner) {
             if (
@@ -1182,6 +1272,19 @@ export class RealtimeTeachingController {
             };
             this.#pendingCodeLearner = undefined;
           } else if (args.learner_code && this.#portableIdentity) {
+            if (!transcriptContainsLearnerCode(verifiedTranscript, args.learner_code)) {
+              output = {
+                ok: false,
+                identity_complete: false,
+                state_changed: false,
+                spoken_response:
+                  "I did not receive all six learner-code digits. Please say all six digits, or enter them and press pound.",
+              };
+              this.#lastVerifiedTranscript = undefined;
+              send(toolOutputEvent(call.call_id, output));
+              send(speakToolOutputEvent("localize_onboarding"));
+              return;
+            }
             const verification = this.#portableIdentity.verify({
               code: args.learner_code,
               sourcePhoneNumber: this.#callerNumber,
@@ -1207,7 +1310,12 @@ export class RealtimeTeachingController {
               ...verification.learner,
               preferredLanguage: this.#selectedLanguage.languageMode,
             };
-          } else {
+          } else if (
+            transcriptSaysNoLearnerCode(
+              verifiedTranscript,
+              this.#selectedLanguage,
+            )
+          ) {
             this.#learner = this.#lessonService.identifyLearner({
               phoneNumber: this.#callerNumber,
               learnerName: args.learner_name,
@@ -1221,7 +1329,21 @@ export class RealtimeTeachingController {
                 this.#learner.id,
               );
             }
+          } else {
+            output = {
+              ok: false,
+              identity_complete: false,
+              state_changed: false,
+              spoken_response:
+                "Do you already have a six-digit learner code? If yes, say all six digits. If not, say no.",
+            };
+            this.#lastVerifiedTranscript = undefined;
+            send(toolOutputEvent(call.call_id, output));
+            send(speakToolOutputEvent("localize_onboarding"));
+            return;
           }
+          this.#pendingLearnerName = undefined;
+          this.#lastVerifiedTranscript = undefined;
           const spokenCode = portableCodeIssued
             ? `Your portable learner code is ${portableCodeIssued.split("").join(" ")}. Keep it private. `
             : "";
@@ -1772,7 +1894,9 @@ export class RealtimeTeachingController {
             : "Enter the six-digit guardian code, then press pound.";
         } else if (!this.#learner) {
           recoveryStage = "identity";
-          pendingPrompt = "What name would you like me to use?";
+          pendingPrompt = this.#pendingLearnerName
+            ? "Do you already have a six-digit learner code? If yes, say all six digits. If not, say no."
+            : "What name would you like me to use?";
         } else if (!this.#learningMode || !this.#context) {
           recoveryStage = "menu";
           pendingPrompt = this.#pendingLearningSelection

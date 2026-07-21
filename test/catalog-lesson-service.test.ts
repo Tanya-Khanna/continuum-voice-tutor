@@ -81,6 +81,37 @@ function parseToolOutput(event: RealtimeClientEvent): Record<string, unknown> {
   return JSON.parse(item.output) as Record<string, unknown>;
 }
 
+async function prepareNewLearnerWithoutCode(options: {
+  controller: RealtimeTeachingController;
+  learnerName: string;
+}): Promise<void> {
+  const discard = () => undefined;
+  await options.controller.handleServerEvent(
+    {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: "catalog_name_audio",
+      transcript: options.learnerName,
+    },
+    discard,
+  );
+  await options.controller.handleServerEvent(
+    functionCallEvent({
+      callId: "catalog_save_name",
+      name: "start_lesson",
+      arguments: { learner_name: options.learnerName },
+    }),
+    discard,
+  );
+  await options.controller.handleServerEvent(
+    {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: "catalog_no_code_audio",
+      transcript: "No, I do not have a code.",
+    },
+    discard,
+  );
+}
+
 describe("CatalogLessonService", () => {
   it("builds a metadata-driven subject menu and routes an explicit subject", () => {
     const repository = new SqliteLearningRepository(":memory:");
@@ -188,6 +219,11 @@ describe("CatalogLessonService", () => {
     });
     const sent: RealtimeClientEvent[] = [];
     const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    await prepareNewLearnerWithoutCode({
+      controller,
+      learnerName: "Menu Learner",
+    });
 
     await controller.handleServerEvent(
       functionCallEvent({
