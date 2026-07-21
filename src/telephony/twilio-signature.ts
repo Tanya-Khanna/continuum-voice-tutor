@@ -1,4 +1,5 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac } from "node:crypto";
+import { validateRequest } from "twilio";
 
 export function computeTwilioSignature(options: {
   authToken: string;
@@ -26,9 +27,19 @@ export function validateTwilioSignature(options: {
   providedSignature?: string;
 }): boolean {
   if (!options.providedSignature) return false;
-  const expected = Buffer.from(computeTwilioSignature(options), "utf8");
-  const provided = Buffer.from(options.providedSignature, "utf8");
-  return (
-    expected.length === provided.length && timingSafeEqual(expected, provided)
+  const parameters: Record<string, string | string[]> = {};
+  for (const name of new Set(options.parameters.keys())) {
+    const values = options.parameters.getAll(name);
+    parameters[name] = values.length === 1 ? values[0]! : values;
+  }
+  // Twilio's own validator deliberately checks signatures generated with and
+  // without the standard HTTPS/HTTP port. Twilio documents that its signing
+  // backend is inconsistent about including those ports, so a single manual
+  // HMAC comparison can reject a genuine provider webhook behind a proxy.
+  return validateRequest(
+    options.authToken,
+    options.providedSignature,
+    options.url,
+    parameters,
   );
 }

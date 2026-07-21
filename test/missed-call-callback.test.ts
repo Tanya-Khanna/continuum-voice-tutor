@@ -66,6 +66,17 @@ describe("missed-call callback access", () => {
     expect(
       validateTwilioSignature({ ...options, providedSignature: "tampered" }),
     ).toBe(false);
+
+    const signatureWithStandardPort = computeTwilioSignature({
+      ...options,
+      url: "https://continuum.example:443/webhooks/twilio/missed-call",
+    });
+    expect(
+      validateTwilioSignature({
+        ...options,
+        providedSignature: signatureWithStandardPort,
+      }),
+    ).toBe(true);
   });
 
   it("encrypts the destination and collapses duplicate missed calls", () => {
