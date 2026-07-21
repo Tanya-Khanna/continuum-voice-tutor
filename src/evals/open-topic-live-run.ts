@@ -194,7 +194,7 @@ export const openTopicLiveCases: LiveCase[] = [
     category: "mastery",
     request: request({
       learnerId: "synthetic-v7-dtmf",
-      learnerInput: "2",
+      learnerInput: "Two fourths.",
       phase: "practice",
       currentTopic: "equivalent fractions",
       previousPrompt: "Which choice represents one half? Press 1, 2, or 3.",
