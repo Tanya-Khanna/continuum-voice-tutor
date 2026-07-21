@@ -892,7 +892,7 @@ A judge should be able to validate the product without learning a menu:
 - ~~Project builds from a clean clone.~~
 - ~~`npm run chat`, `npm run eval`, `npm test`, `npm run typecheck`, and `npm run check` pass.~~
 - ~~Server starts without curriculum-pack variables.~~
-- Deployed revision equals the tested commit.
+- ~~Deployed revision equals the tested commit.~~
 - Real carrier golden journey and DTMF/drop/SMS smoke pass.
 - Public claims name only tested languages and carrier behavior.
 - ~~README explains setup, architecture, safety, privacy, limitations, Codex use, and GPT model use.~~
