@@ -1,42 +1,38 @@
-import {
-  curriculumCatalogOptions,
-  loadCurriculumCatalog,
-} from "../config/curriculum.js";
 import { loadEnvironment } from "../config/env.js";
-import { seedDemoState } from "../demo/seed-demo-state.js";
-import { OfflineTeachingEngine } from "../engine/offline-teaching-engine.js";
-import { CatalogLessonService } from "../lesson/catalog-lesson-service.js";
-import { SqliteLearningRepository } from "../persistence/sqlite-learning-repository.js";
+import { createOpenTopicRuntime } from "../runtime/open-topic-runtime.js";
 
 async function main(): Promise<void> {
   const environment = loadEnvironment();
-  const catalog = loadCurriculumCatalog(curriculumCatalogOptions(environment));
-  catalog.requireBySubject("Math");
-  const repository = new SqliteLearningRepository(
-    environment.NOMAD_DATABASE_PATH,
-  );
-  const lessonService = new CatalogLessonService({
-    repository,
-    catalog,
-    engineFactory: (packId) =>
-      new OfflineTeachingEngine(catalog.requireByPackId(packId).pack),
-    phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
-  });
+  const runtime = createOpenTopicRuntime(environment);
+  const learnerName = "Ravi";
+  const phoneNumber = "+910000000042";
 
   try {
-    const result = await seedDemoState({
-      lessonService,
+    const learner = runtime.lessonService.identifyLearner({
+      phoneNumber,
+      learnerName,
+      preferredLanguage: "en",
     });
+    let context = runtime.lessonService.beginOrResumeLearner(learner);
+    const created = !context.resumed && context.session.turnCount === 0;
+    if (created) {
+      const response = await runtime.lessonService.respond(
+        context,
+        "Teach me why shadows change length.",
+      );
+      context = response.context;
+    }
+    context = runtime.lessonService.pause(context, "drop");
     console.log(
-      `Demo state ${result.created ? "created" : "already present"}: ${result.learnerName} is paused after ${result.turnCount} teaching turn${result.turnCount === 1 ? "" : "s"}.`,
+      `Demo state ${created ? "created" : "already present"}: ${learnerName} is paused after ${context.session.turnCount} open-topic teaching turn${context.session.turnCount === 1 ? "" : "s"}.`,
     );
-    console.log(`Subject: ${result.subject}`);
-    console.log(`Pending prompt: ${result.pendingPrompt}`);
+    console.log("Experience: open-topic phone teacher");
+    console.log(`Pending prompt: ${context.session.lastPrompt}`);
     console.log(
-      `Resume with: npm run chat -- --name ${result.learnerName} --phone ${result.phoneNumber} --language en --subject ${result.subject}`,
+      `Resume with: npm run chat -- --name ${learnerName} --phone ${phoneNumber} --language en`,
     );
   } finally {
-    repository.close();
+    runtime.close();
   }
 }
 

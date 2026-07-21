@@ -32,6 +32,28 @@ function run(
   }
 }
 
+function runCapture(
+  command: string,
+  args: string[],
+  options: { input?: string; environment?: NodeJS.ProcessEnv } = {},
+): string {
+  console.log(`\n> ${command} ${args.join(" ")}`);
+  const result = spawnSync(command, args, {
+    cwd: freshRoot,
+    env: options.environment ?? process.env,
+    input: options.input,
+    encoding: "utf8",
+    maxBuffer: 20 * 1024 * 1024,
+  });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`${command} ${args.join(" ")} exited ${result.status}.`);
+  }
+  return result.stdout;
+}
+
 try {
   const archive = spawnSync(
     "git",
@@ -77,8 +99,14 @@ try {
   run("npm", ["run", "smoke:production"], { environment: cleanEnvironment });
   run("npm", ["run", "check"], { environment: cleanEnvironment });
   run("npm", ["run", "eval"], { environment: cleanEnvironment });
-  run("npm", ["run", "seed:demo"], { environment: cleanEnvironment });
-  run(
+  const seedOutput = runCapture("npm", ["run", "seed:demo"], {
+    environment: cleanEnvironment,
+  });
+  const pendingPrompt = seedOutput.match(/^Pending prompt: (.+)$/mu)?.[1];
+  if (!pendingPrompt) {
+    throw new Error("The v7 demo seed did not expose an exact pending prompt.");
+  }
+  const resumeOutput = runCapture(
     "npm",
     [
       "run",
@@ -96,6 +124,15 @@ try {
       input: "exit\n",
     },
   );
+  if (
+    !resumeOutput.includes("Session: resumed") ||
+    !resumeOutput.includes(pendingPrompt) ||
+    !resumeOutput.includes("Session saved after 1 teaching turn")
+  ) {
+    throw new Error(
+      "The fresh v7 session did not resume the exact persisted open-topic question.",
+    );
+  }
 
   console.log(
     "\nFresh-clone gate passed: lockfile install, pack-free production smoke, tests, v7 deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
