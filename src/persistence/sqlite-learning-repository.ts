@@ -56,6 +56,10 @@ import {
   CarrierCallReceiptSchema,
   type CarrierCallReceipt,
 } from "../domain/carrier-usage.js";
+import {
+  SmsReminderSchema,
+  type SmsReminder,
+} from "../domain/sms-reminder.js";
 
 interface LearnerRow {
   id: string;
@@ -419,6 +423,21 @@ export class SqliteLearningRepository implements LearningRepository {
 
       CREATE INDEX IF NOT EXISTS homework_assignments_learner_idx
         ON homework_assignments(learner_id, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS sms_reminders (
+        id TEXT PRIMARY KEY,
+        learner_id TEXT NOT NULL REFERENCES learners(id) ON DELETE CASCADE,
+        reminder_json TEXT NOT NULL,
+        due_at TEXT NOT NULL,
+        status TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS sms_reminders_due_idx
+        ON sms_reminders(status, due_at);
+
+      CREATE INDEX IF NOT EXISTS sms_reminders_learner_idx
+        ON sms_reminders(learner_id, updated_at DESC);
 
       CREATE TABLE IF NOT EXISTS product_metric_events (
         id TEXT PRIMARY KEY,
@@ -1502,6 +1521,108 @@ export class SqliteLearningRepository implements LearningRepository {
     return rows.map((row) =>
       HomeworkAssignmentSchema.parse(JSON.parse(row.assignment_json) as unknown),
     );
+  }
+
+  saveSmsReminder(unparsedReminder: SmsReminder): void {
+    const reminder = SmsReminderSchema.parse(unparsedReminder);
+    this.#database
+      .prepare(
+        `INSERT INTO sms_reminders (
+          id, learner_id, reminder_json, due_at, status, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          reminder_json = excluded.reminder_json,
+          due_at = excluded.due_at,
+          status = excluded.status,
+          updated_at = excluded.updated_at`,
+      )
+      .run(
+        reminder.id,
+        reminder.learnerId,
+        JSON.stringify(reminder),
+        reminder.dueAt,
+        reminder.status,
+        reminder.updatedAt,
+      );
+  }
+
+  findSmsReminder(id: string): SmsReminder | undefined {
+    const row = this.#database
+      .prepare("SELECT reminder_json FROM sms_reminders WHERE id = ?")
+      .get(id) as { reminder_json: string } | undefined;
+    return row
+      ? SmsReminderSchema.parse(JSON.parse(row.reminder_json) as unknown)
+      : undefined;
+  }
+
+  listSmsReminders(learnerId: string): SmsReminder[] {
+    const rows = this.#database
+      .prepare(
+        "SELECT reminder_json FROM sms_reminders WHERE learner_id = ? ORDER BY updated_at DESC",
+      )
+      .all(learnerId) as { reminder_json: string }[];
+    return rows.map((row) =>
+      SmsReminderSchema.parse(JSON.parse(row.reminder_json) as unknown),
+    );
+  }
+
+  claimDueSmsReminders(options: {
+    now: string;
+    claimToken: string;
+    claimExpiresAt: string;
+    limit: number;
+  }): SmsReminder[] {
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(options.limit)));
+    return this.#database.transaction(() => {
+      const rows = this.#database
+        .prepare(
+          `SELECT reminder_json FROM sms_reminders
+           WHERE status IN ('pending', 'claimed') AND due_at <= ?
+           ORDER BY due_at LIMIT ?`,
+        )
+        .all(options.now, safeLimit) as { reminder_json: string }[];
+      const claimed: SmsReminder[] = [];
+      for (const row of rows) {
+        const reminder = SmsReminderSchema.parse(
+          JSON.parse(row.reminder_json) as unknown,
+        );
+        if (
+          reminder.claimExpiresAt &&
+          reminder.claimExpiresAt >= options.now
+        ) {
+          continue;
+        }
+        const next = SmsReminderSchema.parse({
+          ...reminder,
+          status: "claimed",
+          claimToken: options.claimToken,
+          claimExpiresAt: options.claimExpiresAt,
+          updatedAt: options.now,
+        });
+        this.saveSmsReminder(next);
+        claimed.push(next);
+      }
+      return claimed;
+    })();
+  }
+
+  cancelPendingSmsReminders(learnerId: string, now: string): number {
+    return this.#database.transaction(() => {
+      const reminders = this.listSmsReminders(learnerId).filter(
+        (reminder) =>
+          reminder.status === "pending" || reminder.status === "claimed",
+      );
+      for (const reminder of reminders) {
+        this.saveSmsReminder({
+          ...reminder,
+          status: "cancelled",
+          claimToken: null,
+          claimExpiresAt: null,
+          updatedAt: now,
+        });
+      }
+      return reminders.length;
+    })();
   }
 
   deleteLearnerData(learnerId: string): void {

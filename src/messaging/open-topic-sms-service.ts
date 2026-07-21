@@ -10,6 +10,7 @@ import {
 import { parseHomeworkReply } from "../domain/homework.js";
 import type { GuardianAccessService } from "../guardian/guardian-access-service.js";
 import type { HomeworkService } from "./homework-service.js";
+import type { SmsReminderService } from "./sms-reminder-service.js";
 
 const HELP_TEXT =
   "Commands: STOP, PROGRESS, MEMORY, DELETE, HELP. Practice: HW CODE 1-4.";
@@ -18,6 +19,7 @@ export class OpenTopicSmsService {
   readonly #repository: LearningRepository;
   readonly #guardianAccess: GuardianAccessService;
   readonly #homeworkService: HomeworkService | undefined;
+  readonly #reminderService: SmsReminderService | undefined;
   readonly #clock: () => Date;
   readonly #makeId: () => string;
 
@@ -25,12 +27,14 @@ export class OpenTopicSmsService {
     repository: LearningRepository;
     guardianAccess: GuardianAccessService;
     homeworkService?: HomeworkService;
+    reminderService?: SmsReminderService;
     clock?: () => Date;
     makeId?: () => string;
   }) {
     this.#repository = options.repository;
     this.#guardianAccess = options.guardianAccess;
     this.#homeworkService = options.homeworkService;
+    this.#reminderService = options.reminderService;
     this.#clock = options.clock ?? (() => new Date());
     this.#makeId = options.makeId ?? randomUUID;
   }
@@ -142,6 +146,7 @@ export class OpenTopicSmsService {
           updatedAt: now,
         });
       }
+      this.#reminderService?.cancelAll(learner.id);
       responseText =
         "Future proactive messages and calls stopped. Learning memory is kept unless you delete it.";
     } else if (command.action === "progress") {

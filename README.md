@@ -37,6 +37,7 @@ The current production call path implements:
 - Atomic persistence before speech, pause-on-drop, same-phone resume, and portable cross-phone resume.
 - PII redaction, consented preference memory, memory inspection, correction, and two-step deletion.
 - One-question SMS practice and phone-bound replies, progress/memory/stop/delete controls, MessageSid idempotency, and bounded handling of unsupported SMS chat.
+- One-time exam/revision SMS reminders with exact-phone authorization, a separate spoken/keypad consent turn, quiet hours, one-segment formatting, due-job locking, and immediate `STOP` cancellation.
 - A missed-call callback adapter, carrier receipt ledger, cost/usage metrics, and an access-controlled redacted proof view.
 - A zero-credit open-topic CLI and a 26-case deterministic anti-wrapper gate.
 
@@ -109,11 +110,12 @@ SMS can carry one small thread across calls:
 - A pause reminder after a dropped lesson.
 - One short practice question with a bound reply code.
 - A progress or selective-memory summary for an authorized number.
+- One consented exam/revision reminder, requested during a call and confirmed in a separate speech or keypad turn.
 - Stop and two-step deletion controls.
 
 An arbitrary text such as “teach me a whole lesson here” receives bounded help text; it is never forwarded into an open GPT conversation. Practice replies are bound to the assignment, learner, and receiving phone, and multiple-choice evidence cannot create secure understanding.
 
-Recurring outbound tutoring calls have been removed from the current product. Consented one-time exam/revision SMS scheduling is still an open implementation item and is not claimed as shipped.
+Recurring outbound tutoring calls have been removed from the current product. One-time reminder delivery remains disabled by default and requires guardian SMS enrollment plus `NOMAD_SMS_REMINDERS_ENABLED=true`; the learner must still confirm each reminder separately.
 
 ## Memory and privacy
 
@@ -190,6 +192,7 @@ NOMAD_DATABASE_PATH=.data/nomad.db
 OPENAI_TEXT_MODEL=gpt-5.6-luna
 OPENAI_REALTIME_MODEL=gpt-realtime-2.1-mini
 OPENAI_REALTIME_VOICE=marin
+NOMAD_SMS_REMINDERS_ENABLED=false
 ```
 
 Live teaching additionally needs `OPENAI_API_KEY`. Phone calls require the OpenAI webhook/SIP project settings and Twilio credentials documented in [docs/PHONE_SETUP.md](docs/PHONE_SETUP.md). Run the secret-safe checks before spending on a call:
@@ -198,6 +201,14 @@ Live teaching additionally needs `OPENAI_API_KEY`. Phone calls require the OpenA
 npm run secrets:init
 npm run phone:preflight
 ```
+
+For a child-safety test, authorize the exact SMS number before requesting a reminder on a call:
+
+```bash
+npm run guardian:enroll -- --learner-code 123456 --guardian-phone +919999999999
+```
+
+The command returns a private guardian code used by bounded SMS controls such as `STOP <code>`. It does not pre-consent to a reminder; the learner must still confirm the proposed topic and time during the call.
 
 The missed-call path uses a signed Twilio webhook and returns first-verb `<Reject reason="busy">` before queuing the callback. This avoids answering that inbound Twilio leg; local-carrier charging behavior remains deployment-specific. See Twilio’s official [`<Reject>` documentation](https://www.twilio.com/docs/voice/twiml/reject).
 
@@ -215,7 +226,7 @@ The current model names are deployment defaults, not a claim that every task nee
 - The new open-topic path is automated-test green but still needs the complete real-carrier journey after deployment.
 - Public language claims must be limited to adult-speaker carrier patterns actually tested; keypad routing alone does not prove speech quality.
 - The zero-credit adapter validates state and pedagogy boundaries but cannot teach arbitrary facts without a model.
-- One-time, consented exam/revision SMS scheduling is planned but not yet implemented.
+- One-time reminder automation is implemented and deterministic-test green, but real Twilio delivery and multilingual natural-date interpretation still require carrier acceptance on the deployed revision.
 - Live v7 GPT learner/evaluator cases must replace the historical curriculum agent report before final release.
 - The final demo, `/feedback` session ID, Devpost acceptance, public repository/judge access, and human-written submission description remain human release steps.
 - Voice-only access excludes deaf and hard-of-hearing learners; SMS is supplementary, not an equivalent classroom.

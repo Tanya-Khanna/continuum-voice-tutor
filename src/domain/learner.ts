@@ -30,6 +30,7 @@ import {
 } from "./product-metrics.js";
 import type { HomeworkAssignment } from "./homework.js";
 import type { CarrierCallReceipt } from "./carrier-usage.js";
+import type { SmsReminder } from "./sms-reminder.js";
 
 export const LearnerProfileSchema = z.object({
   id: z.string().min(1),
@@ -176,5 +177,15 @@ export interface LearningRepository {
   saveHomeworkAssignment(assignment: HomeworkAssignment): void;
   findHomeworkAssignmentByCode(code: string): HomeworkAssignment | undefined;
   listHomeworkAssignments(learnerId: string): HomeworkAssignment[];
+  saveSmsReminder(reminder: SmsReminder): void;
+  findSmsReminder(id: string): SmsReminder | undefined;
+  listSmsReminders(learnerId: string): SmsReminder[];
+  claimDueSmsReminders(options: {
+    now: string;
+    claimToken: string;
+    claimExpiresAt: string;
+    limit: number;
+  }): SmsReminder[];
+  cancelPendingSmsReminders(learnerId: string, now: string): number;
   close(): void;
 }

@@ -25,6 +25,9 @@ export const ProductMetricNameSchema = z.enum([
   "sms_segments_sent",
   "sms_delivered",
   "sms_failed",
+  "sms_reminder_scheduled",
+  "sms_reminder_sent",
+  "sms_reminder_cancelled",
 ]);
 
 export const AccessModeSchema = z.enum([

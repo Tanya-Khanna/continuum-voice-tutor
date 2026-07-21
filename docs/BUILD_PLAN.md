@@ -812,7 +812,7 @@ Migration rules:
 
 - ~~Replace curriculum mastery with objective-specific understanding state.~~
 - ~~Store learner feedback beside objective evidence.~~
-- Persist helpful/failed methods, exact next point, exam dates, and requested follow-ups.
+- ~~Persist helpful/failed methods, exact next point, exam dates, and requested follow-ups.~~
 - ~~Complete consented memory inspection, correction, and two-step deletion.~~
 - Complete legacy-memory migration.
 
@@ -832,7 +832,7 @@ Migration rules:
 - Implement recaps, one-question practice, replies, drop reminders, exam reminders, callback nudges, and guardian summaries.
 - ~~Implement one-question practice replies and bounded, signed SMS controls.~~
 - ~~Disable the outbound lesson-call scheduler.~~
-- Enforce consent, quiet hours, rate limits, `STOP`, one-segment targets, and bounded SMS behavior.
+- ~~Enforce consent, quiet hours, rate limits, `STOP`, one-segment targets, and bounded SMS behavior.~~
 
 **Exit:** an exam reminder and practice reply work without turning SMS into open chat.
 

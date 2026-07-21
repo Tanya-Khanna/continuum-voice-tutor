@@ -40,6 +40,7 @@ import { validateTwilioSignature } from "./telephony/twilio-signature.js";
 import { GuardianAccessService } from "./guardian/guardian-access-service.js";
 import { OpenTopicSmsService } from "./messaging/open-topic-sms-service.js";
 import { HomeworkService } from "./messaging/homework-service.js";
+import { SmsReminderService } from "./messaging/sms-reminder-service.js";
 import {
   ProductMetricEventSchema,
   type AccessMode,
@@ -162,7 +163,7 @@ async function sendTrackedSms(options: {
   body: string;
   learnerId?: string;
   accessMode?: AccessMode;
-}): Promise<void> {
+}): Promise<{ sid: string } | undefined> {
   if (!twilioSmsConfig) return;
   const statusCallbackUrl = messageStatusCallbackUrl();
   const sent = await sendTwilioSms({
@@ -179,6 +180,39 @@ async function sendTrackedSms(options: {
     accessMode: options.accessMode ?? "unknown",
     numericValue: sent.segments,
   });
+  return { sid: sent.sid };
+}
+
+function createSmsReminderService(
+  repository: SqliteLearningRepository,
+): SmsReminderService {
+  return new SmsReminderService({
+    repository,
+    phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
+    encryptionSecret: environment.NOMAD_CALLBACK_SECRET,
+    timeZone: environment.NOMAD_DEPLOYMENT_TIME_ZONE,
+    quietStartHour: environment.NOMAD_CALLBACK_QUIET_START_HOUR,
+    quietEndHour: environment.NOMAD_CALLBACK_QUIET_END_HOUR,
+  });
+}
+
+async function processDueSmsReminders(): Promise<void> {
+  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
+  try {
+    const result = await createSmsReminderService(repository).runDue(
+      async ({ to, body }) =>
+        sendTrackedSms({
+          repository,
+          to,
+          body,
+        }),
+    );
+    if (result.sent || result.cancelled || result.deferred || result.failed) {
+      console.log("SMS reminder sweep:", result);
+    }
+  } finally {
+    repository.close();
+  }
 }
 
 async function reconcileCarrierReceipt(receiptId: string): Promise<void> {
@@ -420,6 +454,7 @@ export const server = createServer(async (request, response) => {
             missedCallCallback: environment.NOMAD_MISSED_CALL_ENABLED,
             smsControls: environment.NOMAD_SMS_CONTROLS_ENABLED,
             scheduler: false,
+            smsReminders: environment.NOMAD_SMS_REMINDERS_ENABLED,
             smsRecap: environment.NOMAD_SMS_RECAP_ENABLED,
           },
           publicPhonePublished: environment.NOMAD_PUBLIC_PHONE_ENABLED,
@@ -732,6 +767,7 @@ export const server = createServer(async (request, response) => {
               repository,
               phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
             }),
+            reminderService: createSmsReminderService(repository),
           }).handle(Object.fromEntries(parameters.entries()));
           await sendTrackedSms({
             repository,
@@ -1017,6 +1053,10 @@ export const server = createServer(async (request, response) => {
                 interrupt_response: true,
               },
               environment.OPENAI_REALTIME_SPEED,
+              {
+                nowIso: new Date().toISOString(),
+                timeZone: environment.NOMAD_DEPLOYMENT_TIME_ZONE,
+              },
             ),
           });
 
@@ -1036,6 +1076,28 @@ export const server = createServer(async (request, response) => {
             modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
               console.error(`Realtime call ${callId}:`, bridgeError.message),
+            ...(environment.NOMAD_SMS_REMINDERS_ENABLED
+              ? {
+                  onExamReminderConfirmed: async ({
+                    callerNumber: recipientPhoneNumber,
+                    learner,
+                    topic,
+                    dueAt,
+                    examAt,
+                  }) => {
+                    createSmsReminderService(
+                      runtime.repository,
+                    ).scheduleExamReview({
+                      learnerId: learner.id,
+                      recipientPhoneNumber,
+                      topic,
+                      dueAt,
+                      examAt,
+                      consentConfirmed: true,
+                    });
+                  },
+                }
+              : {}),
             ...(twilioSmsConfig
               ? {
                   onLessonCompleted: async ({
@@ -1137,3 +1199,21 @@ server.listen(environment.PORT, environment.HOST, () => {
     `Continuum server listening on http://${environment.HOST}:${environment.PORT}`,
   );
 });
+
+if (environment.NOMAD_SMS_REMINDERS_ENABLED) {
+  void processDueSmsReminders().catch((error: unknown) =>
+    console.error(
+      "SMS reminder sweep failed:",
+      error instanceof Error ? error.message : "unknown error",
+    ),
+  );
+  const smsReminderTimer = setInterval(() => {
+    void processDueSmsReminders().catch((error: unknown) =>
+      console.error(
+        "SMS reminder sweep failed:",
+        error instanceof Error ? error.message : "unknown error",
+      ),
+    );
+  }, environment.NOMAD_SMS_REMINDER_INTERVAL_MS);
+  smsReminderTimer.unref();
+}

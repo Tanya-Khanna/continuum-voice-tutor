@@ -728,3 +728,11 @@
 - Required pause and practice SMS side effects to have SMS authorization bound to the exact learner and caller phone; configuring Twilio alone is not consent.
 - Replaced the obsolete curriculum-first README with the v7 product, architecture, trust boundary, local setup, verification, privacy, limitations, and model-use story. Historical packs are labeled as audit/eval artifacts, not the product runtime.
 - Updated the plan ledger only after verification. Current gate: strict TypeScript, 213/213 automated tests, 26/26 v7 deterministic evals, and the production TypeScript build pass.
+
+## 2026-07-21 — Consented one-time SMS reminder thread
+
+- Added durable one-time exam/revision SMS reminders without restoring recurring tutoring calls. Reminders are encrypted at rest, recipient-hash bound, deduplicated, limited to three pending items, claimed atomically, expiry checked, and sent only outside deployment quiet hours.
+- Added a live Realtime reminder flow. A reminder tool is valid only in the open-topic stage, must preserve the server-verified learner transcript, and can only create a pending proposal. A separate spoken yes/no or keypad 1/2 turn is required before trusted code schedules it.
+- Bound delivery to prior guardian SMS authorization for the exact phone. The local operator enrollment command issues a private guardian code, while each reminder still needs separate learner consent. Revoked consent or `STOP <guardian code>` cancels pending reminders before delivery.
+- Made reminder text genuinely feature-phone bounded: email/URL/number-like PII is redacted and the topic is shortened until the complete GSM or Unicode message fits one SMS segment.
+- Added opt-in deployment switches and a due-job worker; the removed outbound lesson-call scheduler remains disabled. Current verification: strict TypeScript, 220/220 automated tests, 26/26 v7 deterministic evals, and the production build pass.

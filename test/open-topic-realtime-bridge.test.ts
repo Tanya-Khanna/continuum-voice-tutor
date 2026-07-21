@@ -6,6 +6,7 @@ import { OpenTopicLessonService } from "../src/lesson/open-topic-lesson-service.
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 import {
   OpenTopicRealtimeController,
+  type ConfirmedExamReminder,
   type OpenTopicRealtimeClientEvent,
 } from "../src/telephony/open-topic-realtime-bridge.js";
 import {
@@ -51,7 +52,10 @@ function parseToolOutput(
   return JSON.parse(item.output) as Record<string, unknown>;
 }
 
-function fixture(phoneNumber = "+14155550100") {
+function fixture(
+  phoneNumber = "+14155550100",
+  onExamReminderConfirmed?: (reminder: ConfirmedExamReminder) => void,
+) {
   const repository = new SqliteLearningRepository(":memory:");
   const service = new OpenTopicLessonService({
     repository,
@@ -71,6 +75,7 @@ function fixture(phoneNumber = "+14155550100") {
     languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
     modelRoute: "gpt-realtime-2.1-mini",
     dynamicToolRouting: true,
+    ...(onExamReminderConfirmed ? { onExamReminderConfirmed } : {}),
   });
   return { repository, service, portableIdentity, controller };
 }
@@ -123,6 +128,8 @@ describe("open-topic Realtime call path", () => {
       "record_teaching_feedback",
       "save_learning_preferences",
       "recover_unclear_audio",
+      "propose_exam_reminder",
+      "confirm_exam_reminder",
     ]);
     expect(OPEN_TOPIC_REALTIME_INSTRUCTIONS).toContain(
       "What would you like to learn?",
@@ -415,5 +422,89 @@ describe("open-topic Realtime call path", () => {
 
     await second.close();
     first.repository.close();
+  });
+
+  it("requires verified request text and a second consent turn before scheduling one SMS reminder", async () => {
+    const confirmed: ConfirmedExamReminder[] = [];
+    const { repository, controller } = fixture(
+      "+14155550100",
+      (reminder) => confirmed.push(reminder),
+    );
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+    await startNewLearner({ controller, sent });
+    const sourceText =
+      "Please remind me by SMS tomorrow to review fractions before my exam.";
+    const dueAt = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    const examAt = new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString();
+    await controller.handleServerEvent(
+      transcription("reminder-request", sourceText),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "propose-reminder",
+        name: "propose_exam_reminder",
+        arguments: {
+          source_text: sourceText,
+          topic: "fractions",
+          due_at: dueAt,
+          exam_at: examAt,
+          time_zone: "America/New_York",
+        },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent)).toMatchObject({
+      ok: true,
+      reminder_pending_consent: true,
+    });
+    expect(confirmed).toHaveLength(0);
+
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      send,
+    );
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]).toMatchObject({ topic: "fractions", dueAt, examAt });
+    expect(JSON.stringify(sent.at(-1))).toContain("reminder is scheduled");
+    await controller.close();
+    repository.close();
+  });
+
+  it("rejects a reminder proposal whose source text was not spoken", async () => {
+    const confirmed: ConfirmedExamReminder[] = [];
+    const { repository, controller } = fixture(
+      "+14155550100",
+      (reminder) => confirmed.push(reminder),
+    );
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+    await startNewLearner({ controller, sent });
+    await controller.handleServerEvent(
+      transcription("ordinary-topic", "Teach me fractions."),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "forged-reminder",
+        name: "propose_exam_reminder",
+        arguments: {
+          source_text: "Remind me tomorrow.",
+          topic: "fractions",
+          due_at: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
+          exam_at: new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString(),
+          time_zone: "UTC",
+        },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent)).toMatchObject({
+      ok: false,
+      state_changed: false,
+    });
+    expect(confirmed).toHaveLength(0);
+    await controller.close();
+    repository.close();
   });
 });

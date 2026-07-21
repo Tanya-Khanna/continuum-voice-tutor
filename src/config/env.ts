@@ -71,6 +71,8 @@ const EnvironmentSchema = z.object({
   NOMAD_MISSED_CALL_ENABLED: booleanFromEnvironment,
   NOMAD_MISSED_CALL_ADULT_DEMO: booleanFromEnvironment,
   NOMAD_SMS_CONTROLS_ENABLED: booleanFromEnvironment,
+  NOMAD_SMS_REMINDERS_ENABLED: booleanFromEnvironment,
+  NOMAD_SMS_REMINDER_INTERVAL_MS: z.coerce.number().int().min(5_000).max(300_000).default(30_000),
   NOMAD_SCHEDULER_ENABLED: booleanFromEnvironment,
   NOMAD_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(5_000).max(300_000).default(30_000),
   NOMAD_CALLBACK_ALLOWED_PREFIXES: stringArrayFromEnvironment.default([
@@ -160,6 +162,20 @@ const EnvironmentSchema = z.object({
       path: ["NOMAD_SMS_CONTROLS_ENABLED"],
       message:
         "SMS controls require NOMAD_PUBLIC_BASE_URL and Twilio credentials and phone number.",
+    });
+  }
+  if (
+    environment.NOMAD_SMS_REMINDERS_ENABLED &&
+    (!environment.NOMAD_PUBLIC_BASE_URL ||
+      !environment.TWILIO_ACCOUNT_SID ||
+      !environment.TWILIO_AUTH_TOKEN ||
+      !environment.TWILIO_PHONE_NUMBER)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["NOMAD_SMS_REMINDERS_ENABLED"],
+      message:
+        "SMS reminders require NOMAD_PUBLIC_BASE_URL and Twilio credentials and phone number.",
     });
   }
   if (

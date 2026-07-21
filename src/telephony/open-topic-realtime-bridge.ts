@@ -61,6 +61,16 @@ const LearningPreferencesArgumentsSchema = z.object({
   preferred_activities: z.array(LearningActivityKindSchema).max(8).optional(),
   preferred_pace: TeachingPaceSchema.nullable().optional(),
 });
+const ExamReminderProposalArgumentsSchema = z.object({
+  source_text: z.string().trim().min(1).max(2_000),
+  topic: z.string().trim().min(1).max(120),
+  due_at: z.string().datetime(),
+  exam_at: z.string().datetime(),
+  time_zone: z.string().trim().min(1).max(80),
+});
+const ConfirmExamReminderArgumentsSchema = z.object({
+  consent_confirmed: z.boolean(),
+});
 const EmptyArgumentsSchema = z.object({}).strict();
 const FunctionCallItemSchema = z.object({
   type: z.literal("function_call"),
@@ -156,6 +166,26 @@ export interface PausedOpenTopicLesson {
   callerNumber: string;
   context: OpenTopicLessonContext;
   pendingQuestionNumber: number;
+}
+export interface ConfirmedExamReminder {
+  callerNumber: string;
+  learner: LearnerProfile;
+  topic: string;
+  dueAt: string;
+  examAt: string;
+}
+
+function formattedReminderTime(
+  dueAt: string,
+  timeZone: string,
+  languageMode: string,
+): string {
+  const locale = languageMode === "und" ? "en" : languageMode;
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(dueAt));
 }
 
 function functionCallsFromEvent(event: unknown) {
@@ -298,6 +328,9 @@ export class OpenTopicRealtimeController {
   readonly #onLessonPaused:
     | ((lesson: PausedOpenTopicLesson) => Promise<void> | void)
     | undefined;
+  readonly #onExamReminderConfirmed:
+    | ((reminder: ConfirmedExamReminder) => Promise<void> | void)
+    | undefined;
   readonly #handledCallIds = new Set<string>();
   readonly #handledUsageIds = new Set<string>();
   readonly #cancelledResponseIds = new Set<string>();
@@ -316,6 +349,9 @@ export class OpenTopicRealtimeController {
   #keypadFallbackPending = false;
   #pendingFeedback:
     | { pendingPrompt: string; objectiveResult: z.infer<typeof EvidenceResultSchema> }
+    | undefined;
+  #pendingReminder:
+    | { topic: string; dueAt: string; examAt: string; timeZone: string }
     | undefined;
   #responseInProgress = false;
   #activeResponseId: string | undefined;
@@ -340,6 +376,9 @@ export class OpenTopicRealtimeController {
     onLessonPaused?: (
       lesson: PausedOpenTopicLesson,
     ) => Promise<void> | void;
+    onExamReminderConfirmed?: (
+      reminder: ConfirmedExamReminder,
+    ) => Promise<void> | void;
   }) {
     this.#callerNumber = options.callerNumber;
     this.#lessonService = options.lessonService;
@@ -351,6 +390,7 @@ export class OpenTopicRealtimeController {
     this.#onError = options.onError ?? (() => undefined);
     this.#onLessonCompleted = options.onLessonCompleted;
     this.#onLessonPaused = options.onLessonPaused;
+    this.#onExamReminderConfirmed = options.onExamReminderConfirmed;
   }
 
   openingStage(): OpenTopicRealtimeStage {
@@ -524,6 +564,19 @@ export class OpenTopicRealtimeController {
     }
 
     if (!this.#context || this.#stage !== "open_topic") return;
+    if (this.#pendingReminder && (digit === "1" || digit === "2")) {
+      const spoken = await this.#applyExamReminderConsent(digit === "1");
+      send(speakExactTextEvent(spoken));
+      return;
+    }
+    if (this.#pendingReminder && (digit === "*" || digit === "0")) {
+      send(
+        speakExactTextEvent(
+          "Should I schedule that one SMS reminder? Press 1 for yes or 2 for no.",
+        ),
+      );
+      return;
+    }
     if (this.#pendingFeedback && (digit === "1" || digit === "2")) {
       const pending = this.#pendingFeedback;
       this.#lessonService.recordTeachingFeedback(this.#context, {
@@ -814,6 +867,13 @@ export class OpenTopicRealtimeController {
             spoken_response: "Before we learn, what name would you like me to use?",
           };
           nextStage = "identity";
+        } else if (this.#pendingReminder) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response:
+              "Should I schedule that one SMS reminder? Say yes or no, or press 1 or 2.",
+          };
         } else if (this.#pendingFeedback) {
           output = {
             ok: false,
@@ -928,6 +988,78 @@ export class OpenTopicRealtimeController {
             spoken_response: `I saved only those learning preferences. ${this.#context.session.lastPrompt}`,
           };
         }
+      } else if (call.name === "propose_exam_reminder") {
+        const args = ExamReminderProposalArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        const transcript = this.#lastVerifiedTranscript;
+        const dueAt = new Date(args.due_at);
+        const examAt = new Date(args.exam_at);
+        if (!this.#learner || !this.#context) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response: "Before setting a reminder, what name would you like me to use?",
+          };
+          nextStage = "identity";
+        } else if (!transcript || args.source_text !== transcript) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response: `I need the reminder request in your own words. ${this.#context.session.lastPrompt}`,
+          };
+        } else if (
+          dueAt <= new Date() ||
+          dueAt >= examAt ||
+          examAt.getTime() - Date.now() > 366 * 24 * 60 * 60_000
+        ) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response:
+              "I need a future reminder time before the exam. What date and time should I use?",
+          };
+        } else {
+          const displayTime = formattedReminderTime(
+            args.due_at,
+            args.time_zone,
+            this.#selectedLanguage?.languageMode ?? "en",
+          );
+          this.#pendingReminder = {
+            topic: args.topic,
+            dueAt: args.due_at,
+            examAt: args.exam_at,
+            timeZone: args.time_zone,
+          };
+          this.#lastVerifiedTranscript = undefined;
+          output = {
+            ok: true,
+            reminder_pending_consent: true,
+            spoken_response: `One SMS reminder for ${args.topic} at ${displayTime}. Should I schedule it? Say yes or no, or press 1 or 2.`,
+          };
+          policy = "localize_onboarding";
+        }
+      } else if (call.name === "confirm_exam_reminder") {
+        const args = ConfirmExamReminderArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        if (!this.#pendingReminder || !this.#lastVerifiedTranscript) {
+          output = {
+            ok: false,
+            state_changed: false,
+            spoken_response: this.#context?.session.lastPrompt ?? OPEN_TOPIC_PROMPT,
+          };
+        } else {
+          output = {
+            ok: true,
+            reminder_scheduled: args.consent_confirmed,
+            spoken_response: await this.#applyExamReminderConsent(
+              args.consent_confirmed,
+            ),
+          };
+          this.#lastVerifiedTranscript = undefined;
+          policy = "localize_onboarding";
+        }
       } else if (call.name === "recover_unclear_audio") {
         EmptyArgumentsSchema.parse(JSON.parse(call.arguments));
         if (this.#context) {
@@ -940,7 +1072,9 @@ export class OpenTopicRealtimeController {
               ? this.#pendingLearnerName
                 ? "Do you already have a six-digit learner code? If yes, say all six digits. If not, say no."
                 : "What name would you like me to use?"
-              : this.#context?.session.lastPrompt ?? "What would you like to learn?";
+              : this.#pendingReminder
+                ? "Should I schedule that one SMS reminder? Say yes or no, or press 1 or 2."
+                : this.#context?.session.lastPrompt ?? "What would you like to learn?";
         output = {
           ok: true,
           recovery_stage: this.#stage,
@@ -973,6 +1107,31 @@ export class OpenTopicRealtimeController {
         }),
       );
       send(speakToolOutputEvent());
+    }
+  }
+
+  async #applyExamReminderConsent(consentConfirmed: boolean): Promise<string> {
+    const pending = this.#pendingReminder;
+    this.#pendingReminder = undefined;
+    const nextPrompt = this.#context?.session.lastPrompt ?? OPEN_TOPIC_PROMPT;
+    if (!pending || !this.#learner) return nextPrompt;
+    if (!consentConfirmed) {
+      return `Okay, I did not schedule it. ${nextPrompt}`;
+    }
+    if (!this.#onExamReminderConfirmed) {
+      return `SMS reminders are not enabled for this call. ${nextPrompt}`;
+    }
+    try {
+      await this.#onExamReminderConfirmed({
+        callerNumber: this.#callerNumber,
+        learner: this.#learner,
+        topic: pending.topic,
+        dueAt: pending.dueAt,
+        examAt: pending.examAt,
+      });
+      return `Your one SMS review reminder is scheduled. ${nextPrompt}`;
+    } catch {
+      return `I could not schedule that reminder. A guardian must first authorize SMS for this phone. ${nextPrompt}`;
     }
   }
 
@@ -1055,6 +1214,9 @@ export class OpenTopicRealtimeBridge {
     onLessonPaused?: (
       lesson: PausedOpenTopicLesson,
     ) => Promise<void> | void;
+    onExamReminderConfirmed?: (
+      reminder: ConfirmedExamReminder,
+    ) => Promise<void> | void;
   }) {
     this.#apiKey = options.apiKey;
     this.#callId = options.callId;
@@ -1078,6 +1240,9 @@ export class OpenTopicRealtimeBridge {
         : {}),
       ...(options.onLessonPaused
         ? { onLessonPaused: options.onLessonPaused }
+        : {}),
+      ...(options.onExamReminderConfirmed
+        ? { onExamReminderConfirmed: options.onExamReminderConfirmed }
         : {}),
     });
   }

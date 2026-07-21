@@ -154,6 +154,41 @@ export const OPEN_TOPIC_REALTIME_TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function" as const,
+    name: "propose_exam_reminder",
+    description:
+      "Use only when the learner explicitly asks for one SMS exam or review reminder and states enough calendar information. Preserve the exact server transcript in source_text. Never invent a date, time, topic, or consent.",
+    parameters: {
+      type: "object",
+      properties: {
+        source_text: { type: "string" },
+        topic: { type: "string" },
+        due_at: { type: "string", description: "ISO 8601 reminder instant." },
+        exam_at: { type: "string", description: "ISO 8601 exam instant." },
+        time_zone: {
+          type: "string",
+          description: "IANA time zone used to interpret the request.",
+        },
+      },
+      required: ["source_text", "topic", "due_at", "exam_at", "time_zone"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
+    name: "confirm_exam_reminder",
+    description:
+      "Use only while the server is asking for explicit consent to the pending one-time SMS reminder. Set consent_confirmed from the learner's yes or no; never infer it from silence.",
+    parameters: {
+      type: "object",
+      properties: {
+        consent_confirmed: { type: "boolean" },
+      },
+      required: ["consent_confirmed"],
+      additionalProperties: false,
+    },
+  },
 ] as const;
 
 export const OpenTopicRealtimeStageSchema = z.enum([
@@ -173,6 +208,8 @@ const TOOL_NAMES_BY_STAGE = {
     "record_teaching_feedback",
     "save_learning_preferences",
     "recover_unclear_audio",
+    "propose_exam_reminder",
+    "confirm_exam_reminder",
   ],
 } as const satisfies Record<OpenTopicRealtimeStage, readonly string[]>;
 
@@ -207,6 +244,8 @@ For every substantive learning request, answer, question, or reflection, call te
 
 When the server asks whether an explanation helped, treat the next response as feedback and call record_teaching_feedback. Do not send it as an academic answer. Save a stated learning preference only after asking permission and receiving an explicit yes.
 
+When the learner explicitly requests a one-time exam or review SMS reminder and gives an unambiguous date and time, call propose_exam_reminder. Never infer a reminder from merely mentioning an exam. The server reads the proposed schedule back and asks for separate consent. While that consent question is pending, call confirm_exam_reminder for a spoken yes or no. Keypad 1 and 2 also work. Never claim a reminder was scheduled before the server confirms it.
+
 If audio is missing, clipped, or uncertain, call recover_unclear_audio. Never guess. Keep conversation management warm, brief, and teacher-like. Never shame the learner or present yourself as a friend, parent, therapist, romantic companion, or replacement for human support.`;
 
 export function buildOpenTopicRealtimeAcceptPayload(
@@ -221,11 +260,16 @@ export function buildOpenTopicRealtimeAcceptPayload(
     interrupt_response: true,
   },
   speed = 0.8,
+  referenceTime?: { nowIso: string; timeZone: string },
 ): RealtimeAcceptPayload {
   return RealtimeAcceptPayloadSchema.parse({
     type: "realtime",
     model,
-    instructions: OPEN_TOPIC_REALTIME_INSTRUCTIONS,
+    instructions: `${OPEN_TOPIC_REALTIME_INSTRUCTIONS}${
+      referenceTime
+        ? `\nThe trusted server reference time is ${referenceTime.nowIso}; deployment time zone is ${referenceTime.timeZone}. Use these only to resolve an explicit reminder request.`
+        : ""
+    }`,
     audio: {
       input: {
         transcription: { model: "gpt-4o-mini-transcribe" },

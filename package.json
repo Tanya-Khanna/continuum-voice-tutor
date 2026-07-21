@@ -30,6 +30,7 @@
     "release:preflight": "tsx scripts/release-preflight.ts",
     "release:verify": "npm run verify:fresh",
     "secrets:init": "tsx src/cli/init-secrets.ts",
+    "guardian:enroll": "tsx src/cli/enroll-guardian.ts",
     "start": "tsx src/server.ts",
     "start:prod": "node dist/start-production.js",
     "dev": "tsx watch src/server.ts",
