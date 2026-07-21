@@ -411,7 +411,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
           ? 'Signed delivery is the sole open check. Keep the number private.'
           : 'Complete only the open actions below; no credential values are displayed.'));
       const guide = text('a', 'Open the setup guide', 'guide-link');
-      guide.href = 'https://github.com/Tanya-Khanna/nomad-ai/blob/main/' + report.guidePath;
+      guide.href = 'https://github.com/Tanya-Khanna/continuum-voice-tutor/blob/main/' + report.guidePath;
       guide.target = '_blank';
       guide.rel = 'noreferrer';
       copy.append(text('p', '', 'release-note'));

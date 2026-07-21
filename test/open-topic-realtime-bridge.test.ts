@@ -238,6 +238,8 @@ describe("open-topic Realtime call path", () => {
       { type: "input_audio_buffer.dtmf_event_received", event: "1" },
       send,
     );
+    expect(sent).toContainEqual({ type: "response.cancel" });
+    expect(sent).toContainEqual({ type: "output_audio_buffer.clear" });
     const beforeStaleCall = sent.length;
     await controller.handleServerEvent(
       functionCallEvent({
@@ -308,6 +310,107 @@ describe("open-topic Realtime call path", () => {
 
     await controller.close();
     repository.close();
+  });
+
+  it("recovers malformed optional learner-code arguments without looping identity", async () => {
+    const { repository, controller } = fixture();
+    const sent: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) => sent.push(event);
+    await controller.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "2" },
+      send,
+    );
+    await controller.handleServerEvent(
+      transcription("hindi-name", "Meena"),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "save-hindi-name",
+        name: "start_lesson",
+        arguments: { learner_name: "Meena", learner_code: "Meena" },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent)).toMatchObject({
+      ok: true,
+      identity_complete: false,
+      learner_name_saved: true,
+    });
+    expect(controller.openingStage()).toBe("identity");
+
+    await controller.handleServerEvent(
+      transcription("hindi-no-code", "नहीं, मेरे पास कोड नहीं है"),
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "complete-hindi-identity",
+        name: "start_lesson",
+        arguments: { learner_name: "Meena", learner_code: "" },
+      }),
+      send,
+    );
+    const completed = parseToolOutput(sent);
+    expect(completed).toMatchObject({
+      ok: true,
+      identity_complete: true,
+      open_topic: true,
+    });
+    expect(String(completed.spoken_response)).toContain(
+      "What would you like to learn?",
+    );
+    expect(controller.openingStage()).toBe("open_topic");
+    expect(repository.listRecentLessons(10)).toHaveLength(1);
+
+    await controller.close();
+    repository.close();
+  });
+
+  it("opens the saved learning prompt after Hindi selection and keypad-only identity", async () => {
+    const first = fixture("+14155550101");
+    const firstEvents: OpenTopicRealtimeClientEvent[] = [];
+    await startNewLearner({
+      controller: first.controller,
+      sent: firstEvents,
+      name: "Meena",
+    });
+    expect(first.repository.listRecentLessons(10)[0]?.lastPrompt).toBe(
+      "What would you like to learn?",
+    );
+    await first.controller.close();
+
+    const returning = new OpenTopicRealtimeController({
+      callerNumber: "+14155550199",
+      lessonService: first.service,
+      portableIdentity: first.portableIdentity,
+      languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
+      modelRoute: "gpt-realtime-2.1-mini",
+      dynamicToolRouting: true,
+    });
+    const returnedEvents: OpenTopicRealtimeClientEvent[] = [];
+    const send = (event: OpenTopicRealtimeClientEvent) =>
+      returnedEvents.push(event);
+    await returning.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "2" },
+      send,
+    );
+    for (const digit of "482913#") {
+      await returning.handleServerEvent(
+        { type: "input_audio_buffer.dtmf_event_received", event: digit },
+        send,
+      );
+    }
+    expect(returning.openingStage()).toBe("open_topic");
+    expect(JSON.stringify(returnedEvents.at(-1))).toContain(
+      "What would you like to learn?",
+    );
+    expect(JSON.stringify(returnedEvents)).not.toContain(
+      "Please say the learner's name",
+    );
+
+    await returning.close();
+    first.repository.close();
   });
 
   it("stores keypad feedback and uses a different method on the next turn", async () => {
@@ -395,7 +498,7 @@ describe("open-topic Realtime call path", () => {
     const sendResumed = (event: OpenTopicRealtimeClientEvent) =>
       resumedEvents.push(event);
     await second.handleServerEvent(
-      { type: "input_audio_buffer.dtmf_event_received", event: "1" },
+      { type: "input_audio_buffer.dtmf_event_received", event: "2" },
       sendResumed,
     );
     for (const digit of "482913#") {
@@ -404,21 +507,8 @@ describe("open-topic Realtime call path", () => {
         sendResumed,
       );
     }
-    await second.handleServerEvent(
-      transcription("confirm-name", "Asha"),
-      sendResumed,
-    );
-    await second.handleServerEvent(
-      functionCallEvent({
-        callId: "confirm-portable",
-        name: "start_lesson",
-        arguments: { learner_name: "Asha" },
-      }),
-      sendResumed,
-    );
-    const resumed = parseToolOutput(resumedEvents);
-    expect(resumed).toMatchObject({ resumed: true, portable_code_issued: null });
-    expect(String(resumed.spoken_response)).toContain(pending);
+    expect(second.openingStage()).toBe("open_topic");
+    expect(JSON.stringify(resumedEvents.at(-1))).toContain(pending);
     expect(first.repository.listRecentLessons(10)[0]!.lastPrompt).toBe(pending);
 
     await second.close();

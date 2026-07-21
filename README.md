@@ -1,6 +1,6 @@
 # Continuum
 
-[![Release gate](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml/badge.svg)](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml)
+[![Release gate](https://github.com/Tanya-Khanna/continuum-voice-tutor/actions/workflows/release-gate.yml/badge.svg)](https://github.com/Tanya-Khanna/continuum-voice-tutor/actions/workflows/release-gate.yml)
 
 > **The connection may drop. The learning continues.**
 
@@ -145,8 +145,8 @@ Repository history begins on July 16, 2026 with the license and zero-credit teac
 Install exactly from the lockfile:
 
 ```bash
-git clone https://github.com/Tanya-Khanna/nomad-ai.git
-cd nomad-ai
+git clone https://github.com/Tanya-Khanna/continuum-voice-tutor.git
+cd continuum-voice-tutor
 nvm use
 npm ci
 cp .env.example .env
@@ -203,7 +203,7 @@ This runs formatting hygiene, strict unused-code linting, TypeScript, all determ
 
 Current verified local results:
 
-- **29 test files, 122 automated tests: pass**
+- **29 test files, 124 automated tests: pass**
 - **39 deterministic teaching/safety/privacy cases: pass**
 - **TypeScript, unused-code lint, production build, and production smoke: pass**
 

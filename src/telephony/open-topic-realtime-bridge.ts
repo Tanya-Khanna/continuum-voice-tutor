@@ -42,9 +42,17 @@ import {
 const SelectLanguageArgumentsSchema = z.object({
   language_mode: ResolvedLanguageModeSchema,
 });
+const OptionalLearnerCodeSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return undefined;
+    const trimmed = value.trim();
+    return /^\d{6}$/u.test(trimmed) ? trimmed : undefined;
+  },
+  z.string().regex(/^\d{6}$/u).optional(),
+);
 const StartLessonArgumentsSchema = z.object({
   learner_name: z.string().trim().min(1).max(80),
-  learner_code: z.string().regex(/^\d{6}$/u).optional(),
+  learner_code: OptionalLearnerCodeSchema,
 });
 const OpenTopicInputArgumentsSchema = z.object({
   learner_input: z.string().trim().min(1).max(2_000),
@@ -248,6 +256,18 @@ function speakExactTextEvent(text: string): OpenTopicRealtimeClientEvent {
   };
 }
 
+function speakLocalizedOnboardingTextEvent(
+  text: string,
+  languageMode: string,
+): OpenTopicRealtimeClientEvent {
+  return {
+    type: "response.create",
+    response: {
+      instructions: `Localize only this authoritative onboarding text into ${JSON.stringify(languageMode)}. Preserve every name, digit, and question. Add nothing, then wait: ${JSON.stringify(text)}`,
+    },
+  };
+}
+
 function respondToTranscriptEvent(
   transcript: string,
   stage: OpenTopicRealtimeStage,
@@ -349,7 +369,6 @@ export class OpenTopicRealtimeController {
   #allowUnlistedLanguage = false;
   #lastVerifiedTranscript: string | undefined;
   #pendingLearnerName: string | undefined;
-  #pendingCodeLearner: LearnerProfile | undefined;
   #codeAttempts = 0;
   #dtmfBuffer = "";
   #lastActivity: LearningActivity | undefined;
@@ -505,6 +524,7 @@ export class OpenTopicRealtimeController {
   }
 
   #interruptAudio(send: OpenTopicRealtimeSender): void {
+    const shouldClearOutput = this.#responseInProgress || this.#audioPlaying;
     if (this.#responseInProgress) {
       if (this.#activeResponseId) {
         this.#cancelledResponseIds.add(this.#activeResponseId);
@@ -513,7 +533,7 @@ export class OpenTopicRealtimeController {
       this.#responseInProgress = false;
       this.#activeResponseId = undefined;
     }
-    if (this.#audioPlaying) {
+    if (shouldClearOutput) {
       send({ type: "output_audio_buffer.clear" });
       this.#audioPlaying = false;
     }
@@ -566,8 +586,27 @@ export class OpenTopicRealtimeController {
       });
       this.#codeAttempts += 1;
       if (verified.status === "matched") {
-        this.#pendingCodeLearner = verified.learner;
-        send(speakExactTextEvent("I found a learning profile. Please say the learner's name to confirm it."));
+        const languageMode =
+          this.#selectedLanguage?.languageMode ??
+          verified.learner.preferredLanguage;
+        const learner = {
+          ...verified.learner,
+          preferredLanguage: languageMode,
+        };
+        this.#learner = learner;
+        const context = this.#lessonService.beginOrResumeLearner(
+          learner,
+          this.#accessMode,
+        );
+        this.#context = context;
+        this.#flushUsage();
+        this.#setStage("open_topic", send);
+        send(
+          speakLocalizedOnboardingTextEvent(
+            context.greeting,
+            languageMode,
+          ),
+        );
       } else if (verified.status === "blocked") {
         send(speakExactTextEvent("Learner-code attempts are paused for ten minutes."));
       } else {
@@ -734,7 +773,7 @@ export class OpenTopicRealtimeController {
             spoken_response: this.#context?.session.lastPrompt ?? "What would you like to learn?",
           };
           nextStage = "open_topic";
-        } else if (!this.#pendingCodeLearner && !this.#pendingLearnerName) {
+        } else if (!this.#pendingLearnerName) {
           if (!transcriptConfirmsLearnerName(transcript, args.learner_name)) {
             output = {
               ok: false,
@@ -771,25 +810,7 @@ export class OpenTopicRealtimeController {
             return;
           }
           let issuedCode: string | undefined;
-          if (this.#pendingCodeLearner) {
-            if (
-              normalizeLearnerName(this.#pendingCodeLearner.name) !==
-              normalizeLearnerName(args.learner_name)
-            ) {
-              output = {
-                ok: false,
-                spoken_response: "That name did not confirm the learner code. Please say the learner's name again.",
-              };
-              send(toolOutputEvent(call.call_id, output));
-              send(speakToolOutputEvent("localize_onboarding"));
-              return;
-            }
-            this.#learner = {
-              ...this.#pendingCodeLearner,
-              preferredLanguage: this.#selectedLanguage.languageMode,
-            };
-            this.#pendingCodeLearner = undefined;
-          } else if (args.learner_code && this.#portableIdentity) {
+          if (args.learner_code && this.#portableIdentity) {
             if (!transcriptContainsLearnerCode(transcript, args.learner_code)) {
               output = {
                 ok: false,
@@ -1164,14 +1185,26 @@ export class OpenTopicRealtimeController {
       send(speakToolOutputEvent(policy));
     } catch (error) {
       this.#onError(error instanceof Error ? error : new Error("Realtime tool failed"));
+      const spokenResponse =
+        this.#stage === "language"
+          ? buildVoiceLanguageMenuPrompt(this.#languageMenu)
+          : this.#stage === "identity"
+            ? this.#pendingLearnerName
+              ? "Do you already have a six-digit learner code? If yes, say all six digits. If not, say no."
+              : "What name would you like me to use?"
+            : this.#pendingReminder
+              ? "Should I schedule that one SMS reminder? Say yes or no, or press 1 or 2."
+              : this.#pendingFeedback
+                ? "Did that explanation help? Say yes or no, or press 1 or 2."
+                : this.#context?.session.lastPrompt ?? OPEN_TOPIC_PROMPT;
       send(
         toolOutputEvent(call.call_id, {
           ok: false,
           state_changed: false,
-          spoken_response: this.#context?.session.lastPrompt ?? "Could you say that once more?",
+          spoken_response: spokenResponse,
         }),
       );
-      send(speakToolOutputEvent());
+      send(speakToolOutputEvent("localize_recovery"));
     }
   }
 

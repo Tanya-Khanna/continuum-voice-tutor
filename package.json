@@ -7,11 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tanya-Khanna/nomad-ai.git"
+    "url": "git+https://github.com/Tanya-Khanna/continuum-voice-tutor.git"
   },
   "homepage": "https://continuum-production-8971.up.railway.app/",
   "bugs": {
-    "url": "https://github.com/Tanya-Khanna/nomad-ai/issues"
+    "url": "https://github.com/Tanya-Khanna/continuum-voice-tutor/issues"
   },
   "type": "module",
   "scripts": {

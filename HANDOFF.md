@@ -7,7 +7,7 @@ Verified on **July 21, 2026**. This is a release handoff, not a product plan. Re
 
 - Branch: `main`
 - Last application/code release commit: `d72afb80f74a1cba23a072ef9366d68b302ae610`
-- GitHub: <https://github.com/Tanya-Khanna/nomad-ai> (**private at handoff time**)
+- GitHub: <https://github.com/Tanya-Khanna/continuum-voice-tutor> (**private at handoff time**)
 - Production: <https://continuum-production-8971.up.railway.app/>
 - Health/revision: <https://continuum-production-8971.up.railway.app/health>
 - Protected Mission Control shell: <https://continuum-production-8971.up.railway.app/dashboard>
@@ -15,7 +15,7 @@ Verified on **July 21, 2026**. This is a release handoff, not a product plan. Re
   `019f6dd7-9486-74b2-9828-be19ee983b70` (recorded, but the `/feedback`
   share/upload flow is still a manual submission task)
 - Successful release-gate run for the application commit:
-  <https://github.com/Tanya-Khanna/nomad-ai/actions/runs/29828967745>
+  <https://github.com/Tanya-Khanna/continuum-voice-tutor/actions/runs/29828967745>
 
 `HANDOFF.md` is the only change after the application release above. When this
 repository is cloned, `git rev-parse HEAD` is the authoritative handoff-document
@@ -104,7 +104,7 @@ valid, spoken, stored, sent, or acted upon.**
 - `src/evals/` — 39 deterministic cases and the spend-gated nine-case GPT suite.
 - `scripts/verify-fresh-clone.ts`, `scripts/verify-production.ts`, and
   `scripts/release-preflight.ts` — release, compiled-server, and receipt gates.
-- `test/` — 29 files / 122 automated tests at the application release SHA.
+- `test/` — 29 files / 124 automated tests at the application release SHA.
 - `docs/TESTING_GUIDE.md`, `docs/PHONE_SETUP.md`, `docs/DEPLOYMENT.md`, and
   `docs/SAFETY_PRIVACY.md` — authoritative operating and acceptance procedures.
 
@@ -315,7 +315,7 @@ URL exists only in the private release receipt and must be shared separately.
 Verified on the application release SHA:
 
 - `npm run verify:fresh`: clean exported-tree `npm ci`, formatting, strict lint,
-  typecheck, **29 files / 122 tests**, **39/39 deterministic evaluations**, production
+  typecheck, **29 files / 124 tests**, **39/39 deterministic evaluations**, production
   build/smoke, and process-boundary exact resume all passed.
 - `npm run eval:live -- --confirm-spend`: **9/9** GPT cases passed on the same SHA.
 - GitHub Actions release gate passed on the same SHA.

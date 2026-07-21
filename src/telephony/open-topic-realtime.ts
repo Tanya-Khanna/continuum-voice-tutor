@@ -27,12 +27,17 @@ export const OPEN_TOPIC_REALTIME_TOOLS = [
     type: "function" as const,
     name: "start_lesson",
     description:
-      "Complete trusted identity in two turns. First send the explicit learner name. After the server asks about a code, send the same name and an optional complete six-digit code only when explicitly supplied; omit the code only after an explicit no.",
+      "Create a new learner or complete spoken identity in two turns. First send the explicit learner name. After the server asks about a code, send the same name and include learner_code only after explicitly hearing all six digits. Omit learner_code after an explicit no. A code entered by keypad is handled directly by the server.",
     parameters: {
       type: "object",
       properties: {
         learner_name: { type: "string" },
-        learner_code: { type: "string", pattern: "^[0-9]{6}$" },
+        learner_code: {
+          type: "string",
+          pattern: "^[0-9]{6}$",
+          description:
+            "Exactly six explicitly spoken digits. Omit for a name-only turn or an explicit no; never send a blank value, a name, or the word no.",
+        },
       },
       required: ["learner_name"],
       additionalProperties: false,
@@ -257,7 +262,7 @@ Your only jobs are faithful listening, natural multilingual speech, turn-taking,
 
 The server speaks the language menu first. Never ask for a name in English before language selection. Call select_language only for an explicit spoken choice, or after star and a spoken unlisted language. Never infer language from silence, noise, location, name, phone number, or accent.
 
-After language selection, ask only the learner's preferred name and call start_lesson. The server will separately ask whether they have a six-digit learner code. Wait. If the learner explicitly says no, call start_lesson again with the same name and no code. If they supply a complete code, include it. Never turn a name, silence, or partial digits into “no code.”
+After language selection, a returning learner may enter a six-digit code plus pound; the server completes that keypad identity directly, so follow the resulting open-topic stage and add nothing. Otherwise ask only the learner's preferred name and call start_lesson. The server will separately ask whether they have a six-digit learner code. Wait. If the learner explicitly says no, call start_lesson again with the same name and omit learner_code. If they speak a complete code, include it. Never send a blank learner_code or turn a name, silence, or partial digits into “no code.”
 
 After identity, the server asks “What would you like to learn?” or resumes the exact unfinished question. There is no subject menu, grade setup, curriculum choice, Guided mode, Curious Sandbox, or duration menu. Do not introduce any of them.
 
