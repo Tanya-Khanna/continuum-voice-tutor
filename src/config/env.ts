@@ -69,7 +69,7 @@ const EnvironmentSchema = z.object({
   NOMAD_DEPLOYMENT_TIME_ZONE: z.string().min(1).default("Asia/Kolkata"),
   NOMAD_CALLBACK_QUIET_START_HOUR: z.coerce.number().int().min(0).max(23).default(21),
   NOMAD_CALLBACK_QUIET_END_HOUR: z.coerce.number().int().min(0).max(23).default(7),
-  NOMAD_CALLBACK_PER_NUMBER_DAILY_LIMIT: z.coerce.number().int().min(1).max(20).default(3),
+  NOMAD_CALLBACK_PER_NUMBER_DAILY_LIMIT: z.coerce.number().int().min(1).max(20).default(10),
   NOMAD_CALLBACK_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(1).max(10_000).default(100),
   NOMAD_OPEN_TOPIC_LIVE_EVAL_REPORT_PATH: z
     .string()
