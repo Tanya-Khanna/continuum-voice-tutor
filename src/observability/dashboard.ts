@@ -2,11 +2,12 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { CurriculumPack } from "../curriculum/schema.js";
 import type { LearningRepository } from "../domain/learner.js";
+import { OPEN_TOPIC_NAMESPACE } from "../domain/open-topic.js";
 import { estimateUsageCost } from "./pricing.js";
 
 const DashboardTurnSchema = z.object({
   sequence: z.number().int().positive(),
-  mode: z.enum(["guided", "curious_sandbox"]),
+  mode: z.enum(["open_topic", "guided", "curious_sandbox"]),
   learner_answer: z.string(),
   anchor_object: z.string().nullable(),
   spoken_response: z.string(),
@@ -23,6 +24,12 @@ const DashboardTurnSchema = z.object({
   mastery_status: z.string(),
   mastery_evidence: z.string(),
   model_route: z.string(),
+  activity_kind: z.string().nullable(),
+  strategy_changed: z.boolean().nullable(),
+  evidence_kind: z.string().nullable(),
+  evidence_result: z.string().nullable(),
+  human_support: z.string().nullable(),
+  knowledge_state: z.string().nullable(),
   created_at: z.string().datetime(),
 });
 
@@ -88,11 +95,8 @@ export function buildDashboardSnapshot(options: {
   const packs =
     options.curriculumPacks ??
     (options.curriculumPack ? [options.curriculumPack] : []);
-  if (packs.length === 0) {
-    throw new Error("Dashboard snapshot requires at least one curriculum pack.");
-  }
   const packsById = new Map(packs.map((pack) => [pack.id, pack]));
-  const defaultPack = packs[0]!;
+  const defaultPack = packs[0];
   const sessions = options.repository
     .listRecentLessons(options.limit ?? 20)
     .map((session) => {
@@ -100,17 +104,22 @@ export function buildDashboardSnapshot(options: {
       if (!learner) {
         throw new Error(`Learner ${session.learnerId} is missing.`);
       }
-      const curriculumPack =
-        session.curriculumPackId === "legacy"
+      const isOpenTopic = session.curriculumPackId === OPEN_TOPIC_NAMESPACE;
+      const curriculumPack = isOpenTopic
+        ? undefined
+        : session.curriculumPackId === "legacy"
           ? defaultPack
           : packsById.get(session.curriculumPackId);
-      if (!curriculumPack) {
+      if (!isOpenTopic && !curriculumPack) {
         throw new Error(
           `Curriculum pack ${session.curriculumPackId} is missing from the dashboard catalog.`,
         );
       }
-      const conceptTitle =
-        curriculumPack.concepts.find(
+      const conceptTitle = isOpenTopic
+        ? session.concept === "open-topic"
+          ? "Awaiting learner topic"
+          : session.concept
+        : curriculumPack!.concepts.find(
           (concept) => concept.id === session.concept,
         )?.title ?? session.concept;
       const usageRecords = options.repository.listUsage(session.id);
@@ -141,8 +150,9 @@ export function buildDashboardSnapshot(options: {
       const measuredLatencies = usageRecords.flatMap((usage) =>
         usage.latencyMs === undefined ? [] : [usage.latencyMs],
       );
-      const guidedTurns = options.repository.listTurns(session.id).map((entry) => ({
-        mode: "guided" as const,
+      const decisions = options.repository.listPedagogyDecisions(session.id);
+      const guidedTurns = options.repository.listTurns(session.id).map((entry, index) => ({
+        mode: isOpenTopic ? ("open_topic" as const) : ("guided" as const),
         learner_answer: entry.turn.learner_answer,
         anchor_object: entry.turn.anchor_object,
         spoken_response: entry.turn.spoken_response,
@@ -153,6 +163,12 @@ export function buildDashboardSnapshot(options: {
         mastery_status: entry.turn.mastery_status,
         mastery_evidence: entry.turn.mastery_evidence,
         model_route: entry.modelRoute,
+        activity_kind: decisions[index]?.activity.kind ?? null,
+        strategy_changed: decisions[index]?.strategyChanged ?? null,
+        evidence_kind: decisions[index]?.evidenceKind ?? null,
+        evidence_result: decisions[index]?.evidenceResult ?? null,
+        human_support: decisions[index]?.humanSupport ?? null,
+        knowledge_state: decisions[index]?.knowledgeState ?? null,
         created_at: entry.createdAt,
       }));
       const sandboxTurns = options.repository
@@ -170,6 +186,12 @@ export function buildDashboardSnapshot(options: {
           mastery_evidence:
             "Sandbox interactions are excluded from guided curriculum mastery.",
           model_route: entry.modelRoute,
+          activity_kind: null,
+          strategy_changed: null,
+          evidence_kind: null,
+          evidence_result: null,
+          human_support: null,
+          knowledge_state: null,
           created_at: entry.createdAt,
         }));
       const turns = [...guidedTurns, ...sandboxTurns]
@@ -179,8 +201,8 @@ export function buildDashboardSnapshot(options: {
       return {
         session_id: session.id,
         learner_ref: learnerReference(session.learnerId),
-        curriculum_pack_id: curriculumPack.id,
-        subject: curriculumPack.deployment.subject,
+        curriculum_pack_id: session.curriculumPackId,
+        subject: isOpenTopic ? "Open learning" : curriculumPack!.deployment.subject,
         concept_id: session.concept,
         concept_title: conceptTitle,
         status: session.status,

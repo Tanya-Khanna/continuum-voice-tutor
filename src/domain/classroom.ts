@@ -47,6 +47,8 @@ export const HumanSupportDecisionSchema = z.enum([
   "suggest_teacher",
   "curriculum_review",
   "safety_protocol",
+  "qualified_professional",
+  "immediate_safety_protocol",
 ]);
 
 export const TeachingHelpfulnessSchema = z.enum([
@@ -172,6 +174,20 @@ export const PedagogyDecisionSchema = z.object({
   responseMode: LearnerResponseModeSchema,
   humanSupport: HumanSupportDecisionSchema,
   reviewAfterDays: z.number().int().min(1).max(365).nullable(),
+  openTopicPlan: z.unknown().nullable().optional(),
+  learningIntent: z.unknown().nullable().optional(),
+  knowledgeState: z
+    .enum([
+      "stable",
+      "ambiguous",
+      "current_or_disputed",
+      "high_stakes",
+      "unsafe",
+    ])
+    .nullable()
+    .optional(),
+  expectedChoiceKey: z.enum(["1", "2", "3", "4"]).nullable().optional(),
+  smsFollowUp: z.string().trim().min(1).max(160).nullable().optional(),
   createdAt: z.string().datetime(),
 });
 

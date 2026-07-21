@@ -6,6 +6,8 @@ import { buildDashboardSnapshot } from "../src/observability/dashboard.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 import { StoredModelUsageSchema } from "../src/domain/usage.js";
 import { DASHBOARD_HTML } from "../src/dashboard/page.js";
+import { OfflineOpenTopicEngine } from "../src/engine/offline-open-topic-engine.js";
+import { OpenTopicLessonService } from "../src/lesson/open-topic-lesson-service.js";
 
 describe("mission-control snapshot", () => {
   it("uses the Continuum brand in learner-visible Mission Control copy", () => {
@@ -133,6 +135,45 @@ describe("mission-control snapshot", () => {
     });
     expect(serialized).not.toContain("Private Learner Name");
     expect(serialized).not.toContain("+919999988888");
+    repository.close();
+  });
+
+  it("renders open-topic proof without requiring a curriculum pack", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new OpenTopicLessonService({
+      repository,
+      engine: new OfflineOpenTopicEngine(),
+      phoneHashSecret: "dashboard-open-topic-secret",
+    });
+    const learner = service.identifyLearner({
+      phoneNumber: "+14155550123",
+      learnerName: "Open Topic Learner",
+      preferredLanguage: "en",
+    });
+    const context = service.beginOrResumeLearner(learner);
+    await service.respond(context, "Why do shadows change length?");
+
+    const snapshot = buildDashboardSnapshot({
+      repository,
+      now: new Date("2026-07-21T12:00:00.000Z"),
+    });
+    expect(snapshot.sessions[0]).toMatchObject({
+      curriculum_pack_id: "continuum-open-topic-v1",
+      subject: "Open learning",
+      concept_title: "Why do shadows change length?",
+      placement: { level: "unplaced" },
+      turns: [
+        expect.objectContaining({
+          mode: "open_topic",
+          activity_kind: "socratic_prompt",
+          evidence_kind: "diagnostic",
+          evidence_result: "unclear",
+          knowledge_state: "stable",
+        }),
+      ],
+    });
+    expect(JSON.stringify(snapshot)).not.toContain("Open Topic Learner");
+    expect(JSON.stringify(snapshot)).not.toContain("+14155550123");
     repository.close();
   });
 });

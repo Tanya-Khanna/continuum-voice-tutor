@@ -19,20 +19,18 @@ import {
 } from "./messaging/twilio-sms.js";
 import { buildDashboardSnapshot } from "./observability/dashboard.js";
 import { SqliteLearningRepository } from "./persistence/sqlite-learning-repository.js";
-import { createLessonRuntime } from "./runtime/lesson-runtime.js";
+import { createOpenTopicRuntime } from "./runtime/open-topic-runtime.js";
 import { CallAdmissionGuard } from "./telephony/call-admission.js";
 import { buildPhoneReadinessReport } from "./telephony/readiness.js";
 import {
   RealtimeIncomingCallSchema,
   acceptRealtimeCall,
   accessModeFromIncomingCall,
-  buildRealtimeAcceptPayload,
   callerNumberFromIncomingCall,
-  durationFromIncomingCall,
-  learnerIdFromIncomingCall,
   rejectRealtimeCall,
 } from "./telephony/realtime-sip.js";
-import { RealtimeTeachingBridge } from "./telephony/realtime-teaching-bridge.js";
+import { buildOpenTopicRealtimeAcceptPayload } from "./telephony/open-topic-realtime.js";
+import { OpenTopicRealtimeBridge } from "./telephony/open-topic-realtime-bridge.js";
 import {
   MISSED_CALL_REJECT_TWIML,
   MissedCallCallbackService,
@@ -40,9 +38,8 @@ import {
 } from "./telephony/missed-call-callback.js";
 import { validateTwilioSignature } from "./telephony/twilio-signature.js";
 import { GuardianAccessService } from "./guardian/guardian-access-service.js";
-import { SmsControlService } from "./messaging/sms-control-service.js";
+import { OpenTopicSmsService } from "./messaging/open-topic-sms-service.js";
 import { HomeworkService } from "./messaging/homework-service.js";
-import { StudyPlanScheduler } from "./scheduling/study-plan-scheduler.js";
 import {
   ProductMetricEventSchema,
   type AccessMode,
@@ -399,66 +396,6 @@ async function processCallbackJob(jobId: string): Promise<void> {
   }
 }
 
-let schedulerTickRunning = false;
-async function runStudySchedulerTick(): Promise<void> {
-  if (schedulerTickRunning) return;
-  schedulerTickRunning = true;
-  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
-  try {
-    await new StudyPlanScheduler({
-      repository,
-      callbackSecret: environment.NOMAD_CALLBACK_SECRET,
-      dial: async ({ learnerId, to, durationMinutes }) => {
-        const receiptId = randomUUID();
-        const receipt = createCarrierCallReceipt({
-          id: receiptId,
-          kind: "scheduled",
-          learnerId,
-          requestedDurationMinutes: durationMinutes,
-          now: new Date().toISOString(),
-        });
-        repository.saveCarrierCallReceipt(receipt);
-        try {
-          const placed = await placeTwilioCallback({
-            accountSid: environment.TWILIO_ACCOUNT_SID!,
-            authToken: environment.TWILIO_AUTH_TOKEN!,
-            from: environment.TWILIO_PHONE_NUMBER!,
-            to,
-            projectId: environment.OPENAI_PROJECT_ID!,
-            relaySecret: environment.NOMAD_CALLBACK_SECRET,
-            learnerId,
-            durationMinutes,
-            accessMode: "scheduled",
-            statusCallbackUrl: carrierCallStatusCallbackUrl(
-              environment.NOMAD_PUBLIC_BASE_URL!,
-              receiptId,
-            ),
-          });
-          repository.saveCarrierCallReceipt(
-            markCarrierCallQueued(
-              repository.findCarrierCallReceipt(receiptId) ?? receipt,
-              placed.sid,
-              new Date().toISOString(),
-            ),
-          );
-        } catch (error) {
-          repository.saveCarrierCallReceipt({
-            ...receipt,
-            status: "failed",
-            completedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-          throw error;
-        }
-      },
-    }).runDue();
-    await reconcileUnpricedCarrierReceipts();
-  } finally {
-    repository.close();
-    schedulerTickRunning = false;
-  }
-}
-
 export const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", "http://localhost");
@@ -472,7 +409,8 @@ export const server = createServer(async (request, response) => {
           realtimeConfigured: Boolean(
             environment.OPENAI_API_KEY && environment.OPENAI_WEBHOOK_SECRET,
           ),
-          guidedSubjects: curriculumCatalog.subjects(),
+          experience: "open_topic_teacher",
+          curriculumRequiredForCalls: false,
           releaseRevision: (
             environment.NOMAD_RELEASE_COMMIT ??
             environment.RAILWAY_GIT_COMMIT_SHA ??
@@ -481,7 +419,7 @@ export const server = createServer(async (request, response) => {
           accessFeatures: {
             missedCallCallback: environment.NOMAD_MISSED_CALL_ENABLED,
             smsControls: environment.NOMAD_SMS_CONTROLS_ENABLED,
-            scheduler: environment.NOMAD_SCHEDULER_ENABLED,
+            scheduler: false,
             smsRecap: environment.NOMAD_SMS_RECAP_ENABLED,
           },
           publicPhonePublished: environment.NOMAD_PUBLIC_PHONE_ENABLED,
@@ -508,7 +446,6 @@ export const server = createServer(async (request, response) => {
             environment.NOMAD_TWILIO_NUMBER_VOICE_READY &&
             environment.NOMAD_OPENAI_WEBHOOK_PUBLIC,
           missedCallEnabled: environment.NOMAD_MISSED_CALL_ENABLED,
-          guidedSubjects: curriculumCatalog.subjects(),
         }),
       );
       return;
@@ -788,16 +725,13 @@ export const server = createServer(async (request, response) => {
             secret: environment.NOMAD_GUARDIAN_CODE_SECRET,
             phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
           });
-          const receipt = new SmsControlService({
+          const receipt = new OpenTopicSmsService({
             repository,
             guardianAccess,
             homeworkService: new HomeworkService({
               repository,
               phoneHashSecret: environment.NOMAD_PHONE_HASH_SECRET,
             }),
-            defaultSubject: curriculumCatalog.defaultOption.subject,
-            timeZone: environment.NOMAD_DEPLOYMENT_TIME_ZONE,
-            callbackSecret: environment.NOMAD_CALLBACK_SECRET,
           }).handle(Object.fromEntries(parameters.entries()));
           await sendTrackedSms({
             repository,
@@ -1070,7 +1004,7 @@ export const server = createServer(async (request, response) => {
           await acceptRealtimeCall({
             apiKey,
             callId,
-            payload: buildRealtimeAcceptPayload(
+            payload: buildOpenTopicRealtimeAcceptPayload(
               environment.OPENAI_REALTIME_MODEL,
               environment.OPENAI_REALTIME_VOICE,
               {
@@ -1086,35 +1020,18 @@ export const server = createServer(async (request, response) => {
             ),
           });
 
-          const runtime = createLessonRuntime(environment);
-          const scheduledLearnerId = learnerIdFromIncomingCall(
-            incomingCall,
-            environment.NOMAD_CALLBACK_SECRET,
-          );
-          const scheduledDurationMinutes = durationFromIncomingCall(
-            incomingCall,
-            environment.NOMAD_CALLBACK_SECRET,
-          );
+          const runtime = createOpenTopicRuntime(environment);
           const callAccessMode = accessModeFromIncomingCall(
             incomingCall,
             environment.NOMAD_CALLBACK_SECRET,
           );
-          const scheduledLearner = scheduledLearnerId
-            ? runtime.lessonService.findLearner(scheduledLearnerId)
-            : undefined;
-          const bridge = new RealtimeTeachingBridge({
+          const bridge = new OpenTopicRealtimeBridge({
             apiKey,
             callId,
             callerNumber,
             lessonService: runtime.lessonService,
             portableIdentity: runtime.portableIdentity,
-            guardianAccess: runtime.guardianAccess,
-            guardianControls: runtime.guardianControls,
             languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
-            ...(scheduledLearner ? { initialLearner: scheduledLearner } : {}),
-            ...(scheduledLearner && scheduledDurationMinutes
-              ? { initialDurationMinutes: scheduledDurationMinutes }
-              : {}),
             initialAccessMode: callAccessMode,
             modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
@@ -1125,11 +1042,13 @@ export const server = createServer(async (request, response) => {
                     callerNumber: to,
                     context,
                   }) => {
+                    const draft = runtime.lessonService.homeworkDraft(context);
+                    if (!draft) return;
                     const homework = runtime.homework.assign({
                       learnerId: context.learner.id,
                       sessionId: context.session.id,
                       recipientPhoneNumber: to,
-                      draft: runtime.lessonService.homeworkDraft(context),
+                      draft,
                     });
                     await sendTrackedSms({
                       repository: runtime.repository,
@@ -1198,20 +1117,3 @@ server.listen(environment.PORT, environment.HOST, () => {
     `Continuum server listening on http://${environment.HOST}:${environment.PORT}`,
   );
 });
-
-if (environment.NOMAD_SCHEDULER_ENABLED) {
-  void runStudySchedulerTick().catch((error: unknown) =>
-    console.error(
-      "Initial scheduler tick failed:",
-      error instanceof Error ? error.message : "unknown error",
-    ),
-  );
-  setInterval(() => {
-    void runStudySchedulerTick().catch((error: unknown) =>
-      console.error(
-        "Scheduler tick failed:",
-        error instanceof Error ? error.message : "unknown error",
-      ),
-    );
-  }, environment.NOMAD_SCHEDULER_INTERVAL_MS).unref();
-}

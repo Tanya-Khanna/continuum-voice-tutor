@@ -792,44 +792,46 @@ Migration rules:
 
 ### Phase 0 — Scope reset and contract tests
 
-- Make this plan and the agent guide authoritative.
-- Add failing tests forbidding subject menu, Guided/Sandbox, grade placement, and duration selection.
-- Define the open-topic state machine and versioned schemas.
+- ~~Make this plan and the agent guide authoritative.~~
+- ~~Add contract tests forbidding subject menu, Guided/Sandbox, grade placement, and duration selection.~~
+- ~~Define the open-topic state machine and versioned schemas.~~
 - Add a migration flag and preserve the previous flow only long enough for safe data migration.
 
 **Exit:** a new learner reaches “What would you like to learn?” after language and identity, with no course choice.
 
 ### Phase 1 — Open-topic teaching brain
 
-- Implement `LearningIntent` and `TopicPlan` through the Responses API.
-- Implement structured diagnosis, method choice, activity, response assessment, and uncertainty.
-- Enforce one question, teaching-not-withholding, and meaningful method switches.
-- Add dynamic explanation, analogy, story, worked-example, hint, quiz, teach-back, transfer, reflection, and recap renderers.
+- ~~Implement `LearningIntent` and `TopicPlan` through the Responses API.~~
+- ~~Implement structured diagnosis, method choice, activity, response assessment, and uncertainty.~~
+- ~~Enforce one question, teaching-not-withholding, and meaningful method switches.~~
+- ~~Add dynamic explanation, analogy, story, worked-example, hint, quiz, teach-back, transfer, reflection, and recap renderers.~~
 
 **Exit:** three unrelated topics pass the same multi-turn teaching loop without pack or engine changes.
 
 ### Phase 2 — Evidence and memory
 
-- Replace curriculum mastery with objective-specific understanding state.
-- Store learner feedback beside objective evidence.
+- ~~Replace curriculum mastery with objective-specific understanding state.~~
+- ~~Store learner feedback beside objective evidence.~~
 - Persist helpful/failed methods, exact next point, exam dates, and requested follow-ups.
-- Complete memory inspection, correction, deletion, and legacy migration.
+- ~~Complete consented memory inspection, correction, and two-step deletion.~~
+- Complete legacy-memory migration.
 
 **Exit:** a second call uses prior evidence appropriately without replaying or overclaiming it.
 
 ### Phase 3 — Voice, keypad, and recovery
 
-- Map DTMF to every valid activity stage.
-- Preserve speech-first interaction and keypad evidence caps.
+- ~~Map DTMF to language, identity, repeat, hint, answer, feedback, and fallback stages.~~
+- ~~Preserve speech-first interaction and keypad evidence caps.~~
 - Make input cancellation and stale-response protection deterministic.
-- Verify atomic drop recovery and cross-phone identity.
+- ~~Verify atomic drop recovery and cross-phone identity in deterministic integration tests.~~
 
 **Exit:** a noisy-line golden journey completes and a dropped question resumes exactly from another phone.
 
 ### Phase 4 — SMS relationship thread
 
 - Implement recaps, one-question practice, replies, drop reminders, exam reminders, callback nudges, and guardian summaries.
-- Disable the outbound lesson-call scheduler.
+- ~~Implement one-question practice replies and bounded, signed SMS controls.~~
+- ~~Disable the outbound lesson-call scheduler.~~
 - Enforce consent, quiet hours, rate limits, `STOP`, one-segment targets, and bounded SMS behavior.
 
 **Exit:** an exam reminder and practice reply work without turning SMS into open chat.
@@ -846,7 +848,8 @@ Migration rules:
 
 - Run the full carrier and language matrix.
 - Run five consecutive golden judge journeys.
-- Update the landing page and README to the exact locked definition.
+- ~~Update the landing page to the exact locked definition.~~
+- Update the README to the exact locked definition.
 - Record the demonstration only after the tested deployment revision is pinned.
 - Freeze features and preserve call/SMS budget.
 

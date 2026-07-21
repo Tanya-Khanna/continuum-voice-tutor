@@ -249,19 +249,22 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
       for (const turn of session.turns) {
         const row = text('div', '', 'turn'); row.append(text('div', String(turn.sequence).padStart(2, '0'), 'turn-no'));
         const content = text('div', '');
-        const learner = text('div', '', 'bubble'); learner.append(text('div', 'Learner · ' + (turn.mode === 'guided' ? 'Guided' : 'Curious Sandbox'), 'speaker')); learner.append(text('div', turn.learner_answer));
+        const modeLabel = turn.mode === 'open_topic' ? 'Open learning' : turn.mode === 'guided' ? 'Legacy guided' : 'Legacy curiosity';
+        const learner = text('div', '', 'bubble'); learner.append(text('div', 'Learner · ' + modeLabel, 'speaker')); learner.append(text('div', turn.learner_answer));
         const continuum = text('div', '', 'bubble continuum'); continuum.append(text('div', 'Continuum', 'speaker')); continuum.append(text('div', turn.spoken_response));
         content.append(learner, continuum); row.append(content); transcript.append(row);
       }
       const analysis = text('aside', '', 'analysis'); analysis.append(text('div', 'Teaching intelligence', 'section-label'));
       addCard(analysis, 'Latest diagnosis', latest?.diagnosis ?? session.last_diagnosis);
-      addCard(analysis, 'Shared physical anchor', latest?.anchor_object ?? session.anchor_object ?? 'None named yet');
+      addCard(analysis, 'Latest activity', latest?.activity_kind ? humanize(latest.activity_kind) : 'Awaiting first activity');
       const reasoning = latest?.reasoning_trace?.length
         ? latest.reasoning_trace.map((entry) => entry.source.replace('_', ' ') + ' · ' + entry.status + ': ' + entry.claim).join(' | ')
-        : 'No guided think-aloud trace for this interaction.';
+        : 'No redacted reasoning trace for this interaction.';
       addCard(analysis, 'Reasoning trace', reasoning);
-      addCard(analysis, 'Latest mode', latest?.mode === 'curious_sandbox' ? 'Curious Sandbox · mastery not assessed' : 'Guided curriculum');
-      addCard(analysis, 'Placement', session.placement.level === 'unplaced' ? 'Pending' : humanize(session.placement.level) + ' · ' + session.placement.score + '/' + session.placement.total);
+      addCard(analysis, 'Teaching system', latest?.mode === 'open_topic' ? 'Open topic · no curriculum menu' : latest?.mode === 'curious_sandbox' ? 'Legacy curiosity' : 'Legacy guided curriculum');
+      addCard(analysis, 'Method switch', latest?.strategy_changed === null || latest?.strategy_changed === undefined ? 'Awaiting evidence' : latest.strategy_changed ? 'Changed after learner evidence' : 'Continued with justification');
+      addCard(analysis, 'Evidence', latest?.evidence_kind ? humanize(latest.evidence_kind) + ' · ' + humanize(latest.evidence_result) : 'Awaiting learner evidence');
+      addCard(analysis, 'Knowledge boundary', latest?.knowledge_state ? humanize(latest.knowledge_state) + ' · human support: ' + humanize(latest.human_support) : 'Legacy session');
       addCard(analysis, 'Mastery evidence', latest?.mastery_evidence ?? session.mastery_evidence);
       addCard(analysis, 'Next strategy', latest?.next_strategy ? humanize(latest.next_strategy) : 'Awaiting first answer');
       addCard(analysis, 'Model route', latest?.model_route ?? 'pending', 'route');
