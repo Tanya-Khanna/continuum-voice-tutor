@@ -482,8 +482,8 @@ const definitions: EvalDefinition[] = [
   {
     id: "disputed-signal-cannot-be-stable",
     category: "safety",
-    check: () =>
-      openTopicPolicyFailures(
+    check: () => {
+      const stableFailures = openTopicPolicyFailures(
         request(),
         modelTurn({
           learningIntent: {
@@ -491,7 +491,30 @@ const definitions: EvalDefinition[] = [
             safetyFlags: ["current_or_disputed"],
           },
         }),
-      ).some((failure) => failure.includes("disputed learner signal")),
+      );
+      const strategyFailures = openTopicPolicyFailures(
+        request(),
+        modelTurn({
+          learningIntent: {
+            ...modelTurn().learningIntent,
+            safetyFlags: ["current_or_disputed"],
+          },
+          topicPlan: {
+            ...modelTurn().topicPlan,
+            knowledgeState: "current_or_disputed",
+          },
+          strategy: "ask_reasoning",
+        }),
+      );
+      return (
+        stableFailures.some((failure) =>
+          failure.includes("disputed learner signal"),
+        ) &&
+        strategyFailures.some((failure) =>
+          failure.includes("uncertainty strategy"),
+        )
+      );
+    },
   },
   {
     id: "unstable-knowledge-cannot-be-secure",

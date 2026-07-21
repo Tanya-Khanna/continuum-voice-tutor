@@ -342,6 +342,14 @@ export function openTopicPolicyFailures(
     failures.push("treated a current or disputed learner signal as stable knowledge");
   }
   if (
+    turn.topicPlan.knowledgeState === "current_or_disputed" &&
+    turn.strategy !== "uncertainty"
+  ) {
+    failures.push(
+      "did not use the uncertainty strategy for current or disputed knowledge",
+    );
+  }
+  if (
     request.latestFeedback?.helpfulness === "not_helpful" &&
     turn.strategy === request.latestFeedback.strategy &&
     turn.strategy !== "safety_redirect"
