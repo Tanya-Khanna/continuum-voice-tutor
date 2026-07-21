@@ -23,8 +23,8 @@ This is the release ledger for the 32 user stories in `docs/BUILD_PLAN.md`. “A
 | US-17 keypad fallback | Realtime DTMF routing tests; reviewed pack choices | `*`, choice, and invalid choice over carrier |
 | US-18 honest keypad scoring | `learning-evidence.test.ts`: DTMF independent=false and never secure | Dashboard inspection |
 | US-19 SMS homework | `homework.test.ts`: one segment, phone binding, MessageSid idempotency, correct learner evidence | Send and reply on Twilio |
-| US-20 recurring schedule | `study-plan-scheduler.test.ts`: consent, due lock, single dial, next slot | Live scheduled call and retention opening |
-| US-21 no repeated missed call | scheduler single-slot tests; no application retry | **Open:** Twilio status callback/no-answer carrier receipt |
+| US-20 recurring schedule | `study-plan-scheduler.test.ts`: consent, due lock, single dial, next slot; signed duration relay into SIP | Live scheduled call and retention opening |
+| US-21 no repeated missed call | scheduler single-slot tests; idempotent Twilio lifecycle receipts; one no-answer SMS; no application retry; duration/price reconciliation | Capture one live no-answer receipt and confirm no redial |
 | US-22 low-literacy guardian | Realtime guardian DTMF tests for progress, time, pause/resume, deletion | Full guardian menu over carrier |
 | US-23 inspect memory | SMS and guardian summary tests | SMS plus voice readback |
 | US-24 delete profile | SMS and guardian two-step deletion tests; cascading state removal | Synthetic live profile only |
@@ -35,7 +35,7 @@ This is the release ledger for the 32 user stories in `docs/BUILD_PLAN.md`. “A
 | US-29 language/code-switching | deterministic and paid text gates; universal typed contract | English, Hindi-English, Spanish-English, French-English adult carrier matrix |
 | US-30 local relevance | frozen reviewed anchors; trusted learner-confirmation check | Native-speaker spot-check |
 | US-31 unclear audio | Realtime recovery tests: no model request or state advance | Clipped/noisy carrier test |
-| US-32 judge validation | offline REPL, protected dashboard Outcomes tab, evals, `verify:fresh` | Five consecutive golden calls and final clean-clone run |
+| US-32 judge validation | offline REPL, protected dashboard Outcomes tab, access/reliability/learning/cost receipts, evals, `verify:fresh` | Five consecutive golden calls and final clean-clone run |
 
 ## Required commands
 

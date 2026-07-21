@@ -52,6 +52,10 @@ import {
   HomeworkAssignmentSchema,
   type HomeworkAssignment,
 } from "../domain/homework.js";
+import {
+  CarrierCallReceiptSchema,
+  type CarrierCallReceipt,
+} from "../domain/carrier-usage.js";
 
 interface LearnerRow {
   id: string;
@@ -354,6 +358,18 @@ export class SqliteLearningRepository implements LearningRepository {
 
       CREATE INDEX IF NOT EXISTS callback_jobs_status_idx
         ON callback_jobs(status, created_at);
+
+      CREATE TABLE IF NOT EXISTS carrier_call_receipts (
+        id TEXT PRIMARY KEY,
+        provider_call_sid TEXT UNIQUE,
+        receipt_json TEXT NOT NULL,
+        status TEXT NOT NULL,
+        price_amount REAL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS carrier_call_receipts_status_idx
+        ON carrier_call_receipts(status, price_amount, updated_at);
 
       CREATE TABLE IF NOT EXISTS guardian_authorizations (
         learner_id TEXT PRIMARY KEY REFERENCES learners(id) ON DELETE CASCADE,
@@ -793,6 +809,32 @@ export class SqliteLearningRepository implements LearningRepository {
     );
   }
 
+  listAllUsage(limit = 50_000): StoredModelUsage[] {
+    const safeLimit = Math.max(1, Math.min(100_000, Math.trunc(limit)));
+    const rows = this.#database
+      .prepare("SELECT * FROM model_usage ORDER BY created_at DESC, id DESC LIMIT ?")
+      .all(safeLimit) as UsageRow[];
+    return rows.map((row) =>
+      StoredModelUsageSchema.parse({
+        id: row.id,
+        sessionId: row.session_id,
+        source: row.source,
+        modelRoute: row.model_route,
+        ...(row.provider_response_id
+          ? { providerResponseId: row.provider_response_id }
+          : {}),
+        inputTextTokens: row.input_text_tokens,
+        cachedInputTextTokens: row.cached_input_text_tokens,
+        outputTextTokens: row.output_text_tokens,
+        inputAudioTokens: row.input_audio_tokens,
+        cachedInputAudioTokens: row.cached_input_audio_tokens,
+        outputAudioTokens: row.output_audio_tokens,
+        ...(row.latency_ms === null ? {} : { latencyMs: row.latency_ms }),
+        createdAt: row.created_at,
+      }),
+    );
+  }
+
   appendLearningEvidence(unparsedEvidence: LearningEvidence): void {
     const evidence = LearningEvidenceSchema.parse(unparsedEvidence);
     this.#database
@@ -1150,6 +1192,79 @@ export class SqliteLearningRepository implements LearningRepository {
     return transaction();
   }
 
+  saveCarrierCallReceipt(unparsedReceipt: CarrierCallReceipt): void {
+    const receipt = CarrierCallReceiptSchema.parse(unparsedReceipt);
+    this.#database
+      .prepare(
+        `INSERT INTO carrier_call_receipts (
+          id, provider_call_sid, receipt_json, status, price_amount, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          provider_call_sid = excluded.provider_call_sid,
+          receipt_json = excluded.receipt_json,
+          status = excluded.status,
+          price_amount = excluded.price_amount,
+          updated_at = excluded.updated_at`,
+      )
+      .run(
+        receipt.id,
+        receipt.providerCallSid,
+        JSON.stringify(receipt),
+        receipt.status,
+        receipt.priceAmount,
+        receipt.updatedAt,
+      );
+  }
+
+  findCarrierCallReceipt(id: string): CarrierCallReceipt | undefined {
+    const row = this.#database
+      .prepare("SELECT receipt_json FROM carrier_call_receipts WHERE id = ?")
+      .get(id) as { receipt_json: string } | undefined;
+    return row
+      ? CarrierCallReceiptSchema.parse(JSON.parse(row.receipt_json) as unknown)
+      : undefined;
+  }
+
+  findCarrierCallReceiptByProviderSid(
+    providerCallSid: string,
+  ): CarrierCallReceipt | undefined {
+    const row = this.#database
+      .prepare(
+        "SELECT receipt_json FROM carrier_call_receipts WHERE provider_call_sid = ?",
+      )
+      .get(providerCallSid) as { receipt_json: string } | undefined;
+    return row
+      ? CarrierCallReceiptSchema.parse(JSON.parse(row.receipt_json) as unknown)
+      : undefined;
+  }
+
+  listCarrierCallReceipts(limit = 10_000): CarrierCallReceipt[] {
+    const safeLimit = Math.max(1, Math.min(50_000, Math.trunc(limit)));
+    const rows = this.#database
+      .prepare(
+        "SELECT receipt_json FROM carrier_call_receipts ORDER BY updated_at DESC LIMIT ?",
+      )
+      .all(safeLimit) as { receipt_json: string }[];
+    return rows.map((row) =>
+      CarrierCallReceiptSchema.parse(JSON.parse(row.receipt_json) as unknown),
+    );
+  }
+
+  listUnpricedCarrierCallReceipts(limit = 20): CarrierCallReceipt[] {
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+    const rows = this.#database
+      .prepare(
+        `SELECT receipt_json FROM carrier_call_receipts
+         WHERE status IN ('completed', 'busy', 'failed', 'no_answer', 'canceled')
+           AND price_amount IS NULL
+         ORDER BY updated_at LIMIT ?`,
+      )
+      .all(safeLimit) as { receipt_json: string }[];
+    return rows.map((row) =>
+      CarrierCallReceiptSchema.parse(JSON.parse(row.receipt_json) as unknown),
+    );
+  }
+
   saveGuardianAuthorization(
     unparsedAuthorization: GuardianAuthorization,
   ): void {
@@ -1404,7 +1519,7 @@ export class SqliteLearningRepository implements LearningRepository {
     const event = ProductMetricEventSchema.parse(unparsedEvent);
     this.#database
       .prepare(
-        `INSERT INTO product_metric_events (
+        `INSERT OR IGNORE INTO product_metric_events (
           id, name, learner_id, session_id, event_json, created_at
         ) VALUES (?, ?, ?, ?, ?, ?)`,
       )

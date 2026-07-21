@@ -32,9 +32,10 @@ describe("Twilio SMS recap boundary", () => {
         from: "+14155550100",
         to: "+919999900001",
         body: "Resumen listo. ¿Qué idea recordarás mañana?",
+        statusCallbackUrl: "https://continuum.example/webhooks/twilio/message-status",
         fetchImplementation,
       }),
-    ).resolves.toEqual({ sid: "SM123", status: "queued" });
+    ).resolves.toEqual({ sid: "SM123", status: "queued", segments: 1 });
 
     const [url, request] = fetchImplementation.mock.calls[0]!;
     expect(url).toBe(
@@ -46,6 +47,8 @@ describe("Twilio SMS recap boundary", () => {
         To: "+919999900001",
         From: "+14155550100",
         Body: "Resumen listo. ¿Qué idea recordarás mañana?",
+        StatusCallback:
+          "https://continuum.example/webhooks/twilio/message-status",
       }),
     );
     expect(new Headers(request!.headers).get("Authorization")).toBe(

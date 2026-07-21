@@ -26,6 +26,7 @@ import type { StudyPlan } from "./study-plan.js";
 import type { SmsReceipt } from "./sms-control.js";
 import type { ProductMetricEvent } from "./product-metrics.js";
 import type { HomeworkAssignment } from "./homework.js";
+import type { CarrierCallReceipt } from "./carrier-usage.js";
 
 export const LearnerProfileSchema = z.object({
   id: z.string().min(1),
@@ -106,6 +107,7 @@ export interface LearningRepository {
   listSandboxTurns(sessionId: string): StoredSandboxTurn[];
   appendUsage(usage: StoredModelUsage): void;
   listUsage(sessionId: string): StoredModelUsage[];
+  listAllUsage(limit?: number): StoredModelUsage[];
   appendLearningEvidence(evidence: LearningEvidence): void;
   listLearningEvidence(learnerId: string, limit?: number): LearningEvidence[];
   appendTeachingFeedback(feedback: TeachingFeedback): void;
@@ -140,6 +142,13 @@ export interface LearningRepository {
     claimExpiresAt: string;
     now: string;
   }): CallbackJob | undefined;
+  saveCarrierCallReceipt(receipt: CarrierCallReceipt): void;
+  findCarrierCallReceipt(id: string): CarrierCallReceipt | undefined;
+  findCarrierCallReceiptByProviderSid(
+    providerCallSid: string,
+  ): CarrierCallReceipt | undefined;
+  listCarrierCallReceipts(limit?: number): CarrierCallReceipt[];
+  listUnpricedCarrierCallReceipts(limit?: number): CarrierCallReceipt[];
   saveGuardianAuthorization(authorization: GuardianAuthorization): void;
   findGuardianAuthorization(learnerId: string): GuardianAuthorization | undefined;
   findGuardianAuthorizationByFingerprint(

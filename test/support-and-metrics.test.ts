@@ -96,6 +96,7 @@ describe("human support, educator boundary, and product proof", () => {
     for (const [index, name] of [
       "missed_call_queued",
       "callback_placed",
+      "carrier_call_answered",
       "drop_paused",
       "drop_recovered",
     ].entries()) {
@@ -113,10 +114,38 @@ describe("human support, educator boundary, and product proof", () => {
         }),
       );
     }
+    for (const [id, name, value] of [
+      ["duration", "carrier_call_duration_seconds", 120],
+      ["cost", "carrier_call_cost_usd", 0.04],
+      ["segments", "sms_segments_sent", 2],
+      ["terminal", "carrier_call_completed", null],
+    ] as const) {
+      repository.appendProductMetric(
+        ProductMetricEventSchema.parse({
+          id: `metric-${id}`,
+          name,
+          learnerId: null,
+          sessionId: null,
+          channel: "system",
+          accessMode: "missed_call",
+          numericValue: value,
+          synthetic: true,
+          createdAt: now,
+        }),
+      );
+    }
     expect(buildProductMetrics(repository)).toMatchObject({
       evidenceScope: "synthetic",
-      access: { missedCallCallbackConversion: 1 },
-      reliability: { droppedCallRecoveryRate: 1 },
+      access: {
+        missedCallCallbackConversion: 1,
+        completedCallMinutes: 2,
+        smsSegmentsSent: 2,
+        carrierCostUsd: 0.04,
+      },
+      reliability: {
+        droppedCallRecoveryRate: 1,
+        carrierCallCompletionRate: 1,
+      },
     });
     repository.close();
   });

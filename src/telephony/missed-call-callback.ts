@@ -73,10 +73,11 @@ function relaySignature(
   phoneNumber: string,
   secret: string,
   learnerId?: string,
+  durationMinutes?: 3 | 5 | 10,
 ): string {
   return createHmac("sha256", secret)
     .update(
-      `continuum-relayed-caller:${phoneNumber}:${learnerId ?? "missed-call"}`,
+      `continuum-relayed-caller:${phoneNumber}:${learnerId ?? "missed-call"}:${durationMinutes ?? "unspecified"}`,
     )
     .digest("hex");
 }
@@ -86,6 +87,7 @@ export function buildCallbackSipUri(options: {
   callerNumber: string;
   relaySecret: string;
   learnerId?: string;
+  durationMinutes?: 3 | 5 | 10;
 }): string {
   const target = buildSipTarget(options.projectId);
   const parameters = new URLSearchParams({
@@ -93,10 +95,14 @@ export function buildCallbackSipUri(options: {
     ...(options.learnerId
       ? { "X-Continuum-Learner-Id": options.learnerId }
       : {}),
+    ...(options.durationMinutes
+      ? { "X-Continuum-Duration-Minutes": String(options.durationMinutes) }
+      : {}),
     "X-Continuum-Signature": relaySignature(
       options.callerNumber,
       options.relaySecret,
       options.learnerId,
+      options.durationMinutes,
     ),
   });
   return `${target}?${parameters.toString()}`;
@@ -107,11 +113,17 @@ export function verifiedRelayedCaller(options: {
   signature: string;
   relaySecret: string;
   learnerId?: string;
+  durationMinutes?: 3 | 5 | 10;
 }): string | undefined {
   const parsed = E164Schema.safeParse(options.callerNumber);
   if (!parsed.success) return undefined;
   const expected = Buffer.from(
-    relaySignature(parsed.data, options.relaySecret, options.learnerId),
+    relaySignature(
+      parsed.data,
+      options.relaySecret,
+      options.learnerId,
+      options.durationMinutes,
+    ),
     "utf8",
   );
   const supplied = Buffer.from(options.signature, "utf8");
@@ -288,6 +300,8 @@ export async function placeTwilioCallback(options: {
   projectId: string;
   relaySecret: string;
   learnerId?: string;
+  durationMinutes?: 3 | 5 | 10;
+  statusCallbackUrl?: string;
   fetchImplementation?: typeof fetch;
 }): Promise<{ sid: string; status: string }> {
   const accountSid = z.string().regex(/^AC[0-9a-fA-F]{32}$/u).parse(options.accountSid);
@@ -298,10 +312,24 @@ export async function placeTwilioCallback(options: {
     callerNumber: to,
     relaySecret: options.relaySecret,
     ...(options.learnerId ? { learnerId: options.learnerId } : {}),
+    ...(options.durationMinutes
+      ? { durationMinutes: options.durationMinutes }
+      : {}),
   });
   const escapedSipUri = sipUri.replaceAll("&", "&amp;");
   const twiml = `<Response><Dial answerOnBridge="true"><Sip>${escapedSipUri}</Sip></Dial></Response>`;
-  const body = new URLSearchParams({ To: to, From: from, Twiml: twiml });
+  const body = new URLSearchParams({
+    To: to,
+    From: from,
+    Twiml: twiml,
+    ...(options.statusCallbackUrl
+      ? {
+          StatusCallback: z.string().url().parse(options.statusCallbackUrl),
+          StatusCallbackMethod: "POST",
+          StatusCallbackEvent: "initiated ringing answered completed",
+        }
+      : {}),
+  });
   const response = await (options.fetchImplementation ?? fetch)(
     `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Calls.json`,
     {

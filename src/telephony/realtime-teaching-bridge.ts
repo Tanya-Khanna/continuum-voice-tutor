@@ -364,6 +364,7 @@ export class RealtimeTeachingController {
     guardianAccess?: GuardianAccessService;
     guardianControls?: GuardianControlService;
     initialLearner?: LearnerProfile;
+    initialDurationMinutes?: 3 | 5 | 10;
     dynamicToolRouting?: boolean;
     onError?: (error: Error) => void;
     onLessonCompleted?: (
@@ -388,6 +389,12 @@ export class RealtimeTeachingController {
       this.#context = this.#lessonService.beginOrResumeSubject(
         options.initialLearner,
       );
+      if (options.initialDurationMinutes) {
+        this.#context = this.#lessonService.setLessonDuration(
+          this.#context,
+          options.initialDurationMinutes,
+        );
+      }
       this.#learningMode = "guided";
       this.#toolStage = this.#lessonService.requiresPlacement(this.#context)
         ? "placement"
@@ -1469,6 +1476,7 @@ export class RealtimeTeachingBridge {
     guardianAccess?: GuardianAccessService;
     guardianControls?: GuardianControlService;
     initialLearner?: LearnerProfile;
+    initialDurationMinutes?: 3 | 5 | 10;
     modelRoute: string;
     WebSocketImplementation?: typeof WebSocket;
     onError?: (error: Error) => void;
@@ -1498,6 +1506,9 @@ export class RealtimeTeachingBridge {
         : {}),
       ...(options.initialLearner
         ? { initialLearner: options.initialLearner }
+        : {}),
+      ...(options.initialDurationMinutes
+        ? { initialDurationMinutes: options.initialDurationMinutes }
         : {}),
       modelRoute: options.modelRoute,
       dynamicToolRouting: true,

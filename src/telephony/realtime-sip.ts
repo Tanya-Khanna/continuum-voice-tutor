@@ -395,41 +395,64 @@ export function buildSipTarget(projectId: string): string {
   return `sip:${projectId}@sip.api.openai.com;transport=tls`;
 }
 
+function verifiedRelayContext(
+  event: z.infer<typeof RealtimeIncomingCallSchema>,
+  relaySecret: string,
+): {
+  callerNumber: string;
+  learnerId?: string;
+  durationMinutes?: 3 | 5 | 10;
+} | undefined {
+  const header = (name: string) =>
+    event.data.sip_headers.find(
+      (candidate) => candidate.name.toLocaleLowerCase() === name,
+    )?.value;
+  const callerNumber = header("x-continuum-caller");
+  const learnerId = header("x-continuum-learner-id");
+  const durationValue = header("x-continuum-duration-minutes");
+  const signature = header("x-continuum-signature");
+  if (
+    !callerNumber ||
+    !signature ||
+    !/^\+[1-9]\d{7,14}$/u.test(callerNumber) ||
+    (learnerId !== undefined && !/^[A-Za-z0-9_-]{1,120}$/u.test(learnerId)) ||
+    (durationValue !== undefined && !["3", "5", "10"].includes(durationValue))
+  ) {
+    return undefined;
+  }
+  const durationMinutes = durationValue === undefined
+    ? undefined
+    : (Number(durationValue) as 3 | 5 | 10);
+  const expected = Buffer.from(
+    createHmac("sha256", relaySecret)
+      .update(
+        `continuum-relayed-caller:${callerNumber}:${learnerId ?? "missed-call"}:${durationMinutes ?? "unspecified"}`,
+      )
+      .digest("hex"),
+    "utf8",
+  );
+  const supplied = Buffer.from(signature, "utf8");
+  if (
+    expected.length !== supplied.length ||
+    !timingSafeEqual(expected, supplied)
+  ) {
+    return undefined;
+  }
+  return {
+    callerNumber,
+    ...(learnerId ? { learnerId } : {}),
+    ...(durationMinutes ? { durationMinutes } : {}),
+  };
+}
+
 export function callerNumberFromIncomingCall(
   unparsedEvent: unknown,
   relaySecret?: string,
 ): string {
   const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
   if (relaySecret) {
-    const relayedCaller = event.data.sip_headers.find(
-      (header) =>
-        header.name.toLocaleLowerCase() === "x-continuum-caller",
-    )?.value;
-    const relayedSignature = event.data.sip_headers.find(
-      (header) =>
-        header.name.toLocaleLowerCase() === "x-continuum-signature",
-    )?.value;
-    const relayedLearnerId = event.data.sip_headers.find(
-      (header) =>
-        header.name.toLocaleLowerCase() === "x-continuum-learner-id",
-    )?.value;
-    if (relayedCaller && relayedSignature && /^\+[1-9]\d{7,14}$/u.test(relayedCaller)) {
-      const expected = Buffer.from(
-        createHmac("sha256", relaySecret)
-          .update(
-            `continuum-relayed-caller:${relayedCaller}:${relayedLearnerId ?? "missed-call"}`,
-          )
-          .digest("hex"),
-        "utf8",
-      );
-      const supplied = Buffer.from(relayedSignature, "utf8");
-      if (
-        expected.length === supplied.length &&
-        timingSafeEqual(expected, supplied)
-      ) {
-        return relayedCaller;
-      }
-    }
+    const relayContext = verifiedRelayContext(event, relaySecret);
+    if (relayContext) return relayContext.callerNumber;
   }
   const from = event.data.sip_headers.find(
     (header) => header.name.toLocaleLowerCase() === "from",
@@ -449,37 +472,15 @@ export function learnerIdFromIncomingCall(
   relaySecret: string,
 ): string | undefined {
   const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
-  const caller = event.data.sip_headers.find(
-    (header) => header.name.toLocaleLowerCase() === "x-continuum-caller",
-  )?.value;
-  const learnerId = event.data.sip_headers.find(
-    (header) =>
-      header.name.toLocaleLowerCase() === "x-continuum-learner-id",
-  )?.value;
-  const signature = event.data.sip_headers.find(
-    (header) =>
-      header.name.toLocaleLowerCase() === "x-continuum-signature",
-  )?.value;
-  if (
-    !caller ||
-    !learnerId ||
-    !signature ||
-    !/^\+[1-9]\d{7,14}$/u.test(caller) ||
-    !/^[A-Za-z0-9_-]{1,120}$/u.test(learnerId)
-  ) {
-    return undefined;
-  }
-  const expected = Buffer.from(
-    createHmac("sha256", relaySecret)
-      .update(`continuum-relayed-caller:${caller}:${learnerId}`)
-      .digest("hex"),
-    "utf8",
-  );
-  const supplied = Buffer.from(signature, "utf8");
-  return expected.length === supplied.length &&
-    timingSafeEqual(expected, supplied)
-    ? learnerId
-    : undefined;
+  return verifiedRelayContext(event, relaySecret)?.learnerId;
+}
+
+export function durationFromIncomingCall(
+  unparsedEvent: unknown,
+  relaySecret: string,
+): 3 | 5 | 10 | undefined {
+  const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
+  return verifiedRelayContext(event, relaySecret)?.durationMinutes;
 }
 
 export function buildRealtimeAcceptPayload(

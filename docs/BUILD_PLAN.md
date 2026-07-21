@@ -50,6 +50,7 @@ Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-
 - Access/reliability/learning metric ledger and protected metrics API.
 - Mobile-first public landing page with no learner web classroom.
 - Three-, five-, and ten-minute lesson state, with duration-specific activity targets.
+- Signed scheduled-duration relay into Realtime plus idempotent Twilio call lifecycle callbacks, no-answer handling, duration/price reconciliation, SMS segment/delivery receipts, and aggregate cost-per-completed-lesson evidence.
 - Offline demo, deterministic evaluator, strict TypeScript, and automated unit/integration tests remain zero-credit runnable.
 
 ### Still gated before a public claim
@@ -57,7 +58,7 @@ Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-
 - A second measured carrier call must prove the corrected onboarding and teaching state machine.
 - Live missed-call callback, DTMF code, reviewed quiz, feedback, drop SMS, same/cross-phone resume, homework reply, schedule, no-answer, and guardian menu require carrier smoke tests.
 - Science, English, History, and Geography source briefs require human approval, compilation, independent verification, builder spot-check, and freeze. Until then the public guided menu must expose Math only.
-- Carrier status callbacks and priced usage receipts must be added before claiming measured call-completion or cost-per-lesson values.
+- Carrier status callbacks and priced usage receipt collection are implemented; real completed/no-answer receipts must be captured before claiming measured call-completion or cost-per-lesson values.
 - English, Hindi-English, Spanish-English, and French-English must be described only as named tested adult-speaker patterns after the actual carrier matrix passes.
 - Demo recording, YouTube upload, Devpost team acceptance, human-written submission copy, `/feedback` Session ID, clean-clone proof, and final repository sharing remain human submission gates.
 

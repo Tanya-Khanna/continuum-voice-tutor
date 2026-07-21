@@ -17,6 +17,7 @@ import { GuardianControlService } from "../guardian/guardian-control-service.js"
 import { HomeworkService } from "../messaging/homework-service.js";
 
 export function createLessonRuntime(environment: Environment): {
+  repository: SqliteLearningRepository;
   lessonService: CatalogLessonService;
   portableIdentity: PortableIdentityService;
   guardianAccess: GuardianAccessService;
@@ -30,6 +31,7 @@ export function createLessonRuntime(environment: Environment): {
   );
 
   return {
+    repository,
     lessonService: new CatalogLessonService({
       repository,
       catalog,

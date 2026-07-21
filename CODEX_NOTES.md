@@ -610,3 +610,11 @@
 - Pushed commits `ebb4fc4` and `931def6`; GitHub's release gate passed and Railway deployment `6fcabc8b-bc3a-4cde-9894-6786e2d1dead` completed successfully. Public health remains green with the OpenAI teaching engine, Realtime configuration, and Math catalog.
 - Enabled the production missed-call, private adult-demo, SMS-control, SMS-recap, and scheduler switches. The public webhook endpoints reject unsigned probes with `403`, confirming that enabling them did not bypass Twilio signature validation.
 - Reconfigured the existing voice/SMS-capable Twilio number through the authenticated API: removed its inbound trunk association, set the signed missed-call Voice webhook and SMS-control webhook to HTTP POST, and kept the same owned number available as the outbound callback caller ID. No second number was purchased. A learner-initiated live missed call is still required before the callback journey is claimed as carrier-proven.
+
+## 2026-07-20 — Carrier lifecycle and cost evidence
+
+- Added durable, idempotent carrier-call receipts for missed-call and scheduled access. Twilio progress callbacks are signature-validated, sequence-aware, and terminal-state sticky, so duplicate or out-of-order delivery cannot regress a call.
+- Added eventual Call-resource reconciliation for duration and connectivity price, bounded retry on the live server, aggregate Twilio/OpenAI cost-per-completed-lesson evidence, SMS segment counting, and outbound message delivery/failure callbacks.
+- Added one-shot scheduled no-answer behavior: a terminal busy/failed/no-answer/canceled receipt increments the missed count, sends one compact SMS, leaves the next regular slot intact, and never dials again immediately.
+- Signed the configured 3/5/10-minute scheduled duration into the SIP relay context and applied it before the Realtime lesson opens; altered caller, learner, or duration headers now fail verification together.
+- Verified the increment with strict TypeScript, 176/176 automated tests, and the unchanged 25/25 deterministic teaching gate. Live carrier receipts remain intentionally unclaimed until Tanya runs the final matrix.

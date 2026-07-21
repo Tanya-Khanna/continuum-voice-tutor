@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Environment } from "../config/env.js";
+import { smsSegmentInfo } from "../domain/sms-control.js";
 
 const E164PhoneNumberSchema = z
   .string()
@@ -17,6 +18,7 @@ const TwilioMessageResponseSchema = z
   .object({
     sid: z.string().min(1),
     status: z.string().min(1),
+    num_segments: z.string().regex(/^\d+$/u).optional(),
   })
   .passthrough();
 
@@ -55,14 +57,18 @@ export async function sendTwilioSms(options: {
   from: string;
   to: string;
   body: string;
+  statusCallbackUrl?: string;
   fetchImplementation?: typeof fetch;
-}): Promise<{ sid: string; status: string }> {
+}): Promise<{ sid: string; status: string; segments: number }> {
   const parsed = TwilioSmsRequestSchema.parse(options);
   const fetchImplementation = options.fetchImplementation ?? fetch;
   const form = new URLSearchParams({
     To: parsed.to,
     From: parsed.from,
     Body: parsed.body,
+    ...(options.statusCallbackUrl
+      ? { StatusCallback: z.string().url().parse(options.statusCallbackUrl) }
+      : {}),
   });
   const response = await fetchImplementation(
     `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(parsed.accountSid)}/Messages.json`,
@@ -80,5 +86,14 @@ export async function sendTwilioSms(options: {
   if (!response.ok) {
     throw new Error(`Twilio message creation failed with status ${response.status}.`);
   }
-  return TwilioMessageResponseSchema.parse(await response.json());
+  const result = TwilioMessageResponseSchema.parse(await response.json());
+  const providerSegments = Number(result.num_segments);
+  return {
+    sid: result.sid,
+    status: result.status,
+    segments:
+      Number.isInteger(providerSegments) && providerSegments > 0
+        ? providerSegments
+        : smsSegmentInfo(parsed.body).segments,
+  };
 }

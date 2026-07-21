@@ -161,7 +161,8 @@ const EnvironmentSchema = z.object({
   }
   if (
     environment.NOMAD_SCHEDULER_ENABLED &&
-    (!environment.TWILIO_ACCOUNT_SID ||
+    (!environment.NOMAD_PUBLIC_BASE_URL ||
+      !environment.TWILIO_ACCOUNT_SID ||
       !environment.TWILIO_AUTH_TOKEN ||
       !environment.TWILIO_PHONE_NUMBER ||
       !environment.OPENAI_PROJECT_ID)
@@ -170,7 +171,7 @@ const EnvironmentSchema = z.object({
       code: "custom",
       path: ["NOMAD_SCHEDULER_ENABLED"],
       message:
-        "The scheduler requires Twilio credentials and phone number plus OPENAI_PROJECT_ID.",
+        "The scheduler requires NOMAD_PUBLIC_BASE_URL, Twilio credentials and phone number, plus OPENAI_PROJECT_ID.",
     });
   }
 });

@@ -12,6 +12,15 @@ export const ProductMetricNameSchema = z.enum([
   "homework_completed",
   "scheduled_call_dialed",
   "scheduled_call_failed",
+  "carrier_call_answered",
+  "carrier_call_completed",
+  "carrier_call_no_answer",
+  "carrier_call_failed",
+  "carrier_call_duration_seconds",
+  "carrier_call_cost_usd",
+  "sms_segments_sent",
+  "sms_delivered",
+  "sms_failed",
 ]);
 
 export const ProductMetricEventSchema = z.object({

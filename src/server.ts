@@ -26,6 +26,7 @@ import {
   acceptRealtimeCall,
   buildRealtimeAcceptPayload,
   callerNumberFromIncomingCall,
+  durationFromIncomingCall,
   learnerIdFromIncomingCall,
   rejectRealtimeCall,
 } from "./telephony/realtime-sip.js";
@@ -41,6 +42,20 @@ import { SmsControlService } from "./messaging/sms-control-service.js";
 import { HomeworkService } from "./messaging/homework-service.js";
 import { StudyPlanScheduler } from "./scheduling/study-plan-scheduler.js";
 import { ProductMetricEventSchema } from "./domain/product-metrics.js";
+import {
+  TwilioCallStatusWebhookSchema,
+  TwilioMessageStatusWebhookSchema,
+  terminalCarrierCallStatus,
+} from "./domain/carrier-usage.js";
+import {
+  applyCarrierStatusWebhook,
+  applyTwilioCallResource,
+  carrierCallStatusCallbackUrl,
+  createCarrierCallReceipt,
+  fetchTwilioCallResource,
+  markCarrierCallQueued,
+} from "./telephony/carrier-usage.js";
+import { StudyPlanSchema } from "./domain/study-plan.js";
 import { buildProductMetrics } from "./observability/product-metrics.js";
 import { renderLandingPage } from "./landing/page.js";
 import { SAMPLE_SESSION } from "./samples/sample-session.js";
@@ -102,6 +117,196 @@ function createMissedCallService(
   });
 }
 
+function appendMetric(
+  repository: SqliteLearningRepository,
+  options: {
+    id: string;
+    name: Parameters<SqliteLearningRepository["appendProductMetric"]>[0]["name"];
+    learnerId?: string | null;
+    sessionId?: string | null;
+    channel: "phone" | "dtmf" | "sms" | "system";
+    accessMode: "missed_call" | "sponsored" | "direct_dial" | "scheduled" | "unknown";
+    numericValue?: number | null;
+    synthetic?: boolean;
+    createdAt?: string;
+  },
+): void {
+  repository.appendProductMetric(
+    ProductMetricEventSchema.parse({
+      id: options.id,
+      name: options.name,
+      learnerId: options.learnerId ?? null,
+      sessionId: options.sessionId ?? null,
+      channel: options.channel,
+      accessMode: options.accessMode,
+      numericValue: options.numericValue ?? null,
+      synthetic: options.synthetic ?? false,
+      createdAt: options.createdAt ?? new Date().toISOString(),
+    }),
+  );
+}
+
+function messageStatusCallbackUrl(): string | undefined {
+  if (!environment.NOMAD_PUBLIC_BASE_URL) return undefined;
+  return new URL(
+    "/webhooks/twilio/message-status",
+    environment.NOMAD_PUBLIC_BASE_URL,
+  ).toString();
+}
+
+async function sendTrackedSms(options: {
+  repository: SqliteLearningRepository;
+  to: string;
+  body: string;
+  learnerId?: string;
+  accessMode?: "missed_call" | "scheduled" | "unknown";
+}): Promise<void> {
+  if (!twilioSmsConfig) return;
+  const statusCallbackUrl = messageStatusCallbackUrl();
+  const sent = await sendTwilioSms({
+    ...twilioSmsConfig,
+    to: options.to,
+    body: options.body,
+    ...(statusCallbackUrl ? { statusCallbackUrl } : {}),
+  });
+  appendMetric(options.repository, {
+    id: `sms-segments:${sent.sid}`,
+    name: "sms_segments_sent",
+    learnerId: options.learnerId ?? null,
+    channel: "sms",
+    accessMode: options.accessMode ?? "unknown",
+    numericValue: sent.segments,
+  });
+}
+
+async function reconcileCarrierReceipt(receiptId: string): Promise<void> {
+  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
+  try {
+    const receipt = repository.findCarrierCallReceipt(receiptId);
+    if (!receipt?.providerCallSid || receipt.priceFetchAttempts >= 10) return;
+    const resource = await fetchTwilioCallResource({
+      accountSid: environment.TWILIO_ACCOUNT_SID!,
+      authToken: environment.TWILIO_AUTH_TOKEN!,
+      callSid: receipt.providerCallSid,
+    });
+    const updated = applyTwilioCallResource({
+      receipt,
+      resource,
+      now: new Date().toISOString(),
+    });
+    repository.saveCarrierCallReceipt(updated);
+    const accessMode = updated.kind === "scheduled" ? "scheduled" : "missed_call";
+    if (updated.durationSeconds !== null) {
+      appendMetric(repository, {
+        id: `carrier-duration:${updated.id}`,
+        name: "carrier_call_duration_seconds",
+        learnerId: updated.learnerId,
+        channel: "phone",
+        accessMode,
+        numericValue: updated.durationSeconds,
+        synthetic: updated.synthetic,
+      });
+    }
+    if (updated.priceAmount !== null && updated.priceCurrency === "USD") {
+      appendMetric(repository, {
+        id: `carrier-cost:${updated.id}`,
+        name: "carrier_call_cost_usd",
+        learnerId: updated.learnerId,
+        channel: "system",
+        accessMode,
+        numericValue: updated.priceAmount,
+        synthetic: updated.synthetic,
+      });
+    }
+  } finally {
+    repository.close();
+  }
+}
+
+async function reconcileUnpricedCarrierReceipts(): Promise<void> {
+  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
+  let ids: string[] = [];
+  try {
+    ids = repository
+      .listUnpricedCarrierCallReceipts(20)
+      .filter((receipt) => receipt.providerCallSid && receipt.priceFetchAttempts < 10)
+      .map((receipt) => receipt.id);
+  } finally {
+    repository.close();
+  }
+  for (const id of ids) {
+    try {
+      await reconcileCarrierReceipt(id);
+    } catch (error) {
+      console.error(
+        `Carrier receipt ${id} reconciliation failed:`,
+        error instanceof Error ? error.message : "unknown error",
+      );
+    }
+  }
+}
+
+function scheduleCarrierReceiptReconciliation(receiptId: string): void {
+  for (const delayMs of [0, 5_000, 30_000]) {
+    const timer = setTimeout(() => {
+      void reconcileCarrierReceipt(receiptId).catch((error: unknown) =>
+        console.error(
+          `Carrier receipt ${receiptId} reconciliation failed:`,
+          error instanceof Error ? error.message : "unknown error",
+        ),
+      );
+    }, delayMs);
+    timer.unref();
+  }
+}
+
+async function recordScheduledMiss(options: {
+  receiptId: string;
+  to?: string;
+}): Promise<void> {
+  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
+  try {
+    const receipt = repository.findCarrierCallReceipt(options.receiptId);
+    if (
+      !receipt ||
+      receipt.kind !== "scheduled" ||
+      receipt.status === "completed" ||
+      !terminalCarrierCallStatus(receipt.status) ||
+      receipt.missedNoticeSent
+    ) {
+      return;
+    }
+    repository.saveCarrierCallReceipt({
+      ...receipt,
+      missedNoticeSent: true,
+      updatedAt: new Date().toISOString(),
+    });
+    if (receipt.learnerId) {
+      const plan = repository.findStudyPlan(receipt.learnerId);
+      if (plan) {
+        repository.saveStudyPlan(
+          StudyPlanSchema.parse({
+            ...plan,
+            missedLessons: plan.missedLessons + 1,
+            updatedAt: new Date().toISOString(),
+          }),
+        );
+      }
+    }
+    if (options.to) {
+      await sendTrackedSms({
+        repository,
+        to: options.to,
+        body: "We missed today's Continuum lesson. No retry today; your next regular lesson stays scheduled.",
+        ...(receipt.learnerId ? { learnerId: receipt.learnerId } : {}),
+        accessMode: "scheduled",
+      });
+    }
+  } finally {
+    repository.close();
+  }
+}
+
 async function processCallbackJob(jobId: string): Promise<void> {
   const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
   try {
@@ -114,6 +319,14 @@ async function processCallbackJob(jobId: string): Promise<void> {
     });
     if (!claimed) return;
     const service = createMissedCallService(repository);
+    const receiptId = randomUUID();
+    const receipt = createCarrierCallReceipt({
+      id: receiptId,
+      kind: "missed_call",
+      callbackJobId: claimed.id,
+      now: new Date().toISOString(),
+    });
+    repository.saveCarrierCallReceipt(receipt);
     try {
       const placed = await placeTwilioCallback({
         accountSid: environment.TWILIO_ACCOUNT_SID!,
@@ -123,7 +336,18 @@ async function processCallbackJob(jobId: string): Promise<void> {
         to: service.destination(claimed),
         projectId: environment.OPENAI_PROJECT_ID!,
         relaySecret: environment.NOMAD_CALLBACK_SECRET,
+        statusCallbackUrl: carrierCallStatusCallbackUrl(
+          environment.NOMAD_PUBLIC_BASE_URL!,
+          receiptId,
+        ),
       });
+      repository.saveCarrierCallReceipt(
+        markCarrierCallQueued(
+          repository.findCarrierCallReceipt(receiptId) ?? receipt,
+          placed.sid,
+          new Date().toISOString(),
+        ),
+      );
       repository.saveCallbackJob({
         ...claimed,
         status: "completed",
@@ -146,6 +370,12 @@ async function processCallbackJob(jobId: string): Promise<void> {
         }),
       );
     } catch (error) {
+      repository.saveCarrierCallReceipt({
+        ...receipt,
+        status: "failed",
+        completedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
       repository.saveCallbackJob({
         ...claimed,
         status: "failed",
@@ -172,18 +402,50 @@ async function runStudySchedulerTick(): Promise<void> {
     await new StudyPlanScheduler({
       repository,
       callbackSecret: environment.NOMAD_CALLBACK_SECRET,
-      dial: async ({ learnerId, to }) => {
-        await placeTwilioCallback({
-          accountSid: environment.TWILIO_ACCOUNT_SID!,
-          authToken: environment.TWILIO_AUTH_TOKEN!,
-          from: environment.TWILIO_PHONE_NUMBER!,
-          to,
-          projectId: environment.OPENAI_PROJECT_ID!,
-          relaySecret: environment.NOMAD_CALLBACK_SECRET,
+      dial: async ({ learnerId, to, durationMinutes }) => {
+        const receiptId = randomUUID();
+        const receipt = createCarrierCallReceipt({
+          id: receiptId,
+          kind: "scheduled",
           learnerId,
+          requestedDurationMinutes: durationMinutes,
+          now: new Date().toISOString(),
         });
+        repository.saveCarrierCallReceipt(receipt);
+        try {
+          const placed = await placeTwilioCallback({
+            accountSid: environment.TWILIO_ACCOUNT_SID!,
+            authToken: environment.TWILIO_AUTH_TOKEN!,
+            from: environment.TWILIO_PHONE_NUMBER!,
+            to,
+            projectId: environment.OPENAI_PROJECT_ID!,
+            relaySecret: environment.NOMAD_CALLBACK_SECRET,
+            learnerId,
+            durationMinutes,
+            statusCallbackUrl: carrierCallStatusCallbackUrl(
+              environment.NOMAD_PUBLIC_BASE_URL!,
+              receiptId,
+            ),
+          });
+          repository.saveCarrierCallReceipt(
+            markCarrierCallQueued(
+              repository.findCarrierCallReceipt(receiptId) ?? receipt,
+              placed.sid,
+              new Date().toISOString(),
+            ),
+          );
+        } catch (error) {
+          repository.saveCarrierCallReceipt({
+            ...receipt,
+            status: "failed",
+            completedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          throw error;
+        }
       },
     }).runDue();
+    await reconcileUnpricedCarrierReceipts();
   } finally {
     repository.close();
     schedulerTickRunning = false;
@@ -294,6 +556,176 @@ export const server = createServer(async (request, response) => {
 
     if (
       request.method === "POST" &&
+      url.pathname === "/webhooks/twilio/call-status"
+    ) {
+      const rawBody = await readBody(request);
+      const parameters = new URLSearchParams(rawBody);
+      const signatureUrl = new URL(
+        request.url ?? url.pathname,
+        environment.NOMAD_PUBLIC_BASE_URL!,
+      ).toString();
+      const signatureHeader = request.headers["x-twilio-signature"];
+      const providedSignature = Array.isArray(signatureHeader)
+        ? signatureHeader[0]
+        : signatureHeader;
+      if (
+        !validateTwilioSignature({
+          authToken: environment.TWILIO_AUTH_TOKEN!,
+          url: signatureUrl,
+          parameters,
+          ...(providedSignature ? { providedSignature } : {}),
+        })
+      ) {
+        response.writeHead(403, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "invalid_twilio_signature" }));
+        return;
+      }
+      const receiptId = url.searchParams.get("receipt_id") ?? "";
+      const payload = TwilioCallStatusWebhookSchema.parse(
+        Object.fromEntries(parameters.entries()),
+      );
+      const repository = new SqliteLearningRepository(
+        environment.NOMAD_DATABASE_PATH,
+      );
+      let shouldReconcile = false;
+      let shouldRecordMiss = false;
+      try {
+        const receipt = repository.findCarrierCallReceipt(receiptId);
+        if (receipt) {
+          const result = applyCarrierStatusWebhook({
+            receipt,
+            payload,
+            now: new Date().toISOString(),
+          });
+          if (result.advanced) {
+            repository.saveCarrierCallReceipt(result.receipt);
+            const accessMode = result.receipt.kind === "scheduled"
+              ? "scheduled"
+              : "missed_call";
+            if (result.receipt.status === "answered") {
+              appendMetric(repository, {
+                id: `carrier-answered:${result.receipt.id}`,
+                name: "carrier_call_answered",
+                learnerId: result.receipt.learnerId,
+                channel: "phone",
+                accessMode,
+                synthetic: result.receipt.synthetic,
+              });
+            }
+            if (result.becameTerminal) {
+              appendMetric(repository, {
+                id: `carrier-terminal:${result.receipt.id}`,
+                name:
+                  result.receipt.status === "completed"
+                    ? "carrier_call_completed"
+                    : result.receipt.status === "no_answer"
+                      ? "carrier_call_no_answer"
+                      : "carrier_call_failed",
+                learnerId: result.receipt.learnerId,
+                channel: "phone",
+                accessMode,
+                synthetic: result.receipt.synthetic,
+              });
+              if (result.receipt.durationSeconds !== null) {
+                appendMetric(repository, {
+                  id: `carrier-duration:${result.receipt.id}`,
+                  name: "carrier_call_duration_seconds",
+                  learnerId: result.receipt.learnerId,
+                  channel: "phone",
+                  accessMode,
+                  numericValue: result.receipt.durationSeconds,
+                  synthetic: result.receipt.synthetic,
+                });
+              }
+              shouldReconcile = true;
+              shouldRecordMiss =
+                result.receipt.kind === "scheduled" &&
+                result.receipt.status !== "completed";
+            }
+          }
+        }
+      } finally {
+        repository.close();
+      }
+      response.writeHead(204, { "Cache-Control": "no-store" });
+      response.end();
+      if (shouldReconcile) {
+        scheduleCarrierReceiptReconciliation(receiptId);
+      }
+      if (shouldRecordMiss) {
+        setImmediate(() => {
+          void recordScheduledMiss({
+            receiptId,
+            ...(payload.To ? { to: payload.To } : {}),
+          }).catch((error: unknown) =>
+            console.error(
+              `Scheduled miss ${receiptId} handling failed:`,
+              error instanceof Error ? error.message : "unknown error",
+            ),
+          );
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/webhooks/twilio/message-status"
+    ) {
+      const rawBody = await readBody(request);
+      const parameters = new URLSearchParams(rawBody);
+      const signatureUrl = new URL(
+        request.url ?? url.pathname,
+        environment.NOMAD_PUBLIC_BASE_URL!,
+      ).toString();
+      const signatureHeader = request.headers["x-twilio-signature"];
+      const providedSignature = Array.isArray(signatureHeader)
+        ? signatureHeader[0]
+        : signatureHeader;
+      if (
+        !validateTwilioSignature({
+          authToken: environment.TWILIO_AUTH_TOKEN!,
+          url: signatureUrl,
+          parameters,
+          ...(providedSignature ? { providedSignature } : {}),
+        })
+      ) {
+        response.writeHead(403, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "invalid_twilio_signature" }));
+        return;
+      }
+      const payload = TwilioMessageStatusWebhookSchema.parse(
+        Object.fromEntries(parameters.entries()),
+      );
+      if (
+        payload.MessageStatus === "delivered" ||
+        payload.MessageStatus === "undelivered" ||
+        payload.MessageStatus === "failed"
+      ) {
+        const repository = new SqliteLearningRepository(
+          environment.NOMAD_DATABASE_PATH,
+        );
+        try {
+          appendMetric(repository, {
+            id: `sms-status:${payload.MessageSid}`,
+            name:
+              payload.MessageStatus === "delivered"
+                ? "sms_delivered"
+                : "sms_failed",
+            channel: "sms",
+            accessMode: "unknown",
+          });
+        } finally {
+          repository.close();
+        }
+      }
+      response.writeHead(204, { "Cache-Control": "no-store" });
+      response.end();
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
       url.pathname === "/webhooks/twilio/sms"
     ) {
       if (!environment.NOMAD_SMS_CONTROLS_ENABLED) {
@@ -346,12 +778,11 @@ export const server = createServer(async (request, response) => {
             timeZone: environment.NOMAD_DEPLOYMENT_TIME_ZONE,
             callbackSecret: environment.NOMAD_CALLBACK_SECRET,
           }).handle(Object.fromEntries(parameters.entries()));
-          await sendTwilioSms({
-            accountSid: environment.TWILIO_ACCOUNT_SID!,
-            authToken: environment.TWILIO_AUTH_TOKEN!,
-            from: environment.TWILIO_PHONE_NUMBER!,
+          await sendTrackedSms({
+            repository,
             to: parameters.get("From") ?? "",
             body: receipt.responseText,
+            ...(receipt.learnerId ? { learnerId: receipt.learnerId } : {}),
           });
         }
       } finally {
@@ -639,6 +1070,10 @@ export const server = createServer(async (request, response) => {
             incomingCall,
             environment.NOMAD_CALLBACK_SECRET,
           );
+          const scheduledDurationMinutes = durationFromIncomingCall(
+            incomingCall,
+            environment.NOMAD_CALLBACK_SECRET,
+          );
           const scheduledLearner = scheduledLearnerId
             ? runtime.lessonService.findLearner(scheduledLearnerId)
             : undefined;
@@ -651,6 +1086,9 @@ export const server = createServer(async (request, response) => {
             guardianAccess: runtime.guardianAccess,
             guardianControls: runtime.guardianControls,
             ...(scheduledLearner ? { initialLearner: scheduledLearner } : {}),
+            ...(scheduledLearner && scheduledDurationMinutes
+              ? { initialDurationMinutes: scheduledDurationMinutes }
+              : {}),
             modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
               console.error(`Realtime call ${callId}:`, bridgeError.message),
@@ -666,20 +1104,25 @@ export const server = createServer(async (request, response) => {
                       recipientPhoneNumber: to,
                       draft: runtime.lessonService.homeworkDraft(context),
                     });
-                    await sendTwilioSms({
-                      ...twilioSmsConfig,
+                    await sendTrackedSms({
+                      repository: runtime.repository,
                       to,
                       body: homework.smsText,
+                      learnerId: context.learner.id,
+                      accessMode: "missed_call",
                     });
                   },
                   onLessonPaused: async ({
                     callerNumber: to,
+                    context,
                     pendingQuestionNumber,
                   }) => {
-                    await sendTwilioSms({
-                      ...twilioSmsConfig,
+                    await sendTrackedSms({
+                      repository: runtime.repository,
                       to,
                       body: `Lesson paused at Q${pendingQuestionNumber}. Call back anytime and enter your learner code.`,
+                      learnerId: context.learner.id,
+                      accessMode: "missed_call",
                     });
                   },
                 }

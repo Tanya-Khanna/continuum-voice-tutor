@@ -153,10 +153,12 @@ describe("Realtime teaching controller", () => {
       callerNumber: "+919999900012",
       lessonService: service,
       initialLearner: learner,
+      initialDurationMinutes: 10,
       modelRoute: "gpt-realtime-2.1-mini",
     });
 
     expect(controller.openingToolStage()).toBe("placement");
+    expect(repository.findLatestLesson(learner.id)?.durationMinutes).toBe(10);
     expect(controller.openingEvent()).toMatchObject({
       type: "response.create",
       response: {

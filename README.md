@@ -59,6 +59,14 @@ Code-switching is likewise a teaching behavior rather than a locale toggle. SIGD
 
 Continuum's first distribution path is institution-led, not an assumption that a child will discover a phone number online. A school or NGO reviews the local curriculum and safety policy, obtains responsible-adult consent and learner assent, shares a local number in person, and helps the learner make the first call using a nickname.
 
+The hackathon carrier path uses one Twilio number in callback-only mode. A missed
+call is rejected before answer, then that same number calls back and bridges to
+OpenAI Realtime SIP. Each callback and scheduled call has an idempotent lifecycle
+receipt; the Outcomes view separates answered/completed/no-answer events,
+duration, eventual carrier price, OpenAI usage estimate, SMS segments, and cost
+per completed lesson. These values remain labeled synthetic or live and are not
+presented as real-world impact evidence.
+
 The proposed first pilot is one district, one grade, and roughly 200 learners. It should measure independent pre/post assessment—not tutor-session performance alone—along with attendance, completion, teacher and learner feedback, language/access subgroups, failure reports, and compliance with an agreed deletion and retention policy. Teachers remain responsible for instruction; Continuum supplies additional practice and auditable evidence.
 
 Only after the carrier and learning gates pass should the project pursue a school, NGO, state-education, or carrier partner. The build includes the missed-call callback and permission-bounded educator-summary contracts; it does not claim a live school integration, operating human-escalation network, or measured cohort outcome.

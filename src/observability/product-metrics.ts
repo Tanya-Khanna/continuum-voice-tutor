@@ -1,4 +1,5 @@
 import type { LearningRepository } from "../domain/learner.js";
+import { estimateUsageCost } from "./pricing.js";
 
 function ratio(numerator: number, denominator: number): number | null {
   return denominator === 0 ? null : numerator / denominator;
@@ -11,8 +12,16 @@ export function buildProductMetrics(repository: LearningRepository): {
   learning: Record<string, number | null>;
 } {
   const events = repository.listProductMetrics();
-  const eventCount = (name: string) =>
-    events.filter((event) => event.name === name).length;
+  const eventCount = (name: string, accessMode?: string) =>
+    events.filter(
+      (event) =>
+        event.name === name &&
+        (accessMode === undefined || event.accessMode === accessMode),
+    ).length;
+  const eventTotal = (name: string) =>
+    events
+      .filter((event) => event.name === name)
+      .reduce((sum, event) => sum + (event.numericValue ?? 0), 0);
   const sessions = repository.listRecentLessons(100);
   const learnerIds = [...new Set(sessions.map((session) => session.learnerId))];
   const evidence = learnerIds.flatMap((learnerId) =>
@@ -31,6 +40,16 @@ export function buildProductMetrics(repository: LearningRepository): {
       decision.evidenceResult === "partial",
   );
   const scopes = new Set(events.map((event) => event.synthetic));
+  const carrierTerminalCount =
+    eventCount("carrier_call_completed") +
+    eventCount("carrier_call_no_answer") +
+    eventCount("carrier_call_failed");
+  const carrierCostUsd = eventTotal("carrier_call_cost_usd");
+  const openAiCostUsd = repository
+    .listAllUsage()
+    .map(estimateUsageCost)
+    .reduce((sum, estimate) => sum + (estimate.usd ?? 0), 0);
+  const completedLessons = eventCount("lesson_completed");
   const evidenceScope =
     events.length === 0
       ? "empty"
@@ -44,13 +63,29 @@ export function buildProductMetrics(repository: LearningRepository): {
     access: {
       lessonsCompletedWithoutMobileData: eventCount("lesson_completed"),
       missedCallCallbackConversion: ratio(
-        eventCount("callback_placed"),
+        eventCount("carrier_call_answered", "missed_call"),
         eventCount("missed_call_queued"),
       ),
       keypadFallbackCompletions: eventCount("keypad_fallback_completed"),
       crossPhoneResumptions: eventCount("cross_phone_resumed"),
+      completedCallMinutes: eventTotal("carrier_call_duration_seconds") / 60,
+      smsSegmentsSent: eventTotal("sms_segments_sent"),
+      carrierCostUsd,
+      estimatedOpenAiCostUsd: openAiCostUsd,
+      costPerCompletedLessonUsd: ratio(
+        carrierCostUsd + openAiCostUsd,
+        completedLessons,
+      ),
     },
     reliability: {
+      carrierCallCompletionRate: ratio(
+        eventCount("carrier_call_completed"),
+        carrierTerminalCount,
+      ),
+      carrierAnswerRate: ratio(
+        eventCount("carrier_call_answered"),
+        eventCount("callback_placed") + eventCount("scheduled_call_dialed"),
+      ),
       droppedCallRecoveryRate: ratio(
         eventCount("drop_recovered"),
         eventCount("drop_paused"),
@@ -61,6 +96,10 @@ export function buildProductMetrics(repository: LearningRepository): {
           eventCount("scheduled_call_failed"),
       ),
       smsCommandsProcessed: eventCount("sms_command_processed"),
+      smsDeliveryRate: ratio(
+        eventCount("sms_delivered"),
+        eventCount("sms_delivered") + eventCount("sms_failed"),
+      ),
     },
     learning: {
       diagnosticChecks: diagnostics.length,

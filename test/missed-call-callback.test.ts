@@ -6,7 +6,11 @@ import {
   buildCallbackSipUri,
   placeTwilioCallback,
 } from "../src/telephony/missed-call-callback.js";
-import { callerNumberFromIncomingCall } from "../src/telephony/realtime-sip.js";
+import {
+  callerNumberFromIncomingCall,
+  durationFromIncomingCall,
+  learnerIdFromIncomingCall,
+} from "../src/telephony/realtime-sip.js";
 import {
   computeTwilioSignature,
   validateTwilioSignature,
@@ -173,6 +177,10 @@ describe("missed-call callback access", () => {
       to: "+919999900001",
       projectId: "proj_example",
       relaySecret: SECRET,
+      learnerId: "learner_1",
+      durationMinutes: 10,
+      statusCallbackUrl:
+        "https://continuum.example/webhooks/twilio/call-status?receipt_id=receipt-1",
       fetchImplementation,
     });
     const body = new URLSearchParams(
@@ -181,11 +189,16 @@ describe("missed-call callback access", () => {
     const twiml = body.get("Twiml")!;
     expect(twiml).toContain("<Dial answerOnBridge=\"true\">");
     expect(twiml).toContain("X-Continuum-Caller");
+    expect(body.get("StatusCallbackEvent")).toBe(
+      "initiated ringing answered completed",
+    );
 
     const uri = buildCallbackSipUri({
       projectId: "proj_example",
       callerNumber: "+919999900001",
       relaySecret: SECRET,
+      learnerId: "learner_1",
+      durationMinutes: 10,
     });
     const query = new URLSearchParams(uri.split("?")[1]);
     const event = {
@@ -200,12 +213,22 @@ describe("missed-call callback access", () => {
             name: "X-Continuum-Signature",
             value: query.get("X-Continuum-Signature"),
           },
+          {
+            name: "X-Continuum-Learner-Id",
+            value: query.get("X-Continuum-Learner-Id"),
+          },
+          {
+            name: "X-Continuum-Duration-Minutes",
+            value: query.get("X-Continuum-Duration-Minutes"),
+          },
         ],
       },
     };
     expect(callerNumberFromIncomingCall(event, SECRET)).toBe(
       "+919999900001",
     );
+    expect(learnerIdFromIncomingCall(event, SECRET)).toBe("learner_1");
+    expect(durationFromIncomingCall(event, SECRET)).toBe(10);
     expect(callerNumberFromIncomingCall(event, "wrong-secret-value")).toBe(
       "+14155550100",
     );

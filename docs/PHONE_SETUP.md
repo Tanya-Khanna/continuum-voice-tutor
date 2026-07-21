@@ -125,6 +125,26 @@ across time zones, so it suspends the deployment quiet-hours gate. Never enable
 it for a child deployment; with the switch off, guardian enrollment and quiet
 hours both remain enforced.
 
+Every application-created call supplies a signed Twilio status-callback URL for
+`initiated`, `ringing`, `answered`, and `completed` events. Continuum stores the
+highest sequence number so late/out-of-order webhooks cannot regress state. On a
+terminal event it records seconds, reconciles the eventually consistent Call
+resource for connectivity price, and retries that reconciliation in the
+background. Scheduled `busy`, `failed`, `no-answer`, or `canceled` calls create
+one short SMS and never create an immediate application retry. Outbound SMS also
+uses a status callback and records segment count plus delivered/failed state.
+
+The callback and scheduling paths use:
+
+```text
+POST https://YOUR_HOST/webhooks/twilio/call-status?receipt_id=OPAQUE_ID
+POST https://YOUR_HOST/webhooks/twilio/message-status
+```
+
+Both endpoints validate `X-Twilio-Signature` against the exact public URL and
+form body before changing state. Twilio Call prices can be temporarily null, so
+the first dashboard view may show duration before cost.
+
 Set these attestations to `true` only after the corresponding Console save
 succeeds:
 
