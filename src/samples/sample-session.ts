@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ResolvedLanguageModeSchema } from "../domain/teaching.js";
 
 export const SampleSessionSegmentSchema = z.object({
-  speaker: z.enum(["learner", "nomad"]),
+  speaker: z.enum(["learner", "continuum"]),
   text: z.string().min(1),
   languageMode: ResolvedLanguageModeSchema,
   startMs: z.number().int().nonnegative(),
@@ -30,7 +30,7 @@ export const SAMPLE_AUDIO_SOURCE = [
     text: "Creo que one fourth is bigger, porque four is bigger than three.",
   },
   {
-    speaker: "nomad" as const,
+    speaker: "continuum" as const,
     openaiVoice: "marin",
     systemVoice: "Flo (Spanish (Mexico))",
     languageMode: "es+en",
@@ -44,7 +44,7 @@ export const SAMPLE_AUDIO_SOURCE = [
     text: "La persona in the group of three, porque hay fewer pieces, so each piece is bigger.",
   },
   {
-    speaker: "nomad" as const,
+    speaker: "continuum" as const,
     openaiVoice: "marin",
     systemVoice: "Flo (Spanish (Mexico))",
     languageMode: "es+en",

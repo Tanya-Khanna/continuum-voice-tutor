@@ -18,17 +18,6 @@ const booleanFromEnvironment = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
-const optionalPathArray = z.preprocess((value) => {
-  if (value === undefined || value === "") return undefined;
-  if (Array.isArray(value)) return value;
-  if (typeof value !== "string") return value;
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return value;
-  }
-}, z.array(z.string().trim().min(1)).min(1).optional());
-
 const stringArrayFromEnvironment = z.preprocess((value) => {
   if (value === undefined || value === "") return undefined;
   if (Array.isArray(value)) return value;
@@ -73,8 +62,6 @@ const EnvironmentSchema = z.object({
   NOMAD_SMS_CONTROLS_ENABLED: booleanFromEnvironment,
   NOMAD_SMS_REMINDERS_ENABLED: booleanFromEnvironment,
   NOMAD_SMS_REMINDER_INTERVAL_MS: z.coerce.number().int().min(5_000).max(300_000).default(30_000),
-  NOMAD_SCHEDULER_ENABLED: booleanFromEnvironment,
-  NOMAD_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(5_000).max(300_000).default(30_000),
   NOMAD_CALLBACK_ALLOWED_PREFIXES: stringArrayFromEnvironment.default([
     "+1",
     "+91",
@@ -84,12 +71,6 @@ const EnvironmentSchema = z.object({
   NOMAD_CALLBACK_QUIET_END_HOUR: z.coerce.number().int().min(0).max(23).default(7),
   NOMAD_CALLBACK_PER_NUMBER_DAILY_LIMIT: z.coerce.number().int().min(1).max(20).default(3),
   NOMAD_CALLBACK_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(1).max(10_000).default(100),
-  NOMAD_CURRICULUM_PATH: optionalNonEmpty,
-  NOMAD_CURRICULUM_PATHS: optionalPathArray,
-  NOMAD_AGENT_EVAL_REPORT_PATH: z
-    .string()
-    .min(1)
-    .default(".data/latest-agent-eval.json"),
   NOMAD_OPEN_TOPIC_LIVE_EVAL_REPORT_PATH: z
     .string()
     .min(1)
@@ -98,8 +79,6 @@ const EnvironmentSchema = z.object({
   NOMAD_MAX_CALLS_PER_HOUR: z.coerce.number().int().min(1).max(100).default(6),
   OPENAI_API_KEY: optionalNonEmpty,
   OPENAI_TEXT_MODEL: z.string().min(1).default("gpt-5.6-luna"),
-  OPENAI_COMPILER_MODEL: z.string().min(1).default("gpt-5.6-terra"),
-  OPENAI_VERIFIER_MODEL: z.string().min(1).default("gpt-5.6-terra"),
   OPENAI_REALTIME_MODEL: z
     .string()
     .min(1)
@@ -119,7 +98,6 @@ const EnvironmentSchema = z.object({
     .min(200)
     .max(2_000)
     .default(650),
-  OPENAI_SPEECH_MODEL: z.string().min(1).default("tts-1-hd"),
   OPENAI_WEBHOOK_SECRET: optionalNonEmpty,
   OPENAI_PROJECT_ID: optionalNonEmpty,
   NOMAD_OPENAI_WEBHOOK_PUBLIC: booleanFromEnvironment,
@@ -131,14 +109,6 @@ const EnvironmentSchema = z.object({
   NOMAD_TWILIO_NUMBER_VOICE_READY: booleanFromEnvironment,
   NOMAD_SMS_RECAP_ENABLED: booleanFromEnvironment,
 }).superRefine((environment, context) => {
-  if (environment.NOMAD_CURRICULUM_PATH && environment.NOMAD_CURRICULUM_PATHS) {
-    context.addIssue({
-      code: "custom",
-      path: ["NOMAD_CURRICULUM_PATHS"],
-      message:
-        "Configure NOMAD_CURRICULUM_PATH or NOMAD_CURRICULUM_PATHS, not both.",
-    });
-  }
   if (
     environment.NOMAD_MISSED_CALL_ENABLED &&
     (!environment.NOMAD_PUBLIC_BASE_URL ||
@@ -180,21 +150,6 @@ const EnvironmentSchema = z.object({
       path: ["NOMAD_SMS_REMINDERS_ENABLED"],
       message:
         "SMS reminders require NOMAD_PUBLIC_BASE_URL and Twilio credentials and phone number.",
-    });
-  }
-  if (
-    environment.NOMAD_SCHEDULER_ENABLED &&
-    (!environment.NOMAD_PUBLIC_BASE_URL ||
-      !environment.TWILIO_ACCOUNT_SID ||
-      !environment.TWILIO_AUTH_TOKEN ||
-      !environment.TWILIO_PHONE_NUMBER ||
-      !environment.OPENAI_PROJECT_ID)
-  ) {
-    context.addIssue({
-      code: "custom",
-      path: ["NOMAD_SCHEDULER_ENABLED"],
-      message:
-        "The scheduler requires NOMAD_PUBLIC_BASE_URL, Twilio credentials and phone number, plus OPENAI_PROJECT_ID.",
     });
   }
 });

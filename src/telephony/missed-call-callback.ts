@@ -10,7 +10,7 @@ import { z } from "zod";
 import type { LearningRepository } from "../domain/learner.js";
 import { CallbackJobSchema, type CallbackJob } from "../domain/callback.js";
 import { hashPhoneNumber } from "../domain/identity.js";
-import { buildSipTarget } from "./realtime-sip.js";
+import { buildSipTarget } from "./sip.js";
 import {
   AccessModeSchema,
   ProductMetricEventSchema,

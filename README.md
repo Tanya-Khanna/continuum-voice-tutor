@@ -2,259 +2,291 @@
 
 [![Release gate](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml/badge.svg)](https://github.com/Tanya-Khanna/nomad-ai/actions/workflows/release-gate.yml)
 
-> Continuum is a teacher you call on the phone. Any phone.
+> **The connection may drop. The learning continues.**
 
-**If you can make a phone call, school is open.**
+**Continuum is a patient teacher you call on any phone.** A learner can ask to understand any safe topic in their language and be taught through an ordinary voice call, keypad input, and optional short SMS—without a smartphone, app, camera, email account, or mobile data.
 
-Continuum is a patient, multilingual teacher for someone who may have only a basic keypad phone. The learner calls, asks to learn anything, and is taught through speech, keypad input, and optional short SMS messages. There is no app, smartphone, camera, internet connection, email address, course catalog, or reading requirement.
+Try the [hosted release candidate](https://continuum-production-8971.up.railway.app/) or run the complete teaching controller locally for free. The hosted revision is reported by [`/health`](https://continuum-production-8971.up.railway.app/health) and must match the final repository revision before judging.
 
-After language and identity, every new learner hears one open question:
+## The problem
 
-> “What would you like to learn?”
+Most learning software assumes a private smartphone, a readable visual interface, affordable data, and stable internet. Continuum is designed for a different constraint: a learner may have brief access to a shared basic phone, an unreliable line, limited literacy, and no usable data connection.
 
-Continuum listens for the learner’s current understanding, diagnoses what is blocking them, chooses a teaching method, teaches one small step, and checks whether the idea transfers. If an explanation does not help, it changes methods. It remembers only learning state that is useful and permitted. If the line drops, the exact pending question survives.
+The product therefore starts with a spoken language choice, asks one question at a time, accepts keypad input when speech fails, separates siblings on a shared number, saves an exact checkpoint before speaking, and uses tiny authorized SMS messages for continuity. The learner experience is the call—not a reduced version of a web app.
 
-Continuum extends teachers and schools. It does not claim to replace them.
+Continuum extends teachers and schools into hours, places, languages, and devices they may not reach. It does not claim to replace them, operate an emergency service, or prove real-world learning outcomes from synthetic tests.
 
-## What makes it Continuum
+## One complete learner journey
 
-1. **It teaches; it does not merely answer.** It asks useful questions, explains missing prerequisites, uses examples and worked steps, and checks teach-back and transfer instead of dumping an answer.
-2. **It reaches an ordinary phone.** Calls, DTMF, and tiny SMS messages form the full learner experience.
-3. **It teaches in the learner’s language.** Language is chosen first. The structured teaching path accepts BCP-47-style language tags and natural code-switching.
-4. **It is a continuing learning relationship.** A private six-digit learner code supports shared phones, cross-phone identity, selective memory, and exact drop recovery.
-5. **It is safe for a child to use alone.** It is a bounded teacher—not a friend, parent, therapist, romantic companion, or substitute for human support.
+1. **Reach it.** A learner calls directly or places a missed call. In a configured sponsored deployment, Twilio rejects the inbound leg before answer and Continuum calls back within rate limits and quiet hours.
+2. **Choose a language first.** The spoken menu offers nine configured keypad choices. `*` lets the learner name another language; location, accent, silence, and a learner's name never select one.
+3. **Identify privately.** A new learner gives a chosen name and receives a random six-digit portable code. A returning learner enters six digits plus `#`. One phone can hold separate sibling profiles, and the code can recover the same profile from another phone.
+4. **Ask anything safe.** Continuum asks, “What would you like to learn?” There is no subject menu, syllabus, placement quiz, or hidden curriculum dependency.
+5. **Be taught.** GPT-5.6 proposes a structured learning intent, topic plan, diagnosis, teaching method, voice activity, evidence interpretation, and safety decision. Trusted code checks the proposal, stores the pending question, and only then lets Realtime speak it.
+6. **Participate.** The teacher elicits the learner's current model, explains a prerequisite when needed, changes method after unhelpful feedback, and moves through practice, teach-back, transfer, reflection, and recap. A correct guess is not treated as understanding.
+7. **Recover.** `0` repeats, `9` asks for a hint, and `*` requests keypad choices. Unclear audio repeats the current prompt without advancing state. If the call drops, the session pauses; a consented SMS can say that the lesson is waiting. The next call resumes the exact persisted question—even from another phone.
+8. **Continue safely.** Authorized SMS can carry one practice question, a recap, a pause notice, a one-time exam/revision reminder, progress or selective-memory controls, `STOP`, and two-step deletion. SMS never becomes an unrestricted chatbot.
 
-## Current runnable product
+A substantive lesson ends with the learner's own reflection and a useful next retrieval question. Completion means the learner had an opportunity to explain or transfer an idea—not that a model merely produced an answer.
 
-The current production call path implements:
+## Why this is not GPT behind a phone number
 
-- Language-first speech and 1–9 keypad routing, plus `*` for an explicitly named unlisted language.
-- Separate verified turns for learner name and existing learner-code status.
-- One open-topic experience with no subject, grade, mode, curriculum, or duration menu.
-- OpenAI Responses with Zod Structured Outputs for `LearningIntent`, `TopicPlan`, diagnosis, teaching method, voice-native activity, evidence, uncertainty, and human-support decisions.
-- A trusted application state machine for phases, one-question voice rules, meaningful method switches, understanding evidence, and mastery caps.
-- Speech-first learning with `0` repeat, `9` hint, `*` keypad fallback, 1–4 choices, and 1/2 teaching feedback.
-- Atomic persistence before speech, pause-on-drop, same-phone resume, and portable cross-phone resume.
-- PII redaction, consented preference memory, memory inspection, correction, and two-step deletion.
-- One-question SMS practice and phone-bound replies, progress/memory/stop/delete controls, MessageSid idempotency, and bounded handling of unsupported SMS chat.
-- One-time exam/revision SMS reminders with exact-phone authorization, a separate spoken/keypad consent turn, quiet hours, one-segment formatting, due-job locking, and immediate `STOP` cancellation.
-- A missed-call callback adapter, carrier receipt ledger, cost/usage metrics, and an access-controlled redacted proof view.
-- A zero-credit open-topic CLI and a 39-case deterministic anti-wrapper gate.
+A voice wrapper transcribes a question, adds “act as a tutor,” speaks the answer, and forgets the session. Continuum gives probabilistic models a narrow proposal role inside an application-owned teaching system.
 
-The public phone number remains gated until the final real-carrier acceptance matrix passes. Automated success is not presented as live-carrier proof.
-
-## Why this is not a GPT wrapper
-
-A thin wrapper would add “act as a teacher” to a transcript, speak the answer, and forget the call. Continuum’s product behavior lives in application-owned systems around the models:
-
-| Concern | GPT proposes | Trusted Continuum code owns |
+| Concern | GPT-5.6 or Realtime proposes/handles | Trusted Continuum code owns |
 |---|---|---|
-| Teaching | Intent, diagnosis, method, activity, assessment | Allowed phase transitions, one-question policy, failed-method rule |
-| Learning proof | Semantic interpretation of an open response | Evidence ledger, independence rules, DTMF cap, understanding state |
-| Voice | Natural multilingual delivery | Call stages, verified transcripts, barge-in cancellation, DTMF routing |
-| Continuity | Concise learner-facing wording | Atomic checkpoint, exact pending prompt, portable resume |
-| Memory | Candidate preferences and relevant history | Consent, field allowlist, redaction, sibling isolation, deletion |
-| SMS | Candidate recap or practice text | Recipient binding, signature validation, idempotency, bounded commands |
-| Safety | Structured risk and uncertainty classification | Forced human-support boundary, blocked state changes, audit evidence |
+| Pedagogy | Learning intent, tentative diagnosis, method, activity, open-response interpretation | Stage order, evidence requirements, method-switch rule, one-question voice contract |
+| Understanding | Semantic interpretation of a response | Evidence ledger, independence rules, DTMF cap, secure-understanding policy |
+| Voice | Speech, transcription, barge-in, natural multilingual delivery | Call admission, stage-gated tools, verified transcript, stale-event rejection, DTMF routing |
+| Continuity | Concise learner-facing wording | Atomic checkpoint before speech, exact prompt, pause state, portable resume |
+| Memory | Candidate learning preferences and relevant history | Consent, field allowlist, PII redaction, sibling isolation, correction, deletion |
+| SMS | Candidate recap, practice, or reminder wording | Signature validation, exact-phone authorization, idempotency, one-segment limits, `STOP` |
+| Safety | Structured uncertainty and risk classification | Forced human-support boundary, prohibited state changes, auditable policy failures |
 
-The model cannot choose a subject from silence, create a learner from a name alone, turn a keypad guess into secure understanding, replace the trusted transcript with a forged tool argument, or bypass consent by asking for a state change in prose.
+The model cannot create a learner from silence, select a topic the learner did not say, replace the server transcript with a forged tool argument, make a keypad guess “secure,” repeat a failed method silently, send an unconsented reminder, or skip a trusted teaching phase by returning different JSON.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Phone["Any phone<br/>speech, keypad, SMS, missed call"] --> Twilio["Twilio voice and SMS adapter"]
-    Twilio --> Realtime["OpenAI Realtime SIP"]
-    Realtime <-->|"sideband tools"| Controller["Trusted call controller"]
+    Phone["Any phone<br/>speech · DTMF · SMS · missed call"] --> Twilio["Twilio PSTN/SMS boundary"]
+    Twilio -->|"SIP media + keypad"| Realtime["OpenAI Realtime"]
+    Realtime <-->|"sideband tool events"| Controller["Trusted call controller"]
     Controller --> Lesson["Open-topic lesson service"]
     Lesson <-->|"Zod Structured Outputs"| GPT["GPT-5.6 Responses"]
-    Lesson <--> State["SQLite learning state"]
-    State --> SMS["Bounded SMS continuity"]
-    State --> Proof["Redacted Mission Control"]
+    Lesson --> Policy["Phase · evidence · safety policy"]
+    Policy --> SQLite["SQLite selective memory + checkpoints"]
+    SQLite --> SMS["Bounded SMS continuity"]
+    SQLite --> Mission["PII-redacted Mission Control"]
 ```
 
-Realtime handles listening, speech, turn-taking, and SIP DTMF events. It does not invent teaching. Every substantive learner utterance is sent to the sideband controller, which uses the server-verified transcript and asks the structured teaching engine for the next activity. The application validates and persists that activity before it can be spoken.
+### Responsibilities by component
 
-The historical curriculum compiler, five reviewed starter packs, placement flow, Guided mode, Curious Sandbox, and outbound lesson-call scheduler remain in Git history and legacy regression fixtures. They are not loaded by the current learner call runtime.
+- **Twilio** connects ordinary phone calls to the OpenAI SIP endpoint, receives missed-call and carrier-status webhooks, sends/receives SMS, and reports carrier duration and cost. Every state-changing Twilio webhook is signature-validated and idempotent.
+- **OpenAI Realtime over SIP** handles live audio, transcription, interruption, turn-taking, voice output, and DTMF events. It receives only the tools allowed at the current application-owned call stage.
+- **GPT-5.6 through the Responses API** performs the difficult pedagogical reasoning: preserving intent, separating hypotheses from supported misconceptions, choosing a method, assessing an open response, planning a voice-native activity, expressing uncertainty, and proposing a human-support decision.
+- **Structured Outputs and Zod** constrain every model-facing request and response. Schema validity is necessary but not sufficient; trusted semantic policy runs after validation and allows one bounded model correction before failing closed.
+- **The sideband controller** uses server-verified transcription, not untrusted function arguments, and controls language, identity, teaching, feedback, reminder consent, DTMF, cancellations, duplicate/stale events, and exact response playback.
+- **The lesson state machine** owns the phase transition, evidence type, method-switch invariant, voice rules, mastery cap, safety boundary, and next checkpoint.
+- **SQLite** stores keyed phone hashes, separate learner identities, selective educational memory, exact pending prompts, evidence, authorization, idempotency receipts, callback/reminder jobs, and carrier usage. Tables and forward-compatible migrations initialize automatically at startup; no manual migration command is required.
+- **Mission Control** is a protected builder/judge proof surface—not a learner dashboard. It exposes anonymized teaching traces, deterministic/live evaluation reports, readiness, and labeled access/reliability/learning metrics without names, raw phone numbers, phone hashes, secrets, or hidden chain-of-thought.
 
-## Teaching loop
+## Teaching system
 
 The application advances through a trusted version of:
 
 `LISTEN → CLARIFY → ELICIT PRIOR MODEL → DIAGNOSE → CHOOSE METHOD → TEACH → PRACTICE → FEEDBACK → TEACH-BACK → TRANSFER → REFLECT → SAVE`
 
-The structured engine can render explanations, Socratic prompts, analogies, stories, worked examples, hints, quizzes, retrieval, teach-back, transfer, reflection, and recap. Every spoken activity is limited to three short sentences and one question, with no Markdown, URLs, tables, or symbolic fraction notation.
+Activities include Socratic prompts, concise explanations, analogies, stories, worked examples after an attempt, hint ladders, retrieval, quizzes, teach-back, novel transfer, reflection, and recap. Every spoken activity is limited to three short sentences and one question, with no Markdown, links, tables, or unexplained symbolic fraction notation.
 
-Secure understanding requires independent, conceptually valid transfer or later retention. A correct guess, guided response, or keypad-only answer cannot become secure.
+The first request supplies intent, not evidence of a misconception. A diagnosis must name its evidence basis. When the learner says an explanation did not help, the next method must be genuinely different. Secure understanding requires independent conceptual transfer or later retention with reasoning; guided, guessed, or DTMF-only success is capped below secure.
 
-## Phone and keypad experience
+For current, disputed, unverifiable, high-stakes, or unsafe topics, Continuum expresses uncertainty or stops ordinary teaching and directs the learner toward an appropriate trusted or qualified human. Academic struggle alone never silently contacts another person.
 
-The live SIP flow uses OpenAI Realtime with a server-side sideband WebSocket. The server accepts the signed incoming-call event, attaches to the exact call, sends the language prompt, and dynamically exposes only tools valid for the current stage.
+## Keypad and low-connectivity behavior
 
-DTMF is stage-aware:
+DTMF travels over the same SIP call and enters the same trusted controller as speech:
 
-- Language: configured digit; `*` to say another language.
-- Identity: six learner-code digits followed by `#`.
-- Lesson: `0` repeats the exact prompt, `9` requests a hint, and `*` asks for keypad fallback.
-- Choice: 1–4 works only when those exact choices were spoken for the current activity.
-- Feedback: 1 means helpful and 2 means not helpful only while that question is active.
+- Language: configured `1`–`9`; `*` names an unlisted language.
+- Identity: six digits followed by `#`.
+- Active lesson: `0` repeats the exact prompt, `9` requests a hint, `*` requests keypad fallback.
+- Reviewed choice: `1`–`4` only when the current activity spoke those choices.
+- Teaching feedback: `1` helpful, `2` not helpful only while that question is pending.
 
-Unrelated digits, blank transcription, unclear audio, duplicate tool calls, and stale stage actions do not advance learning state. When DTMF interrupts audio, the controller cancels the active response and clears unplayed audio before routing the key.
+When a key interrupts speech, the controller cancels the active Realtime response, clears unplayed audio, and rejects late tool calls associated with the cancelled response. Blank transcription, unrelated digits, duplicate provider events, stale tool calls, and malformed output do not advance learning.
 
-The implementation follows OpenAI’s official [Realtime SIP sideband-control guidance](https://developers.openai.com/api/docs/guides/realtime-server-controls) and [Realtime server-event contract](https://developers.openai.com/api/reference/resources/realtime/server-events).
+Before a question is spoken, its activity ID, phase, exact prompt, evidence, strategy, and resume state are committed. A dropped call therefore recovers stored state rather than asking a model to reconstruct what probably happened.
 
-## SMS is continuity, not a second chatbot
+## SMS is a bounded continuity channel
 
-SMS can carry one small thread across calls:
+Supported SMS behavior is deliberately small:
 
-- A pause reminder after a dropped lesson.
-- One short practice question with a bound reply code.
-- A progress or selective-memory summary for an authorized number.
-- One consented exam/revision reminder, requested during a call and confirmed in a separate speech or keypad turn.
-- Stop and two-step deletion controls.
+- Lesson recap and one practice question with an assignment code.
+- Authorized homework reply bound to that assignment, learner, and phone.
+- Pause notice after a dropped call.
+- Separately requested and confirmed one-time exam/revision or call-back reminder.
+- Guardian-authorized progress and selective-memory summaries.
+- `STOP <guardian-code>` and two-step profile deletion.
 
-An arbitrary text such as “teach me a whole lesson here” receives bounded help text; it is never forwarded into an open GPT conversation. Practice replies are bound to the assignment, learner, and receiving phone, and multiple-choice evidence cannot create secure understanding.
+Twilio signatures, `MessageSid` idempotency, recipient hashes, one-segment formatting, quiet hours, due-job locking, and immediate `STOP` cancellation are enforced in application code. An arbitrary “teach me over text” message receives bounded help and is never forwarded into an open model conversation. Recurring outbound lesson calls are not part of the submitted product.
 
-Recurring outbound tutoring calls have been removed from the current product. One-time reminder delivery remains disabled by default and requires guardian SMS enrollment plus `NOMAD_SMS_REMINDERS_ENABLED=true`; the learner must still confirm each reminder separately.
+## How we used Codex and GPT-5.6
 
-## Memory and privacy
+### Codex
 
-> Continuum remembers what helps you learn and forgets what it does not need.
+Codex was used throughout the July 16–21 build—not only to scaffold code. Its concrete contributions include:
 
-The application may keep the learner’s preferred name and language, current topic and objective, supported obstacle or misconception, helpful and failed methods, evidence state, exact next question, and explicitly approved learning preferences.
+- Designing and implementing the Realtime SIP sideband boundary, trusted teaching state machine, Zod schemas, SQLite persistence, DTMF routing, callback/SMS adapters, Mission Control, and deterministic/live evaluations.
+- Refactoring the product from a curriculum menu into one open-topic teacher while preserving working telephony, identity, persistence, recovery, and safety infrastructure.
+- Debugging live-call behavior, adding regression tests, reviewing security/privacy boundaries, verifying deployment health, and preparing clean-clone release automation and public documentation.
 
-It does not retain raw call recordings by default, background conversations, precise location, unnecessary personal stories, or inferred caste, religion, economic, family, or psychological profiles. Likely phone numbers, email addresses, URLs, and street-address disclosures are redacted before model input and persistence. The proof API uses an anonymized learner reference and excludes names, phone numbers, and phone hashes.
+One concrete debugging example: a real call replayed part of the language menu and selected Science after the learner had said nothing. It also treated a spoken name as proof that no existing learner code was available. With Codex, the event trace was followed through Realtime audio and delayed tool calls. The fix cancelled active speech, cleared unplayed audio, rejected stale response IDs, and split identity into two trusted turns. Regression tests now prove that silence cannot select language/topic or create identity, and that DTMF interruption cannot be overwritten by a late model event.
 
-This is a supervised prototype, not an approved child deployment. See [docs/SAFETY_PRIVACY.md](docs/SAFETY_PRIVACY.md) for the pre-pilot work still required.
+### GPT-5.6
 
-## Run locally without API credit
+GPT-5.6 is not used because telephony needs a large model. It is used where teaching needs semantic judgment across arbitrary subjects and languages: understanding what the learner is trying to learn, distinguishing missing evidence from a supported misconception, selecting and changing pedagogy, evaluating free-form reasoning, generating an age-appropriate voice activity, and deciding when uncertainty or human support is necessary.
 
-Requirements: Node.js 22 or newer.
+The model returns a versioned structured decision. Trusted code may correct deterministic fields, reject policy violations, retry once with explicit failures, or fail closed. OpenAI requests use `store: false`, a one-way safety identifier, and no hidden chain-of-thought request.
 
-```bash
-npm install
-npm run chat -- --name Ravi --phone +919999900001 --language en
-```
+### Product decisions owned by the builder
 
-The first prompt is `What would you like to learn?` Try unrelated topics in the same runtime:
+The builder chose to remove the subject/grade menus and curriculum-pack runtime so the product stayed “a teacher you call,” not an LMS. Other deliberate choices were to keep SMS bounded rather than create a second chatbot, cap keypad evidence below secure, remove recurring outbound calls in favor of user-controlled access and one-time reminders, store selective learning memory rather than raw recordings, and keep the public phone number hidden until the deployed carrier matrix passes.
 
-- `Help me understand a verb.`
-- `Why does the moon seem to follow our car?`
-- `Teach me how to prepare for a chemistry exam.`
+Repository history begins on July 16, 2026 with the license and zero-credit teaching foundation; the application was created and iterated during Build Week. The dated commit history shows the progression from offline pedagogy through Realtime, telephony, persistence, safety, evaluation, deployment, and the final open-topic product.
 
-Type `exit` to simulate a dropped call. Run the same command again to resume the exact saved question.
+## Run locally for free
 
-The offline adapter exercises the open-topic state machine and persistence without pretending to know arbitrary facts. Set `TEACHING_ENGINE=openai` and configure an API key for actual open-world teaching.
+### Requirements
 
-## Verify
+- Node.js 22 (see `.nvmrc`)
+- npm 10.9.3 or a compatible npm 10 release
+- macOS, Linux, or Windows with a Node-compatible `better-sqlite3` build
 
-```bash
-npm run check
-npm run eval
-npm run build
-```
-
-- `npm run check` runs strict TypeScript and all deterministic unit/integration tests.
-- `npm run eval` runs 39 zero-credit v7 gates covering the product contract, trusted model boundary, diagnosis evidence, phase/evidence rules, voice output, method switching, teach-back, transfer, mastery honesty, safety, privacy, memory, exact continuity, and unrelated topics through one pack-free engine.
-- `npm run build` compiles the production server.
-
-The current GPT-powered evaluation is opt-in because it spends API credit. It
-runs nine v7 cases through the same Responses engine used by the phone teacher
-and writes a revision-bound report for Mission Control and release preflight:
+Install exactly from the lockfile:
 
 ```bash
-npm run eval:live -- --confirm-spend
-# or one targeted case
-npm run eval:live -- --confirm-spend --case hinglish-code-switch
+git clone https://github.com/Tanya-Khanna/nomad-ai.git
+cd nomad-ai
+nvm use
+npm ci
+cp .env.example .env
 ```
 
-For an independent clean export/install/build/test run:
+No database command is needed. The first process creates `.data/nomad.db` and applies application-owned schema migrations.
+
+Start the deterministic offline teacher:
+
+```bash
+npm run chat -- --name Ravi --phone +910000000042 --language en
+```
+
+Expected first output includes:
+
+```text
+What would you like to learn?
+```
+
+Try `Why do shadows change length?` The offline engine demonstrates the state transition without pretending to know arbitrary facts. Type `exit` after one teaching turn, then run the same command again. Expected behavior:
+
+- `Session: resumed`
+- The exact previously pending question is printed.
+- The completed turn count does not increase merely because the process restarted.
+
+Use synthetic adult names and reserved example numbers only. The CLI hashes the phone value, but a real number is unnecessary.
+
+## Configuration
+
+`.env.example` is the complete non-secret template. Important groups are:
+
+| Purpose | Variables |
+|---|---|
+| Local/runtime | `TEACHING_ENGINE`, `HOST`, `PORT`, `NOMAD_DATABASE_PATH` |
+| Application secrets | `NOMAD_PHONE_HASH_SECRET`, `NOMAD_LEARNER_CODE_SECRET`, `NOMAD_GUARDIAN_CODE_SECRET`, `NOMAD_CALLBACK_SECRET`, `NOMAD_DASHBOARD_TOKEN` |
+| OpenAI | `OPENAI_API_KEY`, `OPENAI_TEXT_MODEL`, `OPENAI_REALTIME_MODEL`, `OPENAI_REALTIME_VOICE`, `OPENAI_WEBHOOK_SECRET`, `OPENAI_PROJECT_ID` |
+| Twilio | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, optional `TWILIO_MISSED_CALL_NUMBER` |
+| Access/safety | callback allowlist, quiet hours, daily limits, call-rate limit, explicit SMS/callback/publication flags |
+| Release evidence | `NOMAD_PUBLIC_BASE_URL`, `NOMAD_RELEASE_COMMIT`, live-eval report path |
+
+Generate strong local application secrets with `npm run secrets:init`. Do not commit `.env`, databases, logs, recordings, transcripts, completed release receipts, or provider credentials.
+
+Actual open-world text teaching requires `TEACHING_ENGINE=openai` and `OPENAI_API_KEY`. Phone service additionally requires an OpenAI project with a Realtime SIP webhook and a Twilio voice/SIP setup. Follow [docs/PHONE_SETUP.md](docs/PHONE_SETUP.md) and run `npm run phone:preflight` before making a paid call.
+
+## Verification
+
+### Free and deterministic
+
+```bash
+npm run verify
+```
+
+This runs formatting hygiene, strict unused-code linting, TypeScript, all deterministic unit/integration tests, the 39-case anti-wrapper pedagogy/safety evaluation, a production build, and a compiled-server smoke test. It does not call OpenAI or Twilio.
+
+Current verified local results:
+
+- **29 test files, 122 automated tests: pass**
+- **39 deterministic teaching/safety/privacy cases: pass**
+- **TypeScript, unused-code lint, production build, and production smoke: pass**
+
+For an independent exported-tree install and exact resume proof:
 
 ```bash
 npm run verify:fresh
 ```
 
-Historical curriculum-specific eval commands remain under `eval:legacy:*` for
-audit, but their results are not the current v7 release gate.
+That command copies only the proposed public files into a temporary directory, runs `npm ci`, production smoke, tests, deterministic evaluation, and a process-boundary exact-resume scenario. It ignores local `.env`, `.data`, dependencies, and internal ignored files.
 
-For the complete operator sequence—from clean installation through every
-automated, model, browser, carrier, DTMF, SMS, privacy, safety, continuity, and
-submission check—follow [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md).
+### Paid or external
 
-## Server and Mission Control
+The nine-case GPT-5.6 suite uses the same Responses engine as live teaching and requires explicit spend confirmation:
+
+```bash
+npm run eval:live -- --confirm-spend
+# targeted example
+npm run eval:live -- --confirm-spend --case hinglish-code-switch
+```
+
+Its report is schema-validated and revision-bound. A report from an earlier commit is not accepted as current release evidence.
+
+Carrier acceptance requires OpenAI and Twilio credentials and incurs provider cost. It covers inbound speech, DTMF, missed-call callback, signed SMS, same/cross-phone resume, interruption, call status, and usage receipts. Browser, paid-model, and carrier evidence are deliberately reported separately from deterministic tests. The complete sequence and expected results are in [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md).
+
+## Server, deployment, and judge proof
 
 ```bash
 npm run dev
 ```
 
 - Landing page: `http://localhost:3000/`
-- Health: `http://localhost:3000/health`
-- Internal proof: `http://localhost:3000/dashboard`
+- Health/revision: `http://localhost:3000/health`
+- Protected Mission Control shell: `http://localhost:3000/dashboard`
 
-Mission Control is observability for builders and judges, not a learner classroom. An open-topic session shows an anonymized transcript, activity, diagnosis, redacted reasoning evidence, strategy change, evidence kind/result, understanding state, knowledge boundary, human-support decision, model route, latency, and cost estimate.
+Mission Control APIs require `NOMAD_DASHBOARD_TOKEN`. The supported URL fragment places the token in tab-scoped session storage and removes it from the address without sending it in the request URL; APIs receive it only through `Authorization: Bearer`.
 
-When deployed publicly, dashboard learner data requires `NOMAD_DASHBOARD_TOKEN`. A URL fragment can place the token into tab-scoped session storage without sending it in the page request; the API receives it only in an Authorization header.
+The production artifact is a compiled Node server and an unprivileged Docker image. SQLite needs one persistent volume and one application replica. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-## Configuration
+To keep judge access available through August 5, 2026 at 5:00 PM PT, the operator must keep Railway, the persistent volume, OpenAI billing, Twilio number/SIP configuration, and SMS/voice geographic permissions active; keep secrets unexpired; monitor `/health`; preserve a small provider budget; and avoid deploying a revision that has not passed `verify:fresh`, the paid live suite, and carrier smoke.
 
-Copy `.env.example` to `.env`. Never commit credentials.
+## Privacy, consent, and child-safety boundary
 
-Key settings:
+> **Continuum remembers what helps you learn and forgets what it does not need.**
 
-```dotenv
-TEACHING_ENGINE=offline
-NOMAD_DATABASE_PATH=.data/nomad.db
-OPENAI_TEXT_MODEL=gpt-5.6-luna
-OPENAI_REALTIME_MODEL=gpt-realtime-2.1-mini
-OPENAI_REALTIME_VOICE=marin
-NOMAD_SMS_REMINDERS_ENABLED=false
+The application stores a keyed hash of the caller number, a chosen name, language, topic, supported learning obstacle, methods and feedback, evidence state, exact pending question, authorization, and explicitly approved learning preferences. Six-digit learner and guardian codes are one-way protected; callback destinations are encrypted only while needed. Likely email, URL, phone, and street-address disclosures are redacted before model input and persistence.
+
+Continuum does not store raw call audio by default, request a legal name, infer sensitive family/caste/religious/economic/psychological profiles, browse the web during a lesson, or expose learner identity in Mission Control. Shared-phone SMS and lock-screen previews remain disclosure risks. `STOP` cancels pending proactive messages; profile deletion requires confirmation.
+
+This is a supervised prototype—not an approved child deployment. A real pilot needs local legal and safeguarding review, guardian consent and learner assent, native-speaker testing, retention and provider-deletion policies, role-based access, incident response, qualified human-support protocols, cost/access sponsorship, and evidence from real educational evaluation. Read [docs/SAFETY_PRIVACY.md](docs/SAFETY_PRIVACY.md) before enabling public access.
+
+## Honest limitations
+
+- The deterministic offline engine verifies orchestration and policy but does not provide arbitrary factual teaching.
+- “Any language” is an architectural goal, not a claim of carrier-quality speech testing in every language. Public claims must name only the adult-speaker patterns tested on the final deployed revision.
+- Speech recognition, accents, background noise, carrier codecs, and DTMF behavior vary by country and provider; keypad fallback reduces but does not eliminate exclusion.
+- Voice-only teaching is not accessible to deaf or hard-of-hearing learners. SMS is supplementary, not an equivalent classroom.
+- Pattern-based PII redaction is defense in depth, not a guarantee. The current prototype has no time-based automatic deletion policy.
+- Current/disputed and high-stakes questions use uncertainty and human-support boundaries; Continuum does not browse for live answers or operate a real escalation network.
+- Missed-call callback can shift call cost to a sponsor, but carrier treatment and toll-free availability are deployment-specific. Calls are not universally free.
+- The public phone number remains gated until the complete final-revision carrier matrix passes. The hosted landing page alone is not proof that carrier access is ready.
+- No pilot, partnership, user-research result, accessibility certification, or measured learning outcome is claimed.
+
+## Repository map
+
+```text
+src/domain/          Zod contracts, evidence, identity, safety, usage
+src/engine/          Offline and GPT-5.6 open-topic reasoning adapters
+src/lesson/          Trusted teaching state machine and persistence boundary
+src/telephony/       SIP, Realtime sideband, DTMF, callback, admission
+src/messaging/       Bounded SMS practice, recap, reminders
+src/persistence/     SQLite schema, migration, idempotency, deletion
+src/observability/   Redacted Mission Control and product metrics
+src/evals/           Deterministic and spend-gated live model evaluations
+test/                Unit and integration boundary tests
+scripts/             Release, clean-export, smoke, and asset tooling
+docs/                Public setup, testing, deployment, and safety guides
 ```
 
-Live teaching additionally needs `OPENAI_API_KEY`. Phone calls require the OpenAI webhook/SIP project settings and Twilio credentials documented in [docs/PHONE_SETUP.md](docs/PHONE_SETUP.md). Run the secret-safe checks before spending on a call:
+## License, acknowledgments, and support
 
-```bash
-npm run secrets:init
-npm run phone:preflight
-```
+Continuum is licensed under the [MIT License](LICENSE). Dependency licenses, trademark notes, and synthetic-audio provenance are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-For a child-safety test, authorize the exact SMS number before requesting a reminder on a call:
+OpenAI provides the Responses and Realtime APIs; Twilio provides PSTN/SIP and SMS transport; SQLite provides local persistence; Railway hosts the current release candidate. These are technical dependencies, not claimed partnerships.
 
-```bash
-npm run guardian:enroll -- --learner-code 123456 --guardian-phone +919999999999
-```
-
-The command returns a private guardian code used by bounded SMS controls such as `STOP <code>`. It does not pre-consent to a reminder; the learner must still confirm the proposed topic and time during the call.
-
-The missed-call path uses a signed Twilio webhook and returns first-verb `<Reject reason="busy">` before queuing the callback. This avoids answering that inbound Twilio leg; local-carrier charging behavior remains deployment-specific. See Twilio’s official [`<Reject>` documentation](https://www.twilio.com/docs/voice/twiml/reject).
-
-## OpenAI model use
-
-- **GPT-5.6 Luna through the Responses API:** structured learning intent, topic plan, diagnosis, method choice, open-response assessment, uncertainty, and the next voice-native activity.
-- **Realtime SIP:** multilingual audio, interruption handling, transcription, natural delivery, and DTMF events.
-- **Structured Outputs:** Zod-backed model contracts; valid JSON is necessary but trusted code still owns educational and safety semantics. See OpenAI’s [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
-- **Codex:** architecture migration, implementation, tests, debugging, documentation, and the dated decision log in [CODEX_NOTES.md](CODEX_NOTES.md).
-
-The current model names are deployment defaults, not a claim that every task needs the largest model. No hidden chain-of-thought is requested or stored.
-
-## Honest limitations and open release gates
-
-- The new open-topic path is automated-test green but still needs the complete real-carrier journey after deployment.
-- Public language claims must be limited to adult-speaker carrier patterns actually tested; keypad routing alone does not prove speech quality.
-- The zero-credit adapter validates state and pedagogy boundaries but cannot teach arbitrary facts without a model.
-- One-time reminder automation is implemented and deterministic-test green, but real Twilio delivery and multilingual natural-date interpretation still require carrier acceptance on the deployed revision.
-- The revision-bound nine-case live GPT v7 suite is implemented; it must be run
-  with explicit spend confirmation on the final commit before release.
-- The final demo, `/feedback` session ID, Devpost acceptance, public repository/judge access, and human-written submission description remain human release steps.
-- Voice-only access excludes deaf and hard-of-hearing learners; SMS is supplementary, not an equivalent classroom.
-
-The current authority and struck-through progress ledger are in [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md). Final carrier and submission steps live in [docs/FINAL_ACCEPTANCE_RUNBOOK.md](docs/FINAL_ACCEPTANCE_RUNBOOK.md).
-
-## Repository history and naming
-
-The project was renamed from its working title. Existing `NOMAD_` environment names, the `nomad-ai` GitHub slug, and old database columns remain compatibility identifiers; learner-facing copy and current architecture use **Continuum**.
-
-The historical curriculum compiler and frozen packs are retained because deleting reviewed work would weaken auditability. They do not define the product and cannot enter the live open-topic runtime without an explicit future decision.
-
-## License
-
-MIT License. Copyright 2026 Tanya Khanna.
+For reproducible bugs or feature proposals, open a GitHub issue without secrets or learner data. Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md). Contributions should follow [CONTRIBUTING.md](CONTRIBUTING.md).

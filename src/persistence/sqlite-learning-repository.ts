@@ -16,16 +16,10 @@ import {
   type StoredModelUsage,
 } from "../domain/usage.js";
 import {
-  StoredSandboxTurnSchema,
-  type StoredSandboxTurn,
-} from "../domain/sandbox.js";
-import {
-  CuriosityTrailSchema,
   LearnerEducationProfileSchema,
   LearningEvidenceSchema,
   PedagogyDecisionSchema,
   TeachingFeedbackSchema,
-  type CuriosityTrail,
   type LearnerEducationProfile,
   type LearningEvidence,
   type PedagogyDecision,
@@ -128,15 +122,6 @@ interface UsageRow {
   cached_input_audio_tokens: number;
   output_audio_tokens: number;
   latency_ms: number | null;
-  created_at: string;
-}
-
-interface SandboxTurnRow {
-  id: string;
-  session_id: string;
-  sequence: number;
-  turn_json: string;
-  model_route: string;
   created_at: string;
 }
 
@@ -820,42 +805,6 @@ export class SqliteLearningRepository implements LearningRepository {
     );
   }
 
-  appendSandboxTurn(unparsedTurn: StoredSandboxTurn): void {
-    const entry = StoredSandboxTurnSchema.parse(unparsedTurn);
-    this.#database
-      .prepare(
-        `INSERT INTO sandbox_turns (
-          id, session_id, sequence, turn_json, model_route, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
-        entry.id,
-        entry.sessionId,
-        entry.sequence,
-        JSON.stringify(entry.turn),
-        entry.modelRoute,
-        entry.createdAt,
-      );
-  }
-
-  listSandboxTurns(sessionId: string): StoredSandboxTurn[] {
-    const rows = this.#database
-      .prepare(
-        "SELECT * FROM sandbox_turns WHERE session_id = ? ORDER BY sequence",
-      )
-      .all(sessionId) as SandboxTurnRow[];
-    return rows.map((row) =>
-      StoredSandboxTurnSchema.parse({
-        id: row.id,
-        sessionId: row.session_id,
-        sequence: row.sequence,
-        turn: JSON.parse(row.turn_json) as unknown,
-        modelRoute: row.model_route,
-        createdAt: row.created_at,
-      }),
-    );
-  }
-
   appendUsage(unparsedUsage: StoredModelUsage): void {
     const usage = StoredModelUsageSchema.parse(unparsedUsage);
     this.#database
@@ -1042,31 +991,6 @@ export class SqliteLearningRepository implements LearningRepository {
           JSON.parse(row.profile_json) as unknown,
         )
       : undefined;
-  }
-
-  saveCuriosityTrail(unparsedTrail: CuriosityTrail): void {
-    const trail = CuriosityTrailSchema.parse(unparsedTrail);
-    this.#database
-      .prepare(
-        `INSERT INTO curiosity_trails (id, learner_id, trail_json, updated_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET
-           trail_json = excluded.trail_json,
-           updated_at = excluded.updated_at`,
-      )
-      .run(trail.id, trail.learnerId, JSON.stringify(trail), trail.updatedAt);
-  }
-
-  listCuriosityTrails(learnerId: string): CuriosityTrail[] {
-    const rows = this.#database
-      .prepare(
-        `SELECT trail_json FROM curiosity_trails
-         WHERE learner_id = ? ORDER BY updated_at DESC`,
-      )
-      .all(learnerId) as { trail_json: string }[];
-    return rows.map((row) =>
-      CuriosityTrailSchema.parse(JSON.parse(row.trail_json) as unknown),
-    );
   }
 
   saveLearnerAccessCode(unparsedRecord: LearnerAccessCode): void {
@@ -1466,41 +1390,6 @@ export class SqliteLearningRepository implements LearningRepository {
     return row
       ? StudyPlanSchema.parse(JSON.parse(row.plan_json) as unknown)
       : undefined;
-  }
-
-  claimDueStudyPlans(options: {
-    now: string;
-    claimToken: string;
-    claimExpiresAt: string;
-    limit: number;
-  }): StudyPlan[] {
-    const safeLimit = Math.max(1, Math.min(100, Math.trunc(options.limit)));
-    return this.#database.transaction(() => {
-      const rows = this.#database
-        .prepare(
-          `SELECT plan_json FROM study_plans
-           WHERE status = 'active' AND next_scheduled_call IS NOT NULL
-             AND next_scheduled_call <= ?
-           ORDER BY next_scheduled_call LIMIT ?`,
-        )
-        .all(options.now, safeLimit) as { plan_json: string }[];
-      const claimed: StudyPlan[] = [];
-      for (const row of rows) {
-        const plan = StudyPlanSchema.parse(
-          JSON.parse(row.plan_json) as unknown,
-        );
-        if (plan.claimExpiresAt && plan.claimExpiresAt >= options.now) continue;
-        const next = StudyPlanSchema.parse({
-          ...plan,
-          claimToken: options.claimToken,
-          claimExpiresAt: options.claimExpiresAt,
-          updatedAt: options.now,
-        });
-        this.saveStudyPlan(next);
-        claimed.push(next);
-      }
-      return claimed;
-    })();
   }
 
   reserveSmsMessage(messageSid: string, createdAt: string): boolean {

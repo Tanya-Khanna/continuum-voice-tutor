@@ -4,8 +4,10 @@ import {
   type OpenTopicModelTurn,
   type OpenTopicRequest,
 } from "../domain/open-topic.js";
-import type { ModelResult } from "./teaching-engine.js";
-import type { OpenTopicTeachingEngine } from "./open-topic-engine.js";
+import type {
+  ModelResult,
+  OpenTopicTeachingEngine,
+} from "./open-topic-engine.js";
 
 function requestedLanguage(request: OpenTopicRequest): string {
   return request.requestedLanguageMode === "auto"

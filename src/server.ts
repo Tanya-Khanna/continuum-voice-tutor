@@ -3,10 +3,6 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import OpenAI from "openai";
-import {
-  curriculumCatalogOptions,
-  loadCurriculumCatalog,
-} from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
 import { DEFAULT_VOICE_LANGUAGE_MENU } from "./config/voice-language-menu.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
@@ -28,7 +24,7 @@ import {
   accessModeFromIncomingCall,
   callerNumberFromIncomingCall,
   rejectRealtimeCall,
-} from "./telephony/realtime-sip.js";
+} from "./telephony/sip.js";
 import { buildOpenTopicRealtimeAcceptPayload } from "./telephony/open-topic-realtime.js";
 import { OpenTopicRealtimeBridge } from "./telephony/open-topic-realtime-bridge.js";
 import {
@@ -49,7 +45,6 @@ import {
 import {
   TwilioCallStatusWebhookSchema,
   TwilioMessageStatusWebhookSchema,
-  terminalCarrierCallStatus,
 } from "./domain/carrier-usage.js";
 import {
   applyCarrierStatusWebhook,
@@ -59,7 +54,6 @@ import {
   fetchTwilioCallResource,
   markCarrierCallQueued,
 } from "./telephony/carrier-usage.js";
-import { StudyPlanSchema } from "./domain/study-plan.js";
 import { buildProductMetrics } from "./observability/product-metrics.js";
 import { renderLandingPage } from "./landing/page.js";
 import { SAMPLE_SESSION } from "./samples/sample-session.js";
@@ -67,6 +61,10 @@ import {
   assertPublicDashboardProtected,
   dashboardRequestAuthorized,
 } from "./security/dashboard-access.js";
+import {
+  RequestBodyTooLargeError,
+  readRequestBody,
+} from "./security/http-body.js";
 
 function headersFromIncoming(headers: IncomingHttpHeaders): Headers {
   const result = new Headers();
@@ -80,17 +78,13 @@ function headersFromIncoming(headers: IncomingHttpHeaders): Headers {
   return result;
 }
 
-async function readBody(request: NodeJS.ReadableStream): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks).toString("utf8");
-}
-
 const environment = loadEnvironment();
 assertPublicDashboardProtected({
-  publicWebhook: environment.NOMAD_OPENAI_WEBHOOK_PUBLIC,
+  publicWebhook:
+    environment.NOMAD_OPENAI_WEBHOOK_PUBLIC ||
+    environment.NOMAD_MISSED_CALL_ENABLED ||
+    environment.NOMAD_SMS_CONTROLS_ENABLED ||
+    environment.NOMAD_SMS_REMINDERS_ENABLED,
   ...(environment.NOMAD_DASHBOARD_TOKEN
     ? { dashboardToken: environment.NOMAD_DASHBOARD_TOKEN }
     : {}),
@@ -100,9 +94,6 @@ const activeCallIds = new Set<string>();
 const callAdmission = new CallAdmissionGuard({
   maxCallsPerWindow: environment.NOMAD_MAX_CALLS_PER_HOUR,
 });
-const curriculumCatalog = loadCurriculumCatalog(
-  curriculumCatalogOptions(environment),
-);
 
 function createMissedCallService(
   repository: SqliteLearningRepository,
@@ -297,53 +288,6 @@ function scheduleCarrierReceiptReconciliation(receiptId: string): void {
   }
 }
 
-async function recordScheduledMiss(options: {
-  receiptId: string;
-  to?: string;
-}): Promise<void> {
-  const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
-  try {
-    const receipt = repository.findCarrierCallReceipt(options.receiptId);
-    if (
-      !receipt ||
-      receipt.kind !== "scheduled" ||
-      receipt.status === "completed" ||
-      !terminalCarrierCallStatus(receipt.status) ||
-      receipt.missedNoticeSent
-    ) {
-      return;
-    }
-    repository.saveCarrierCallReceipt({
-      ...receipt,
-      missedNoticeSent: true,
-      updatedAt: new Date().toISOString(),
-    });
-    if (receipt.learnerId) {
-      const plan = repository.findStudyPlan(receipt.learnerId);
-      if (plan) {
-        repository.saveStudyPlan(
-          StudyPlanSchema.parse({
-            ...plan,
-            missedLessons: plan.missedLessons + 1,
-            updatedAt: new Date().toISOString(),
-          }),
-        );
-      }
-    }
-    if (options.to) {
-      await sendTrackedSms({
-        repository,
-        to: options.to,
-        body: "We missed today's Continuum lesson. No retry today; your next regular lesson stays scheduled.",
-        ...(receipt.learnerId ? { learnerId: receipt.learnerId } : {}),
-        accessMode: "scheduled",
-      });
-    }
-  } finally {
-    repository.close();
-  }
-}
-
 async function processCallbackJob(jobId: string): Promise<void> {
   const repository = new SqliteLearningRepository(environment.NOMAD_DATABASE_PATH);
   try {
@@ -469,7 +413,11 @@ export const server = createServer(async (request, response) => {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=60",
         "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
         "Referrer-Policy": "no-referrer",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "Content-Security-Policy":
+          "default-src 'self'; style-src 'unsafe-inline'; script-src 'none'; img-src 'self'; media-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
       });
       response.end(
         renderLandingPage({
@@ -496,7 +444,7 @@ export const server = createServer(async (request, response) => {
         response.end(JSON.stringify({ error: "missed_call_disabled" }));
         return;
       }
-      const rawBody = await readBody(request);
+      const rawBody = await readRequestBody(request);
       const parameters = new URLSearchParams(rawBody);
       const signatureUrl = new URL(
         request.url ?? url.pathname,
@@ -552,7 +500,7 @@ export const server = createServer(async (request, response) => {
       request.method === "POST" &&
       url.pathname === "/webhooks/twilio/call-status"
     ) {
-      const rawBody = await readBody(request);
+      const rawBody = await readRequestBody(request);
       const parameters = new URLSearchParams(rawBody);
       const signatureUrl = new URL(
         request.url ?? url.pathname,
@@ -582,7 +530,6 @@ export const server = createServer(async (request, response) => {
         environment.NOMAD_DATABASE_PATH,
       );
       let shouldReconcile = false;
-      let shouldRecordMiss = false;
       try {
         const receipt = repository.findCarrierCallReceipt(receiptId);
         if (receipt) {
@@ -632,9 +579,6 @@ export const server = createServer(async (request, response) => {
                 });
               }
               shouldReconcile = true;
-              shouldRecordMiss =
-                result.receipt.kind === "scheduled" &&
-                result.receipt.status !== "completed";
             }
           }
         }
@@ -646,19 +590,6 @@ export const server = createServer(async (request, response) => {
       if (shouldReconcile) {
         scheduleCarrierReceiptReconciliation(receiptId);
       }
-      if (shouldRecordMiss) {
-        setImmediate(() => {
-          void recordScheduledMiss({
-            receiptId,
-            ...(payload.To ? { to: payload.To } : {}),
-          }).catch((error: unknown) =>
-            console.error(
-              `Scheduled miss ${receiptId} handling failed:`,
-              error instanceof Error ? error.message : "unknown error",
-            ),
-          );
-        });
-      }
       return;
     }
 
@@ -666,7 +597,7 @@ export const server = createServer(async (request, response) => {
       request.method === "POST" &&
       url.pathname === "/webhooks/twilio/message-status"
     ) {
-      const rawBody = await readBody(request);
+      const rawBody = await readRequestBody(request);
       const parameters = new URLSearchParams(rawBody);
       const signatureUrl = new URL(
         request.url ?? url.pathname,
@@ -727,7 +658,7 @@ export const server = createServer(async (request, response) => {
         response.end(JSON.stringify({ error: "sms_controls_disabled" }));
         return;
       }
-      const rawBody = await readBody(request);
+      const rawBody = await readRequestBody(request);
       const parameters = new URLSearchParams(rawBody);
       const signatureUrl = new URL(
         request.url ?? url.pathname,
@@ -794,6 +725,10 @@ export const server = createServer(async (request, response) => {
         "Cache-Control": "no-store",
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "Content-Security-Policy":
+          "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; media-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
       });
       response.end(DASHBOARD_HTML);
       return;
@@ -910,9 +845,6 @@ export const server = createServer(async (request, response) => {
       try {
         const snapshot = buildDashboardSnapshot({
           repository,
-          curriculumPacks: curriculumCatalog
-            .list()
-            .map((option) => option.pack),
           limit: Number(url.searchParams.get("limit") ?? 20),
         });
         response.writeHead(200, {
@@ -965,6 +897,25 @@ export const server = createServer(async (request, response) => {
     }
 
     if (request.method === "GET" && url.pathname === "/api/dashboard/evals") {
+      if (
+        !dashboardRequestAuthorized({
+          ...(environment.NOMAD_DASHBOARD_TOKEN
+            ? { expectedToken: environment.NOMAD_DASHBOARD_TOKEN }
+            : {}),
+          ...(request.headers.authorization
+            ? { authorizationHeader: request.headers.authorization }
+            : {}),
+        })
+      ) {
+        response.writeHead(401, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "WWW-Authenticate": 'Bearer realm="Continuum Mission Control"',
+          "X-Content-Type-Options": "nosniff",
+        });
+        response.end(JSON.stringify({ error: "dashboard_access_required" }));
+        return;
+      }
       const [report, liveReport] = await Promise.all([
         runOpenTopicOfflineEvaluation(),
         readOpenTopicLiveEvalReport(
@@ -995,7 +946,7 @@ export const server = createServer(async (request, response) => {
         throw new Error("OPENAI_WEBHOOK_SECRET is required for the webhook.");
       }
 
-      const rawBody = await readBody(request);
+      const rawBody = await readRequestBody(request);
       const client = new OpenAI({
         apiKey,
         webhookSecret: environment.OPENAI_WEBHOOK_SECRET,
@@ -1207,9 +1158,16 @@ export const server = createServer(async (request, response) => {
     response.writeHead(404, { "Content-Type": "application/json" });
     response.end(JSON.stringify({ error: "Not found" }));
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    response.writeHead(400, { "Content-Type": "application/json" });
-    response.end(JSON.stringify({ error: message }));
+    console.error(
+      "Request failed:",
+      error instanceof Error ? error.name : "UnknownError",
+    );
+    response.writeHead(error instanceof RequestBodyTooLargeError ? 413 : 400, {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    response.end(JSON.stringify({ error: "request_failed" }));
   }
 });
 
@@ -1218,6 +1176,15 @@ server.listen(environment.PORT, environment.HOST, () => {
     `Continuum server listening on http://${environment.HOST}:${environment.PORT}`,
   );
 });
+
+if (environment.TWILIO_ACCOUNT_SID && environment.TWILIO_AUTH_TOKEN) {
+  void reconcileUnpricedCarrierReceipts().catch((error: unknown) =>
+    console.error(
+      "Carrier receipt startup reconciliation failed:",
+      error instanceof Error ? error.name : "UnknownError",
+    ),
+  );
+}
 
 if (environment.NOMAD_SMS_REMINDERS_ENABLED) {
   void processDueSmsReminders().catch((error: unknown) =>

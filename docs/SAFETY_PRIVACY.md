@@ -1,44 +1,96 @@
 # Safety and privacy boundary
 
-Continuum is a hackathon prototype, not an approved child deployment. Do not invite real children to use it until a qualified local reviewer has approved the curriculum, consent flow, emergency language, access controls, and retention policy for that deployment.
+Continuum is a hackathon prototype, not an approved child deployment. Public testing must use synthetic adult participants. Do not invite real children until a qualified local team has approved consent, language, retention, access, incident, and human-support procedures.
 
-## Before a supervised pilot
+## Current technical controls
 
-1. Obtain informed consent from the responsible adult or institution and age-appropriate assent from the learner.
-2. Explain that an AI system will process the learner's speech, produce tutoring responses, and save limited lesson progress.
-3. State who operates the phone number and server, who can view the dashboard, how long records are kept, and how deletion can be requested.
-4. Use a nickname or chosen first name, never a full legal name. Do not request an address, school identifier, account credential, parent contact, or other unnecessary personal data.
-5. Test the deployment's languages and local emergency wording with native speakers. Continuum does not infer a caller's language from their country.
-6. Keep the mission-control dashboard private and restrict it to authorized adults. Set `NOMAD_DASHBOARD_TOKEN` before any public tunnel and share it only through the documented URL fragment; the server refuses public-webhook startup without this control. Anonymized references reduce exposure but do not make conversation transcripts anonymous, and one shared judge token is not role-based institutional access control.
-7. Keep SMS homework, pause notices, progress summaries, and schedules disabled unless the caller or responsible adult explicitly consents to learning content appearing on that exact phone. Treat shared phones and lock-screen previews as disclosure risks; do not assume the learner is the sole recipient.
+- OpenAI and Twilio webhook signatures are verified before state changes.
+- Provider retries are idempotent; duplicate or stale events cannot advance a lesson twice.
+- The application stores a keyed phone hash, not the raw caller number.
+- Portable learner and guardian codes are one-way protected and rate-limited.
+- Pending callback destinations use authenticated encryption and are retained only as required for the job.
+- Likely email addresses, URLs, phone numbers, and explicit street-address phrases are redacted before model input and persistence.
+- OpenAI Responses requests use `store: false` and a one-way safety identifier.
+- Raw call audio is not recorded by Continuum. Twilio recording must remain disabled.
+- Model requests and Structured Outputs are Zod-validated; trusted semantic policy runs after schema validation.
+- Mission Control requires a strong token and returns anonymized learner references, not names, phone numbers, phone hashes, secrets, or hidden chain-of-thought.
+- Shared-phone learners have separate profiles. A caller is not greeted with another learner's name before identity is established.
+- SMS actions require a guardian code bound to the exact receiving phone. `MessageSid` idempotency prevents retry duplication.
+- One-time reminders require a separately confirmed proposal, authorization, quiet-hour checks, and can be cancelled by `STOP` before delivery.
+- Profile deletion uses a two-step confirmation and cancels future contact.
+
+Pattern redaction and token authentication are defense in depth, not guarantees. A single dashboard token is not role-based institutional access control.
+
+## Selective educational memory
 
 > Continuum remembers what helps a learner learn and forgets what it does not need.
 
-## Data currently stored
+The current application may retain:
 
-- A keyed HMAC of the caller number. The raw caller number is not written to SQLite.
-- The learner's chosen name or nickname so multiple learners can share a phone.
-- Curriculum concept, exact pending question, session status, diagnoses, strategy, evidence, language mode, model route, redacted learner text, and Continuum's spoken text. Raw call audio is not stored by Continuum, and the Twilio trunk is configured not to record calls.
-- Structured teaching feedback, homework status, review schedule, Curiosity Trails, and only those goals, interests, aspirations, examples, activities, pace, or grade details the learner explicitly approved for educational use.
-- Salted, one-way learner and guardian access-code records. Raw six-digit codes cannot be recovered from SQLite.
-- Missed-call callback destinations are stored only in an authenticated encrypted envelope while the job is pending. Logs and metric events use phone hashes rather than raw numbers.
-- At most one pack-reviewed generic physical anchor name per guided session, such as `paper` or `leaf`. Unreviewed model output, owners, brands, and locations are not accepted into this field.
-- Likely email addresses, links, long phone-like numbers, and explicit address phrases are redacted before model processing and persistence. Pattern redaction is defense in depth, not a guarantee that every possible identifier will be recognized.
+- Chosen first name or nickname and selected language.
+- Current topic, learning objective, and exact pending question.
+- Learner response after PII redaction.
+- Supported obstacle or misconception and its evidence basis.
+- Teaching methods attempted, learner feedback, hints, teach-back, transfer, reflection, and understanding state.
+- Explicitly approved example, activity, pace, or learning-goal preferences.
+- Authorization, idempotency receipts, provider usage, and de-identified reliability events.
 
-OpenAI Responses requests use `store: false` and a one-way safety identifier. The local SQLite database remains on the operator's machine. The application does not send live lesson content to web search.
+It does not intentionally retain:
 
-Optional Twilio messaging sends reviewed one-segment homework, pause notices, missed-lesson reminders, and requested guardian controls only to an authorized number. Homework replies use a short assignment code bound to that recipient and are MessageSid-idempotent. Sandbox and safety-forced endings do not issue homework. Twilio necessarily receives the destination, sender, and message body when messaging is enabled; provider-side records and retention must be included in the deployment's consent and deletion policy.
+- Raw call recordings or background audio.
+- Full legal identity, precise location, school identifier, credential, or account data.
+- Unnecessary personal stories or unrelated sensitive disclosures.
+- Inferred caste, religion, economic status, family profile, mental-health profile, or personality assessment.
+- Hidden model chain-of-thought.
+
+The SQLite schema still understands selected legacy fields so an existing database can migrate without data loss. Retired curriculum, placement, curiosity-mode, and recurring-schedule features are not reachable in the current runtime.
+
+## Safety and human-support behavior
+
+Learner text and speech are untrusted content. Prompt injection cannot change the schema, trusted stage, evidence type, authorization, or safety policy.
+
+- Benign requests enter open-topic teaching.
+- Ambiguous requests receive one clarifying question.
+- Current, disputed, or unverifiable claims require explicit uncertainty and cannot produce secure understanding.
+- Medical, legal, financial, crisis, abuse, immediate-danger, and operationally harmful requests receive a brief age-appropriate boundary and a suggestion to involve an appropriate trusted or qualified human.
+- Academic difficulty may suggest a teacher or guardian after several distinct methods fail, but it never silently reports the learner.
+- Continuum never presents itself as a friend, parent, therapist, romantic companion, only source of support, or replacement for a human teacher.
+- It rejects secrecy, exclusivity, dependency, shame, threats, comparisons, and career guarantees.
+
+The hackathon build selects and tests a structured human-support decision. It does not claim to operate a live escalation network or emergency service.
+
+## Shared-phone and SMS risks
+
+Authorization does not make a shared phone private. A recap, reminder, progress summary, or practice question may be visible in lock-screen previews or to another family member. Before enabling SMS:
+
+1. Obtain explicit permission for learning content on that exact number.
+2. Explain what message types can arrive and how to send `STOP`.
+3. Use short, neutral wording that avoids sensitive lesson details.
+4. Test deletion and consent revocation on the deployed revision.
+5. Include Twilio's provider-side records and retention in the privacy notice.
 
 ## Retention
 
-The prototype currently retains the local SQLite lesson database until the learner or guardian completes the two-step deletion control, or the operator deletes it. Deletion removes the learner profile and dependent educational state and cancels future schedules; minimal de-identified SMS processing receipts may retain the fact that a profile was deleted so provider retries remain idempotent. This is acceptable only for synthetic development data. Before any real pilot, configure and enforce a time-based retention period, provider deletion procedure, backup policy, and access audit appropriate to local law and institutional policy.
+The prototype retains its local SQLite database until an authorized deletion completes or the operator removes the synthetic environment. Minimal de-identified processing receipts may preserve that a deletion or provider event was handled so a retry remains idempotent.
 
-## Safety behavior
+This is acceptable only for synthetic development data. Before a real pilot, define and enforce:
 
-- Learner speech is treated as untrusted content and cannot override system instructions, the structured schema, or the frozen curriculum.
-- Benign off-topic requests are acknowledged briefly and redirected to the pending lesson question.
-- Unsafe, sexual, violent, illegal, self-harm, and immediate-danger content receives a short refusal and an age-appropriate trusted-adult or local-emergency redirect where relevant.
-- Repeated unsafe or prompt-injection turns end the lesson gracefully instead of consuming unlimited model or phone resources.
-- Academic struggle can suggest asking a guardian, teacher, or facilitator, but it never silently contacts another person. Immediate danger, high-stakes health/legal/crisis questions, and curriculum uncertainty use distinct structured decisions and deployment-specific human protocols.
-- Continuum may connect an approved aspiration to lesson relevance, but it may not infer aspirations, promise career outcomes, manufacture dependency, or present itself as a friend, parent, therapist, or replacement for a teacher.
-- These controls support supervised tutoring; they are not emergency services, content-moderation certification, or a substitute for a responsible adult.
+- A time-based retention schedule.
+- Backup encryption and deletion.
+- OpenAI and Twilio provider-data procedures.
+- Role-based access and audit logs.
+- Legal basis, consent withdrawal, export, correction, and deletion processes.
+- Incident response and breach notification.
+- Local child-safeguarding and mandatory-reporting responsibilities.
+
+## Before any supervised pilot
+
+1. Obtain informed guardian/institutional consent and age-appropriate learner assent.
+2. Explain AI processing, limited memory, SMS disclosure, cost, and human-support boundaries in the learner's language.
+3. Use a nickname, never require a legal identity.
+4. Test carrier speech, DTMF, accessibility, and safety wording with adult native speakers first.
+5. Establish qualified local safeguarding and escalation protocols.
+6. Configure sponsorship or toll-free access without claiming every call is free.
+7. Keep Mission Control private and replace the single-token prototype with appropriate roles.
+8. Complete legal, security, privacy, accessibility, and educational review.
+9. Measure access and learning honestly; do not generalize synthetic eval results to children or real outcomes.

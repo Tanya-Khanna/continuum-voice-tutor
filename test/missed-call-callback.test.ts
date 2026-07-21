@@ -11,7 +11,7 @@ import {
   callerNumberFromIncomingCall,
   durationFromIncomingCall,
   learnerIdFromIncomingCall,
-} from "../src/telephony/realtime-sip.js";
+} from "../src/telephony/sip.js";
 import {
   computeTwilioSignature,
   validateTwilioSignature,

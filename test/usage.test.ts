@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ResponseUsage } from "openai/resources/responses/responses";
-import { usageFromResponse } from "../src/engine/openai-teaching-engine.js";
+import { usageFromOpenTopicResponse } from "../src/engine/openai-open-topic-engine.js";
 import { estimateUsageCost } from "../src/observability/pricing.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 import { LearnerProfileSchema, LessonSessionSchema } from "../src/domain/learner.js";
@@ -8,7 +8,7 @@ import { StoredModelUsageSchema } from "../src/domain/usage.js";
 
 describe("model usage provenance", () => {
   it("normalizes Responses usage and prices cached text independently", () => {
-    const usage = usageFromResponse({
+    const usage = usageFromOpenTopicResponse({
       usage: {
         input_tokens: 1_000,
         input_tokens_details: { cached_tokens: 400, cache_write_tokens: 0 },
@@ -16,7 +16,6 @@ describe("model usage provenance", () => {
         output_tokens_details: { reasoning_tokens: 0 },
         total_tokens: 1_200,
       } satisfies ResponseUsage,
-      source: "responses_teaching",
       modelRoute: "gpt-5.6-luna",
       providerResponseId: "resp_123",
       latencyMs: 321.5,

@@ -12,7 +12,7 @@ npm ci
 npm run smoke:production
 ```
 
-The smoke command compiles `src` to `dist`, starts `node dist/server.js` with no
+The smoke command compiles `src` to `dist`, starts `node dist/start-production.js` with no
 local `.env`, and verifies health, Mission Control authentication, SQLite access,
 and ranged sample audio. It makes no OpenAI or Twilio request.
 
@@ -46,7 +46,7 @@ the image, repository, build arguments, or deploy logs.
 
 ## Persistent learner state
 
-The default `.data/nomad.db` path works in the container's writable application
+The default `.data/nomad.db` path is a compatibility identifier and works in the container's writable application
 directory, but container-local storage may disappear on redeploy. Attach one
 persistent disk and set:
 
@@ -72,7 +72,8 @@ Before connecting Twilio:
 
 1. Deploy a committed revision and record its commit hash.
 2. Confirm `GET https://<host>/health` returns `ok: true`,
-   `teachingEngine: openai`, and `realtimeConfigured: true` without credentials.
+   `teachingEngine: openai`, `experience: open_topic_teacher`,
+   `curriculumRequiredForCalls: false`, and `realtimeConfigured: true` without credentials.
 3. Open `https://<host>/dashboard#token=<judge-token>` and confirm the fragment
    disappears while Sessions remains accessible.
 4. Confirm the same dashboard URL without the token cannot read Sessions.
@@ -81,4 +82,5 @@ Before connecting Twilio:
 
 Do not set `NOMAD_OPENAI_WEBHOOK_PUBLIC=true` merely because the deployment is
 reachable. That flag attests that a valid signed incoming-call event was
-observed, which happens during the controlled 10/11 smoke call.
+observed, which happens during the single controlled smoke call when every
+other readiness check is green.

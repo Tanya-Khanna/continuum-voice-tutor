@@ -140,24 +140,6 @@ export const LearnerEducationProfileSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
-export const CuriosityTrailSchema = z.object({
-  id: z.string().min(1),
-  learnerId: z.string().min(1),
-  sessionId: z.string().min(1),
-  originalQuestion: z.string().trim().min(1).max(2_000),
-  summary: z.string().trim().min(1).max(1_000),
-  relatedQuestions: z.array(z.string().trim().min(1).max(300)).max(8),
-  flashcards: z.array(z.string().trim().min(1).max(300)).max(8),
-  suggestedNextCallAt: z.string().datetime().nullable(),
-  relatedCurriculumPackId: z.string().min(1).nullable(),
-  relatedConceptId: z.string().min(1).nullable(),
-  learnerApproved: z.boolean(),
-  safetyStatus: z.enum(["safe", "redirect"]),
-  certainty: z.enum(["low", "medium", "high"]),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
-
 export const PedagogyDecisionSchema = z.object({
   learnerId: z.string().min(1),
   sessionId: z.string().min(1),
@@ -322,5 +304,4 @@ export type LearningActivity = z.infer<typeof LearningActivitySchema>;
 export type LearningEvidence = z.infer<typeof LearningEvidenceSchema>;
 export type TeachingFeedback = z.infer<typeof TeachingFeedbackSchema>;
 export type LearnerEducationProfile = z.infer<typeof LearnerEducationProfileSchema>;
-export type CuriosityTrail = z.infer<typeof CuriosityTrailSchema>;
 export type PedagogyDecision = z.infer<typeof PedagogyDecisionSchema>;

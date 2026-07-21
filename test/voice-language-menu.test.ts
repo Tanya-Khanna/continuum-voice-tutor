@@ -3,9 +3,7 @@ import { DEFAULT_VOICE_LANGUAGE_MENU } from "../src/config/voice-language-menu.j
 import {
   buildVoiceLanguageMenuPrompt,
   languageOptionByKey,
-  transcriptSelectsDuration,
   transcriptSelectsLanguage,
-  transcriptSelectsSubject,
   VoiceLanguageMenuSchema,
 } from "../src/language/voice-language-menu.js";
 
@@ -43,52 +41,16 @@ describe("voice language menu", () => {
     expect(prompt).toContain("اردو کے لیے 9 دبائیں");
   });
 
-  it("matches explicit language, subject, and duration words across scripts", () => {
+  it("matches explicit language words across scripts", () => {
     const spanish = languageOptionByKey(DEFAULT_VOICE_LANGUAGE_MENU, "3")!;
-    const hindi = languageOptionByKey(DEFAULT_VOICE_LANGUAGE_MENU, "2")!;
-    const swahili = languageOptionByKey(DEFAULT_VOICE_LANGUAGE_MENU, "5")!;
 
     expect(transcriptSelectsLanguage("Quiero español", spanish)).toBe(true);
-    expect(
-      transcriptSelectsSubject({
-        transcript: "Quiero estudiar ciencias",
-        subject: "Science",
-        languageOption: spanish,
-      }),
-    ).toBe(true);
-    expect(
-      transcriptSelectsSubject({
-        transcript: "मुझे विज्ञान पढ़ना है",
-        subject: "Science",
-        languageOption: hindi,
-      }),
-    ).toBe(true);
-    expect(
-      transcriptSelectsSubject({
-        transcript: "Nataka sayansi",
-        subject: "Science",
-        languageOption: swahili,
-      }),
-    ).toBe(true);
-    expect(
-      transcriptSelectsDuration({
-        transcript: "cinco minutos",
-        duration: 5,
-        languageOption: spanish,
-      }),
-    ).toBe(true);
   });
 
-  it("never turns silence or unrelated speech into a subject selection", () => {
+  it("never turns silence or unrelated speech into a language selection", () => {
     const english = languageOptionByKey(DEFAULT_VOICE_LANGUAGE_MENU, "1")!;
     for (const transcript of ["", "   ", "background noise", "Daniel"]) {
-      expect(
-        transcriptSelectsSubject({
-          transcript,
-          subject: "Science",
-          languageOption: english,
-        }),
-      ).toBe(false);
+      expect(transcriptSelectsLanguage(transcript, english)).toBe(false);
     }
   });
 });

@@ -97,7 +97,7 @@ export const DASHBOARD_HTML = String.raw`<!doctype html>
     .sample-line:hover { background: var(--panel-2); }
     .sample-line.active { border-color: var(--lime); background: var(--panel-2); box-shadow: inset 3px 0 var(--lime); }
     .sample-speaker { color: var(--blue); text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
-    .sample-line[data-speaker="nomad"] .sample-speaker { color: var(--lime); }
+    .sample-line[data-speaker="continuum"] .sample-speaker { color: var(--lime); }
     .release-view { margin-top: 18px; }
     .metrics-view { margin-top: 18px; }
     .metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 22px; border-top: 1px solid var(--line); }

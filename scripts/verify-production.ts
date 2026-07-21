@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
-const temporaryRoot = mkdtempSync(join(tmpdir(), "nomad-production-smoke-"));
+const temporaryRoot = mkdtempSync(join(tmpdir(), "continuum-production-smoke-"));
 const dashboardToken = "production-smoke-dashboard-token";
 
 function buildProductionServer(): void {
@@ -46,8 +46,6 @@ function safeEnvironment(port: number): NodeJS.ProcessEnv {
     "TWILIO_ACCOUNT_SID",
     "TWILIO_AUTH_TOKEN",
     "TWILIO_PHONE_NUMBER",
-    "NOMAD_CURRICULUM_PATH",
-    "NOMAD_CURRICULUM_PATHS",
   ]) {
     delete environment[name];
   }
@@ -57,14 +55,13 @@ function safeEnvironment(port: number): NodeJS.ProcessEnv {
     TEACHING_ENGINE: "offline",
     HOST: "127.0.0.1",
     PORT: String(port),
-    NOMAD_DATABASE_PATH: join(temporaryRoot, "nomad.db"),
+    NOMAD_DATABASE_PATH: join(temporaryRoot, "continuum.db"),
     NOMAD_PHONE_HASH_SECRET: "production-smoke-only-secret",
     NOMAD_DASHBOARD_TOKEN: dashboardToken,
     NOMAD_MISSED_CALL_ENABLED: "false",
     NOMAD_SMS_CONTROLS_ENABLED: "false",
     NOMAD_SMS_REMINDERS_ENABLED: "false",
     NOMAD_SMS_RECAP_ENABLED: "false",
-    NOMAD_SCHEDULER_ENABLED: "false",
   };
 }
 
@@ -148,6 +145,7 @@ try {
   await expectStatus(`${baseUrl}/dashboard`, 200);
   await expectStatus(`${baseUrl}/api/dashboard/sessions`, 401);
   await expectStatus(`${baseUrl}/api/dashboard/readiness`, 401);
+  await expectStatus(`${baseUrl}/api/dashboard/evals`, 401);
   await expectStatus(`${baseUrl}/api/dashboard/sessions`, 200, {
     headers: { Authorization: `Bearer ${dashboardToken}` },
   });
@@ -156,6 +154,9 @@ try {
     200,
     { headers: { Authorization: `Bearer ${dashboardToken}` } },
   );
+  await expectStatus(`${baseUrl}/api/dashboard/evals`, 200, {
+    headers: { Authorization: `Bearer ${dashboardToken}` },
+  });
   const serializedReadiness = JSON.stringify(await readiness.json());
   for (const sensitiveValue of [
     dashboardToken,
@@ -178,7 +179,7 @@ try {
   }
 
   console.log(
-    "Production smoke passed: compiled pack-free open-topic server, health, dashboard auth, release readiness, SQLite access, and ranged sample audio are deployable without local secrets.",
+    "Production smoke passed: compiled open-topic server, health, dashboard auth, release readiness, SQLite access, and ranged sample audio are deployable without local secrets or curriculum files.",
   );
 } finally {
   if (productionServer) await stopServer(productionServer);

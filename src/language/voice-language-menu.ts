@@ -21,16 +21,6 @@ export const VoiceLanguageOptionSchema = z.object({
   identityPrompt: z.string().trim().min(1).max(240),
   languageAliases: z.array(z.string().trim().min(1).max(80)).min(1),
   noLearnerCodeAliases: z.array(z.string().trim().min(1).max(120)).min(1),
-  subjectAliases: z.record(
-    z.string().trim().min(1).max(80),
-    z.array(z.string().trim().min(1).max(80)).min(1),
-  ),
-  curiosityAliases: z.array(z.string().trim().min(1).max(80)).min(1),
-  durationAliases: z.object({
-    3: z.array(z.string().trim().min(1).max(40)).min(1),
-    5: z.array(z.string().trim().min(1).max(40)).min(1),
-    10: z.array(z.string().trim().min(1).max(40)).min(1),
-  }),
 });
 
 export const VoiceLanguageMenuSchema = z
@@ -138,42 +128,6 @@ export function transcriptContainsLearnerCode(
   learnerCode: string,
 ): boolean {
   return transcript.replace(/\D/gu, "") === learnerCode;
-}
-
-export function transcriptSelectsSubject(options: {
-  transcript: string;
-  subject: string;
-  languageOption?: VoiceLanguageOption;
-}): boolean {
-  const aliases = options.languageOption?.subjectAliases[options.subject] ?? [
-    options.subject,
-  ];
-  return includesAlias(options.transcript, [options.subject, ...aliases]);
-}
-
-export function transcriptSelectsCuriosity(
-  transcript: string,
-  languageOption?: VoiceLanguageOption,
-): boolean {
-  return includesAlias(
-    transcript,
-    languageOption?.curiosityAliases ?? [
-      "curious sandbox",
-      "ask anything",
-      "curious",
-    ],
-  );
-}
-
-export function transcriptSelectsDuration(options: {
-  transcript: string;
-  duration: 3 | 5 | 10;
-  languageOption?: VoiceLanguageOption;
-}): boolean {
-  const aliases = options.languageOption?.durationAliases[options.duration] ?? [
-    String(options.duration),
-  ];
-  return includesAlias(options.transcript, [String(options.duration), ...aliases]);
 }
 
 export function hasMeaningfulTranscript(transcript: string): boolean {

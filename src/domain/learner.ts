@@ -7,9 +7,7 @@ import {
   PersistedTeachingTurnSchema,
 } from "./teaching.js";
 import type { StoredModelUsage } from "./usage.js";
-import type { StoredSandboxTurn } from "./sandbox.js";
 import type {
-  CuriosityTrail,
   LearnerEducationProfile,
   LearningEvidence,
   PedagogyDecision,
@@ -109,8 +107,6 @@ export interface LearningRepository {
   saveLesson(session: LessonSession): void;
   appendTurn(storedTurn: StoredTeachingTurn): void;
   listTurns(sessionId: string): StoredTeachingTurn[];
-  appendSandboxTurn(storedTurn: StoredSandboxTurn): void;
-  listSandboxTurns(sessionId: string): StoredSandboxTurn[];
   appendUsage(usage: StoredModelUsage): void;
   listUsage(sessionId: string): StoredModelUsage[];
   listAllUsage(limit?: number): StoredModelUsage[];
@@ -122,8 +118,6 @@ export interface LearningRepository {
   listPedagogyDecisions(sessionId: string): PedagogyDecision[];
   saveEducationProfile(profile: LearnerEducationProfile): void;
   findEducationProfile(learnerId: string): LearnerEducationProfile | undefined;
-  saveCuriosityTrail(trail: CuriosityTrail): void;
-  listCuriosityTrails(learnerId: string): CuriosityTrail[];
   saveLearnerAccessCode(record: LearnerAccessCode): void;
   findLearnerAccessCode(learnerId: string): LearnerAccessCode | undefined;
   findLearnerAccessCodeByFingerprint(
@@ -162,12 +156,6 @@ export interface LearningRepository {
   ): GuardianAuthorization | undefined;
   saveStudyPlan(plan: StudyPlan): void;
   findStudyPlan(learnerId: string): StudyPlan | undefined;
-  claimDueStudyPlans(options: {
-    now: string;
-    claimToken: string;
-    claimExpiresAt: string;
-    limit: number;
-  }): StudyPlan[];
   reserveSmsMessage(messageSid: string, createdAt: string): boolean;
   completeSmsMessage(receipt: SmsReceipt): void;
   findSmsReceipt(messageSid: string): SmsReceipt | undefined;

@@ -91,7 +91,7 @@ check(
 check(
   "open_topic_product_contract",
   "pass",
-  "The release product is language, identity, and one open learning question; curriculum packs are historical audit artifacts, not a runtime gate.",
+  "The release product is language, identity, and one open learning question with no curriculum runtime dependency.",
 );
 
 let environment: ReturnType<typeof loadEnvironment> | undefined;
@@ -173,8 +173,8 @@ if (publicBaseUrl) {
       "production_health",
       healthy ? "pass" : "open",
       healthy
-        ? "Production reports the live pack-free open-topic OpenAI/Realtime experience."
-        : "Production health does not report the live pack-free OpenAI/Realtime experience.",
+        ? "Production reports the live curriculum-independent open-topic OpenAI/Realtime experience."
+        : "Production health does not report the live curriculum-independent OpenAI/Realtime experience.",
     );
     const access = health.accessFeatures ?? {};
     const accessFlags = [
@@ -211,13 +211,12 @@ if (publicBaseUrl) {
         environment.NOMAD_SMS_CONTROLS_ENABLED,
         environment.NOMAD_SMS_REMINDERS_ENABLED,
         environment.NOMAD_SMS_RECAP_ENABLED,
-        !environment.NOMAD_SCHEDULER_ENABLED,
       ]
     : [];
   check(
     "access_features_enabled",
-    accessFlags.length === 5 && accessFlags.every(Boolean) ? "pass" : "open",
-    `${accessFlags.filter(Boolean).length}/5 local callback, bounded SMS, one-time reminder, recap, and scheduler-disabled invariants pass.`,
+    accessFlags.length === 4 && accessFlags.every(Boolean) ? "pass" : "open",
+    `${accessFlags.filter(Boolean).length}/4 local callback, bounded SMS, one-time reminder, and recap features are enabled.`,
   );
 }
 

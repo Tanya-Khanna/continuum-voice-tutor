@@ -106,8 +106,8 @@ Messaging webhook (HTTP POST): https://YOUR_HOST/webhooks/twilio/sms
 
 Remove the number from the Elastic SIP trunk before setting the Voice webhook;
 the trunk itself and its OpenAI origination URI may remain configured. Direct
-answered inbound tutoring is disabled in this mode. Outbound callback and
-scheduled calls use the Programmable Voice Calls API and inline `<Dial><Sip>`
+answered inbound tutoring is disabled in this mode. Outbound callbacks use the
+Programmable Voice Calls API and inline `<Dial><Sip>`
 TwiML, so the same owned number can remain their caller ID.
 
 Enable these only after the public deployment is healthy and the two webhook
@@ -119,7 +119,6 @@ NOMAD_MISSED_CALL_ADULT_DEMO=true
 NOMAD_SMS_CONTROLS_ENABLED=true
 NOMAD_SMS_RECAP_ENABLED=true
 NOMAD_SMS_REMINDERS_ENABLED=true
-NOMAD_SCHEDULER_ENABLED=false
 ```
 
 The adult-demo switch creates a private hackathon test surface for adult judges
@@ -209,8 +208,8 @@ On real calls, record the deployed commit and verify:
   trusted phase, policy checks, evidence, and usage recorded.
 
 Publish the number or record the final live-call demo only after these checks
-pass. Use the exact ordered matrix and private release receipt in
-`docs/FINAL_ACCEPTANCE_RUNBOOK.md`. A local REPL, browser audio, or successful
+pass. Record the deployed commit and results in a private release receipt based
+on `submission/release-input.example.json`; do not commit the completed copy. A local REPL, browser audio, or successful
 11/11 configuration is not a substitute for carrier proof.
 
 ## Troubleshooting

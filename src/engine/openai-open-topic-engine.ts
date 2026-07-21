@@ -13,8 +13,10 @@ import {
 } from "../domain/open-topic.js";
 import { assertSafeEducationalMotivation } from "../domain/classroom.js";
 import type { ModelUsage } from "../domain/usage.js";
-import type { ModelResult } from "./teaching-engine.js";
-import type { OpenTopicTeachingEngine } from "./open-topic-engine.js";
+import type {
+  ModelResult,
+  OpenTopicTeachingEngine,
+} from "./open-topic-engine.js";
 
 const OPEN_TOPIC_TEACHER_INSTRUCTIONS = `You are the pedagogical reasoning layer for Continuum, a patient teacher reached through an ordinary phone call.
 The learner may ask to learn any safe topic. There is no subject menu, fixed curriculum, grade placement, Guided mode, or Curious Sandbox. Build a small learning plan for the learner's actual words.
@@ -67,7 +69,7 @@ function safetyIdentifier(learnerId: string): string {
   return createHash("sha256").update(learnerId).digest("hex");
 }
 
-function usageFromResponse(options: {
+export function usageFromOpenTopicResponse(options: {
   usage: ResponseUsage;
   modelRoute: string;
   providerResponseId: string;
@@ -170,7 +172,7 @@ export class OpenAIOpenTopicEngine implements OpenTopicTeachingEngine {
         );
       }
       const usage = response.usage
-        ? usageFromResponse({
+        ? usageFromOpenTopicResponse({
             usage: response.usage,
             modelRoute: this.#model,
             providerResponseId: response.id,

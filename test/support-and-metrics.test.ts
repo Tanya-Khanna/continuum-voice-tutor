@@ -1,22 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 import { humanSupportDecisionFor } from "../src/domain/classroom.js";
-import { EducatorAssignmentSchema } from "../src/domain/educator.js";
 import { ProductMetricEventSchema } from "../src/domain/product-metrics.js";
 import {
   LearningEvidenceSchema,
   TeachingFeedbackSchema,
 } from "../src/domain/classroom.js";
 import { StoredModelUsageSchema } from "../src/domain/usage.js";
-import { EducatorSummaryService } from "../src/educator/educator-summary-service.js";
-import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js";
-import { LessonService } from "../src/lesson/lesson-service.js";
+import { OfflineOpenTopicEngine } from "../src/engine/offline-open-topic-engine.js";
+import { OpenTopicLessonService } from "../src/lesson/open-topic-lesson-service.js";
+import { OPEN_TOPIC_NAMESPACE } from "../src/domain/open-topic.js";
 import { buildProductMetrics } from "../src/observability/product-metrics.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 
 const SECRET = "support-metrics-test-secret";
 
-describe("human support, educator boundary, and product proof", () => {
+describe("human support and product proof", () => {
   it("separates ordinary struggle from safety and qualified review", () => {
     expect(
       humanSupportDecisionFor({
@@ -47,67 +45,19 @@ describe("human support, educator boundary, and product proof", () => {
     ).toBe("safety_protocol");
   });
 
-  it("builds an authorized educator summary without raw conversations", async () => {
-    const repository = new SqliteLearningRepository(":memory:");
-    const lessons = new LessonService({
-      repository,
-      engine: new OfflineTeachingEngine(fractionsPack),
-      phoneHashSecret: SECRET,
-      curriculumPack: fractionsPack,
-    });
-    const context = lessons.beginOrResume({
-      phoneNumber: "+919999900001",
-      learnerName: "Meena",
-    });
-    await lessons.respond(
-      context,
-      "One fourth is bigger because four is bigger than three.",
-    );
-    const assignment = EducatorAssignmentSchema.parse({
-      id: "assignment-1",
-      learnerId: context.learner.id,
-      educatorId: "facilitator-1",
-      curriculumPackId: fractionsPack.id,
-      conceptId: context.session.concept,
-      learnerAuthorized: true,
-      guardianAuthorized: true,
-      authorizationExpiresAt: null,
-      createdAt: "2026-07-18T12:00:00.000Z",
-    });
-    const summary = new EducatorSummaryService({
-      repository,
-      clock: () => new Date("2026-07-18T12:05:00.000Z"),
-    }).build(assignment, "Math");
-    expect(summary).toMatchObject({
-      displayName: "Meena",
-      assignedSubject: "Math",
-      excludesRawConversations: true,
-    });
-    expect(JSON.stringify(summary)).not.toContain(
-      "One fourth is bigger because four is bigger than three.",
-    );
-    expect(() =>
-      new EducatorSummaryService({ repository }).build(
-        { ...assignment, guardianAuthorized: false },
-        "Math",
-      ),
-    ).toThrow(/authorization/);
-    repository.close();
-  });
-
   it("separates access, reliability, and learning metrics with evidence labels", () => {
     const repository = new SqliteLearningRepository(":memory:");
     const now = "2026-07-18T12:00:00.000Z";
-    const lessons = new LessonService({
+    const lessons = new OpenTopicLessonService({
       repository,
-      engine: new OfflineTeachingEngine(fractionsPack),
+      engine: new OfflineOpenTopicEngine(),
       phoneHashSecret: SECRET,
-      curriculumPack: fractionsPack,
     });
-    const context = lessons.beginOrResume({
+    const learner = lessons.identifyLearner({
       phoneNumber: "+919999900009",
       learnerName: "Metric Learner",
     });
+    const context = lessons.beginOrResumeLearner(learner, "missed_call");
     for (const [index, name] of [
       "missed_call_queued",
       "callback_placed",
@@ -206,7 +156,7 @@ describe("human support, educator boundary, and product proof", () => {
           id,
           learnerId: context.learner.id,
           sessionId: context.session.id,
-          curriculumPackId: fractionsPack.id,
+          curriculumPackId: OPEN_TOPIC_NAMESPACE,
           concept: context.session.concept,
           activityId: `${id}-activity`,
           kind,
@@ -225,7 +175,7 @@ describe("human support, educator boundary, and product proof", () => {
         id: "helpful-feedback",
         learnerId: context.learner.id,
         sessionId: context.session.id,
-        subject: fractionsPack.deployment.subject,
+        subject: "Open learning",
         strategy: "concrete_analogy",
         helpfulness: "helpful",
         pace: "right",

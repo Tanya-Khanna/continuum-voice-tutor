@@ -1,19 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { fractionsPack } from "../src/curriculum/fractions.pack.js";
 import { PortableIdentityService } from "../src/domain/portable-identity.js";
-import { OfflineTeachingEngine } from "../src/engine/offline-teaching-engine.js";
-import { LessonService } from "../src/lesson/lesson-service.js";
+import { OfflineOpenTopicEngine } from "../src/engine/offline-open-topic-engine.js";
+import { OpenTopicLessonService } from "../src/lesson/open-topic-lesson-service.js";
 import { SqliteLearningRepository } from "../src/persistence/sqlite-learning-repository.js";
 
 const SECRET = "portable-identity-test-secret";
 
 function setup() {
   const repository = new SqliteLearningRepository(":memory:");
-  const lessons = new LessonService({
+  const lessons = new OpenTopicLessonService({
     repository,
-    engine: new OfflineTeachingEngine(fractionsPack),
+    engine: new OfflineOpenTopicEngine(),
     phoneHashSecret: SECRET,
-    curriculumPack: fractionsPack,
   });
   const learner = lessons.identifyLearner({
     phoneNumber: "+91 99999 11111",
@@ -33,7 +31,7 @@ function setup() {
 describe("PortableIdentityService", () => {
   it("resolves a learner from another phone without storing the raw code", () => {
     const { repository, learner, identity, lessons } = setup();
-    lessons.beginOrResumeSubject(learner);
+    lessons.beginOrResumeLearner(learner);
     const code = identity.issue(learner.id);
 
     expect(code).toBe("482913");

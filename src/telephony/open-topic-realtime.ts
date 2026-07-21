@@ -3,7 +3,7 @@ import {
   RealtimeAcceptPayloadSchema,
   type RealtimeAcceptPayload,
   type RealtimeTurnDetection,
-} from "./realtime-sip.js";
+} from "./sip.js";
 
 export const OPEN_TOPIC_REALTIME_TOOLS = [
   {

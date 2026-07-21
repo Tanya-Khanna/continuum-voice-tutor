@@ -7,8 +7,6 @@ describe("environment configuration", () => {
     expect(environment.TEACHING_ENGINE).toBe("offline");
     expect(environment.HOST).toBe("0.0.0.0");
     expect(environment.OPENAI_TEXT_MODEL).toBe("gpt-5.6-luna");
-    expect(environment.OPENAI_COMPILER_MODEL).toBe("gpt-5.6-terra");
-    expect(environment.OPENAI_VERIFIER_MODEL).toBe("gpt-5.6-terra");
     expect(environment.OPENAI_REALTIME_MODEL).toBe(
       "gpt-realtime-2.1-mini",
     );
@@ -20,7 +18,6 @@ describe("environment configuration", () => {
     expect(environment.NOMAD_MAX_CALLS_PER_HOUR).toBe(6);
     expect(environment.NOMAD_SMS_RECAP_ENABLED).toBe(false);
     expect(environment.NOMAD_PUBLIC_PHONE_ENABLED).toBe(false);
-    expect(environment.NOMAD_CURRICULUM_PATHS).toBeUndefined();
     expect(environment.NOMAD_DASHBOARD_TOKEN).toBeUndefined();
   });
 
@@ -38,23 +35,6 @@ describe("environment configuration", () => {
         NOMAD_DASHBOARD_TOKEN: "judge-dashboard-token-123456789",
       }).NOMAD_DASHBOARD_TOKEN,
     ).toBe("judge-dashboard-token-123456789");
-  });
-
-  it("parses an ordered multi-pack path list and rejects conflicting config", () => {
-    expect(
-      loadEnvironment({
-        NOMAD_CURRICULUM_PATHS: '["packs/math.json","packs/science.json"]',
-      }).NOMAD_CURRICULUM_PATHS,
-    ).toEqual(["packs/math.json", "packs/science.json"]);
-    expect(() =>
-      loadEnvironment({
-        NOMAD_CURRICULUM_PATH: "packs/math.json",
-        NOMAD_CURRICULUM_PATHS: '["packs/science.json"]',
-      }),
-    ).toThrow(/not both/u);
-    expect(() =>
-      loadEnvironment({ NOMAD_CURRICULUM_PATHS: "math.json,science.json" }),
-    ).toThrow();
   });
 
   it("parses an explicit SMS recap opt-in without treating false as truthy", () => {

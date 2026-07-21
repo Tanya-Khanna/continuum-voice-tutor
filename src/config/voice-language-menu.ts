@@ -1,19 +1,5 @@
 import { VoiceLanguageMenuSchema } from "../language/voice-language-menu.js";
 
-const sharedSubjects = {
-  Math: ["math"],
-  Science: ["science"],
-  English: ["english"],
-  History: ["history"],
-  Geography: ["geography"],
-};
-
-const sharedDurations = {
-  3: ["three", "3 minutes"],
-  5: ["five", "5 minutes"],
-  10: ["ten", "10 minutes"],
-};
-
 // This is the India flagship entrypoint default, not a core language boundary.
 // Another deployment can replace the injected menu without changing teaching,
 // persistence, curriculum, or telephony state-machine code.
@@ -26,9 +12,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Welcome to Continuum. What name would you like me to use for you?",
     languageAliases: ["English"],
     noLearnerCodeAliases: ["no", "no code", "i do not have a code", "i don't have a code"],
-    subjectAliases: sharedSubjects,
-    curiosityAliases: ["curious sandbox", "ask anything", "curious"],
-    durationAliases: sharedDurations,
   },
   {
     key: "2",
@@ -38,19 +21,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "कॉन्टिन्यूअम में आपका स्वागत है। मैं आपको किस नाम से बुलाऊँ?",
     languageAliases: ["Hindi", "हिंदी", "हिन्दी"],
     noLearnerCodeAliases: ["नहीं", "नही", "कोड नहीं", "मेरे पास कोड नहीं", "no"],
-    subjectAliases: {
-      Math: ["गणित", "math"],
-      Science: ["विज्ञान", "science"],
-      English: ["अंग्रेज़ी", "अंग्रेजी", "english"],
-      History: ["इतिहास", "history"],
-      Geography: ["भूगोल", "geography"],
-    },
-    curiosityAliases: ["कुछ भी पूछना", "सवाल पूछना", "curious sandbox"],
-    durationAliases: {
-      3: ["तीन", "3 मिनट"],
-      5: ["पाँच", "पांच", "5 मिनट"],
-      10: ["दस", "10 मिनट"],
-    },
   },
   {
     key: "3",
@@ -60,19 +30,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Bienvenido a Continuum. ¿Qué nombre quieres que use para ti?",
     languageAliases: ["Spanish", "español", "espanol"],
     noLearnerCodeAliases: ["no", "no tengo código", "no tengo codigo", "sin código", "sin codigo"],
-    subjectAliases: {
-      Math: ["matemáticas", "matematicas"],
-      Science: ["ciencias", "ciencia"],
-      English: ["inglés", "ingles"],
-      History: ["historia"],
-      Geography: ["geografía", "geografia"],
-    },
-    curiosityAliases: ["preguntar cualquier cosa", "modo curioso", "curious sandbox"],
-    durationAliases: {
-      3: ["tres", "3 minutos"],
-      5: ["cinco", "5 minutos"],
-      10: ["diez", "10 minutos"],
-    },
   },
   {
     key: "4",
@@ -82,19 +39,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Bienvenue sur Continuum. Quel nom veux-tu que j'utilise?",
     languageAliases: ["French", "français", "francais"],
     noLearnerCodeAliases: ["non", "je n'ai pas de code", "pas de code"],
-    subjectAliases: {
-      Math: ["mathématiques", "mathematiques", "maths"],
-      Science: ["sciences"],
-      English: ["anglais"],
-      History: ["histoire"],
-      Geography: ["géographie", "geographie"],
-    },
-    curiosityAliases: ["poser une question", "mode curiosité", "curious sandbox"],
-    durationAliases: {
-      3: ["trois", "3 minutes"],
-      5: ["cinq", "5 minutes"],
-      10: ["dix", "10 minutes"],
-    },
   },
   {
     key: "5",
@@ -104,19 +48,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Karibu Continuum. Ungependa nikuitaje?",
     languageAliases: ["Swahili", "Kiswahili"],
     noLearnerCodeAliases: ["hapana", "sina msimbo", "sina nambari", "sina code", "no"],
-    subjectAliases: {
-      Math: ["hisabati"],
-      Science: ["sayansi"],
-      English: ["kiingereza"],
-      History: ["historia"],
-      Geography: ["jiografia"],
-    },
-    curiosityAliases: ["uliza chochote", "hali ya udadisi", "curious sandbox"],
-    durationAliases: {
-      3: ["tatu", "dakika 3"],
-      5: ["tano", "dakika 5"],
-      10: ["kumi", "dakika 10"],
-    },
   },
   {
     key: "6",
@@ -126,19 +57,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Continuum-க்கு வரவேற்கிறோம். உங்களை எந்தப் பெயரில் அழைக்கலாம்?",
     languageAliases: ["Tamil", "தமிழ்"],
     noLearnerCodeAliases: ["இல்லை", "குறியீடு இல்லை", "கோடு இல்லை", "no"],
-    subjectAliases: {
-      Math: ["கணிதம்"],
-      Science: ["அறிவியல்"],
-      English: ["ஆங்கிலம்"],
-      History: ["வரலாறு"],
-      Geography: ["புவியியல்"],
-    },
-    curiosityAliases: ["எதையும் கேட்க", "ஆர்வம்", "curious sandbox"],
-    durationAliases: {
-      3: ["மூன்று", "3 நிமிடம்"],
-      5: ["ஐந்து", "5 நிமிடம்"],
-      10: ["பத்து", "10 நிமிடம்"],
-    },
   },
   {
     key: "7",
@@ -148,19 +66,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Continuum-এ স্বাগতম। আমি তোমাকে কোন নামে ডাকব?",
     languageAliases: ["Bengali", "Bangla", "বাংলা"],
     noLearnerCodeAliases: ["না", "কোড নেই", "no"],
-    subjectAliases: {
-      Math: ["গণিত"],
-      Science: ["বিজ্ঞান"],
-      English: ["ইংরেজি"],
-      History: ["ইতিহাস"],
-      Geography: ["ভূগোল"],
-    },
-    curiosityAliases: ["যেকোনো প্রশ্ন", "কৌতূহল", "curious sandbox"],
-    durationAliases: {
-      3: ["তিন", "3 মিনিট"],
-      5: ["পাঁচ", "5 মিনিট"],
-      10: ["দশ", "10 মিনিট"],
-    },
   },
   {
     key: "8",
@@ -170,19 +75,6 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "مرحبًا بك في Continuum. ما الاسم الذي تريدني أن أناديك به؟",
     languageAliases: ["Arabic", "العربية", "عربي"],
     noLearnerCodeAliases: ["لا", "ليس لدي رمز", "ما عندي رمز", "no"],
-    subjectAliases: {
-      Math: ["الرياضيات"],
-      Science: ["العلوم"],
-      English: ["الإنجليزية", "الانجليزية"],
-      History: ["التاريخ"],
-      Geography: ["الجغرافيا"],
-    },
-    curiosityAliases: ["اسأل أي شيء", "فضول", "curious sandbox"],
-    durationAliases: {
-      3: ["ثلاث", "3 دقائق"],
-      5: ["خمس", "5 دقائق"],
-      10: ["عشر", "10 دقائق"],
-    },
   },
   {
     key: "9",
@@ -192,18 +84,5 @@ export const DEFAULT_VOICE_LANGUAGE_MENU = VoiceLanguageMenuSchema.parse([
     identityPrompt: "Continuum میں خوش آمدید۔ میں آپ کو کس نام سے پکاروں؟",
     languageAliases: ["Urdu", "اردو"],
     noLearnerCodeAliases: ["نہیں", "کوڈ نہیں", "میرے پاس کوڈ نہیں", "no"],
-    subjectAliases: {
-      Math: ["ریاضی"],
-      Science: ["سائنس"],
-      English: ["انگریزی"],
-      History: ["تاریخ"],
-      Geography: ["جغرافیہ"],
-    },
-    curiosityAliases: ["کچھ بھی پوچھیں", "تجسس", "curious sandbox"],
-    durationAliases: {
-      3: ["تین", "3 منٹ"],
-      5: ["پانچ", "5 منٹ"],
-      10: ["دس", "10 منٹ"],
-    },
   },
 ]);

@@ -15,7 +15,9 @@ if (backend !== "system" && !apiKey) {
 const outputPath = resolve(
   "public/samples/sample-universal-code-switch.mp3",
 );
-const temporaryDirectory = mkdtempSync(join(tmpdir(), "nomad-sample-audio-"));
+const temporaryDirectory = mkdtempSync(
+  join(tmpdir(), "continuum-sample-audio-"),
+);
 const gapSeconds = 0.45;
 const client = new OpenAI({ apiKey: apiKey ?? "unused-system-backend" });
 
@@ -33,7 +35,7 @@ try {
           "-v",
           segment.systemVoice,
           "-r",
-          segment.speaker === "nomad" ? "158" : "170",
+          segment.speaker === "continuum" ? "158" : "170",
           "-o",
           segmentPath,
           segment.text,
@@ -46,7 +48,7 @@ try {
         voice: segment.openaiVoice,
         input: segment.text,
         response_format: "wav",
-        speed: segment.speaker === "nomad" ? 0.92 : 1,
+        speed: segment.speaker === "continuum" ? 0.92 : 1,
       });
       writeFileSync(segmentPath, Buffer.from(await speech.arrayBuffer()));
     }

@@ -1,6 +1,12 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const repositoryRootResult = spawnSync(
@@ -12,7 +18,7 @@ if (repositoryRootResult.status !== 0) {
   throw new Error("verify:fresh must run inside a Git repository.");
 }
 const repositoryRoot = repositoryRootResult.stdout.trim();
-const freshRoot = mkdtempSync(join(tmpdir(), "nomad-fresh-clone-"));
+const freshRoot = mkdtempSync(join(tmpdir(), "continuum-fresh-clone-"));
 
 function run(
   command: string,
@@ -55,27 +61,39 @@ function runCapture(
 }
 
 try {
-  const archive = spawnSync(
+  const listedFiles = spawnSync(
     "git",
-    ["-C", repositoryRoot, "archive", "--format=tar", "HEAD"],
-    { maxBuffer: 100 * 1024 * 1024 },
+    [
+      "-C",
+      repositoryRoot,
+      "ls-files",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "-z",
+    ],
+    { encoding: "utf8", maxBuffer: 100 * 1024 * 1024 },
   );
-  if (archive.error) throw archive.error;
-  if (archive.status !== 0 || !archive.stdout) {
-    throw new Error("Could not archive the committed repository state.");
+  if (listedFiles.error) throw listedFiles.error;
+  if (listedFiles.status !== 0) {
+    throw new Error("Could not list the proposed public repository state.");
   }
-  const extract = spawnSync("tar", ["-xf", "-", "-C", freshRoot], {
-    input: archive.stdout,
-    maxBuffer: 100 * 1024 * 1024,
-  });
-  if (extract.error) throw extract.error;
-  if (extract.status !== 0) throw new Error("Could not extract Git archive.");
+  for (const relativePath of listedFiles.stdout.split("\0").filter(Boolean)) {
+    const source = join(repositoryRoot, relativePath);
+    if (!existsSync(source)) continue;
+    const destination = join(freshRoot, relativePath);
+    mkdirSync(dirname(destination), { recursive: true });
+    copyFileSync(source, destination);
+  }
 
   for (const forbiddenPath of [".env", ".data", "node_modules", "dist"]) {
     if (existsSync(join(freshRoot, forbiddenPath))) {
       throw new Error(`Fresh archive unexpectedly contains ${forbiddenPath}.`);
     }
   }
+
+  run("git", ["init", "-q"]);
+  run("git", ["add", "-A"]);
 
   const cleanEnvironment = { ...process.env };
   for (const name of [
@@ -85,8 +103,6 @@ try {
     "TWILIO_ACCOUNT_SID",
     "TWILIO_AUTH_TOKEN",
     "TWILIO_PHONE_NUMBER",
-    "NOMAD_CURRICULUM_PATH",
-    "NOMAD_CURRICULUM_PATHS",
   ]) {
     delete cleanEnvironment[name];
   }
@@ -96,9 +112,7 @@ try {
     "fresh-clone-verification-only";
 
   run("npm", ["ci"], { environment: cleanEnvironment });
-  run("npm", ["run", "smoke:production"], { environment: cleanEnvironment });
-  run("npm", ["run", "check"], { environment: cleanEnvironment });
-  run("npm", ["run", "eval"], { environment: cleanEnvironment });
+  run("npm", ["run", "verify"], { environment: cleanEnvironment });
   const seedOutput = runCapture("npm", ["run", "seed:demo"], {
     environment: cleanEnvironment,
   });
@@ -135,7 +149,7 @@ try {
   }
 
   console.log(
-    "\nFresh-clone gate passed: lockfile install, pack-free production smoke, tests, v7 deterministic eval, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
+    "\nFresh-clone gate passed: lockfile install, formatting hygiene, lint, tests, deterministic eval, production build/smoke, sample-state seed, and exact offline resume all succeeded without local secrets or prior state.",
   );
 } finally {
   rmSync(freshRoot, { recursive: true, force: true });

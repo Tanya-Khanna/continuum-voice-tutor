@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import type { CurriculumPack } from "../curriculum/schema.js";
 import type { LearningRepository } from "../domain/learner.js";
 import { OPEN_TOPIC_NAMESPACE } from "../domain/open-topic.js";
 import { estimateUsageCost } from "./pricing.js";
@@ -92,41 +91,21 @@ function learnerReference(learnerId: string): string {
 
 export function buildDashboardSnapshot(options: {
   repository: LearningRepository;
-  curriculumPack?: CurriculumPack;
-  curriculumPacks?: readonly CurriculumPack[];
   limit?: number;
   now?: Date;
 }): DashboardSnapshot {
-  const packs =
-    options.curriculumPacks ??
-    (options.curriculumPack ? [options.curriculumPack] : []);
-  const packsById = new Map(packs.map((pack) => [pack.id, pack]));
-  const defaultPack = packs[0];
   const sessions = options.repository
     .listRecentLessons(options.limit ?? 20)
+    .filter((session) => session.curriculumPackId === OPEN_TOPIC_NAMESPACE)
     .map((session) => {
       const learner = options.repository.findLearner(session.learnerId);
       if (!learner) {
         throw new Error(`Learner ${session.learnerId} is missing.`);
       }
-      const isOpenTopic = session.curriculumPackId === OPEN_TOPIC_NAMESPACE;
-      const curriculumPack = isOpenTopic
-        ? undefined
-        : session.curriculumPackId === "legacy"
-          ? defaultPack
-          : packsById.get(session.curriculumPackId);
-      if (!isOpenTopic && !curriculumPack) {
-        throw new Error(
-          `Curriculum pack ${session.curriculumPackId} is missing from the dashboard catalog.`,
-        );
-      }
-      const conceptTitle = isOpenTopic
-        ? session.concept === "open-topic"
+      const conceptTitle =
+        session.concept === "open-topic"
           ? "Awaiting learner topic"
-          : session.concept
-        : curriculumPack!.concepts.find(
-          (concept) => concept.id === session.concept,
-        )?.title ?? session.concept;
+          : session.concept;
       const usageRecords = options.repository.listUsage(session.id);
       const estimates = usageRecords.map(estimateUsageCost);
       const unpricedModels = [
@@ -157,7 +136,7 @@ export function buildDashboardSnapshot(options: {
       );
       const decisions = options.repository.listPedagogyDecisions(session.id);
       const guidedTurns = options.repository.listTurns(session.id).map((entry, index) => ({
-        mode: isOpenTopic ? ("open_topic" as const) : ("guided" as const),
+        mode: "open_topic" as const,
         learner_answer: entry.turn.learner_answer,
         anchor_object: entry.turn.anchor_object,
         spoken_response: entry.turn.spoken_response,
@@ -181,48 +160,19 @@ export function buildDashboardSnapshot(options: {
         knowledge_state: decisions[index]?.knowledgeState ?? null,
         created_at: entry.createdAt,
       }));
-      const sandboxTurns = options.repository
-        .listSandboxTurns(session.id)
-        .map((entry) => ({
-          mode: "curious_sandbox" as const,
-          learner_answer: entry.turn.learner_question,
-          anchor_object: null,
-          spoken_response: entry.turn.spoken_response,
-          diagnosis: `Curious Sandbox response with ${entry.turn.certainty} certainty.`,
-          diagnosis_basis: null,
-          misconception: null,
-          trusted_phase: null,
-          transition_authority: null,
-          policy_checks: [],
-          reasoning_trace: [],
-          language_mode: entry.turn.language_mode,
-          next_strategy: "curious_sandbox",
-          mastery_status: "not_assessed",
-          mastery_evidence:
-            "Sandbox interactions are excluded from guided curriculum mastery.",
-          model_route: entry.modelRoute,
-          activity_kind: null,
-          strategy_changed: null,
-          evidence_kind: null,
-          evidence_result: null,
-          human_support: null,
-          knowledge_state: null,
-          created_at: entry.createdAt,
-        }));
-      const turns = [...guidedTurns, ...sandboxTurns]
-        .sort((left, right) => left.created_at.localeCompare(right.created_at))
+      const turns = guidedTurns
         .map((turn, index) => ({ ...turn, sequence: index + 1 }));
 
       return {
         session_id: session.id,
         learner_ref: learnerReference(session.learnerId),
         curriculum_pack_id: session.curriculumPackId,
-        subject: isOpenTopic ? "Open learning" : curriculumPack!.deployment.subject,
+        subject: "Open learning",
         concept_id: session.concept,
         concept_title: conceptTitle,
         status: session.status,
         turn_count: session.turnCount,
-        sandbox_turn_count: sandboxTurns.length,
+        sandbox_turn_count: 0,
         mastery_status: session.masteryStatus,
         mastery_evidence: session.masteryEvidence,
         last_diagnosis: session.lastDiagnosis,

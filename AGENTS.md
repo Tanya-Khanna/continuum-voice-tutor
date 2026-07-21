@@ -2,9 +2,8 @@
 
 ## Source of truth
 
-- Read `docs/BUILD_PLAN.md` before changing product scope or architecture.
-- Treat that copied plan as the current build plan. Do not rely on older chat excerpts.
-- Record meaningful decisions and milestone progress in `CODEX_NOTES.md`.
+- Read `README.md`, this guide, and the current implementation before changing product scope or architecture.
+- The submitted product is the open-topic phone teacher documented in the README. Historical plans and implementations in Git history are context, not runtime authority.
 
 ## Product invariant
 
@@ -15,17 +14,18 @@ India, fractions, and Hindi/English code-switching may appear only in deployment
 ## Build commands
 
 - `npm run chat` — zero-credit local teaching demo.
-- `npm run diagnostic` — three-question placement diagnostic.
-- `npm run eval` — 25-case deterministic teaching quality gate.
+- `npm run eval` — 39-case deterministic teaching quality gate.
 - `npm test` — deterministic pedagogy and integration-boundary tests.
 - `npm run typecheck` — strict TypeScript validation.
 - `npm run check` — typecheck and automated tests.
+- `npm run verify` — formatting hygiene, lint, tests, evaluations, build, and production smoke.
+- `npm run verify:fresh` — clean exported-tree install and release verification.
 
 ## Engineering rules
 
 - Keep credentials in `.env`; never commit them.
 - Offline mode must remain usable without OpenAI or Twilio credits.
-- Do not require curriculum packs, a subject catalog, grade placement, Guided mode, or Curious Sandbox to begin a lesson. Existing pack artifacts are historical/eval fixtures only and must not appear in the current learner flow.
+- Do not require curriculum packs, a subject catalog, grade placement, Guided mode, or Curious Sandbox to begin a lesson.
 - Generate a validated open-topic plan for the learner's request. Apply explicit uncertainty, factuality, and high-stakes policies; optional server-side grounding must never become a learner internet requirement.
 - Validate all model-facing inputs and outputs with Zod.
 - Put telephony behind an adapter; Twilio must not leak into the teaching engine.
