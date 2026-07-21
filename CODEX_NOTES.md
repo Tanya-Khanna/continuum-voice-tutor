@@ -697,3 +697,12 @@
 - Identity is now a trusted two-turn state machine. The first verified name saves only a pending name and asks the learner-code question. A second verified turn must contain a configured localized “no” phrase or the exact six code digits before a learner is created or loaded. Recovery repeats the code question while that answer is pending.
 - Improved Hindi brand pronunciation with a Devanagari transliteration and made the Kiswahili key unambiguous by speaking both “tano” and “nambari 5.”
 - Focused strict TypeScript and 30/30 language-menu, Realtime, SIP, and multi-subject catalog tests pass. The cancellation behavior follows OpenAI's documented WebRTC/SIP procedure for canceling an in-progress response and clearing unplayed output audio.
+
+## 2026-07-21 — Product reset to one open phone teacher
+
+- Replaced the v6 curriculum/catalog authority with v7: Continuum now has one learner experience. After language and portable identity, it asks “What would you like to learn?” There is no subject menu, grade placement, Guided/Curious split, fixed pack, or duration menu in the intended product.
+- Locked the four learner surfaces to ordinary calls, natural speech, DTMF, and optional short SMS. SMS is the consented relationship thread for recaps, micro-practice, paused lessons, and exam/revision reminders; recurring outbound lesson calls are removed from submission scope.
+- Made the anti-wrapper architecture explicit. GPT models propose versioned structured learning intent, diagnosis, pedagogy, activities, assessment, memory, and safety decisions. Trusted code owns identity, call stages, evidence, state transitions, exact recovery, keypad routing, consent, selective memory, SMS binding, and safety enforcement.
+- Replaced formal curriculum mastery with objective-specific learning evidence. A correct guess is not secure, keypad-only correctness is capped at developing, and secure understanding requires conceptual explanation, novel transfer, or later retention.
+- Preserved the reusable telephony, Realtime sideband, language-first, identity, DTMF, SQLite, recovery, SMS, safety, metrics, offline, and judge-proof infrastructure. The five released packs remain immutable historical/eval artifacts but must be removed from the live learner flow and runtime dependency.
+- Updated `AGENTS.md` so future implementation work cannot reintroduce the obsolete curriculum menu or treat Socratic teaching as answer withholding.

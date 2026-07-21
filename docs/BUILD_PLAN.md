@@ -1,606 +1,956 @@
-# CONTINUUM — THE CALL IS THE CLASSROOM (v6 · CURRENT AUTHORITY)
-
-> Continuum is not designed to replace school or teachers. It extends high-quality tutoring to the hours, places, languages, and devices conventional digital education cannot reach.
-
-**Primary tagline:** The connection may drop. The learning continues.
-**Supporting line:** Any phone. Any language. A tutor who comes back tomorrow.
-
-## Current product contract
-
-Continuum is a persistent, multilingual tutor delivered through ordinary phone calls, keypad input, and short SMS. The learner needs no smartphone, app, camera, internet, email address, or personal device. The conversation is the classroom: lessons, Socratic questions, explanations, stories, worked examples, hint ladders, quizzes, flashcards, teach-back, transfer, reflection, homework, study plans, and retrieval calls are rendered for voice first.
-
-The deployment ladder is missed-call callback, toll-free access, sponsored minutes, or direct dial. Calls are not claimed to be universally free. The hackathon deployment uses one Twilio number in callback-only mode: an inbound ring is rejected without answering, then the same number calls the learner back and remains the SMS sender. Direct answered inbound tutoring is deferred rather than requiring a second paid number. Child deployments require prior guardian enrollment; adult judges may use an explicitly enabled self-request demo. Every proactive learner call requires consent, respects quiet hours, and can be stopped immediately.
-
-The trusted tutoring loop is:
-
-`RECALL → DIAGNOSE → CHOOSE METHOD → TEACH → PRACTICE → TEACH-BACK → TRANSFER → REFLECT → SAVE → SCHEDULE REVIEW`
-
-GPT-5.6 proposes structured pedagogical decisions. Application code validates them, enforces curriculum and safety policy, renders one speakable question at a time, persists the exact pending activity before speech, and controls state transitions. A correct guess is never secure mastery. Keypad-only success is capped at developing. Curious Sandbox and Curiosity Trails never change guided mastery.
-
-Continuum remembers what helps a learner learn and forgets what it does not need. It may retain curriculum progress, misconceptions, homework, helpful methods, language preferences, schedules, and explicitly approved goals or interests. It does not retain raw audio by default or infer sensitive psychological, family, caste, religious, or economic profiles.
-
-## Locked submission scope
-
-- Ordinary phone calls, Realtime SIP, DTMF, and short SMS are the complete learner classroom.
-- Missed-call callback is submission-core. The single hackathon number is callback-only for inbound access and also originates callbacks, scheduled calls, and SMS; direct answered inbound tutoring is not a submission requirement.
-- Portable identity is a six-digit learner code with separate guardian authorization.
-- Math fractions is the deepest proof-of-learning journey.
-- Five Grade 6 starter units remain the release target, but only human-approved, compiled, verified, spot-checked, frozen packs may appear in the public menu.
-- Learner feedback, reflection, drop recovery, cross-phone resume, homework, recurring calls, guardian voice controls, memory controls, and access/reliability/learning metrics are core.
-- Ask Anything is multi-turn and may create a learner-approved Curiosity Trail, never formal mastery.
-- Human escalation is a tested decision contract, not a claimed live support network.
-- Educator summaries are a permissioned deployment contract, not a dashboard.
-- Synthetic evidence must always be labeled synthetic.
-
-Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-companion behavior, large educator dashboards, unreviewed language claims, or decorative animation before the core is stable.
-
-## Implementation ledger — July 18
-
-### Implemented and automated
-
-- Structured `LearningActivity`, `PedagogyDecision`, `LearningEvidence`, learner feedback, reflection, safe mastery, Curiosity Trail, educational profile, human-support, educator-summary, study-plan, SMS-command, callback-job, and product-metric contracts.
-- Explicit strategy switching after failed or learner-reported unhelpful teaching; speech and DTMF teaching feedback; reviewed transfer choices; DTMF-only mastery cap.
-- Portable salted learner identity, three-attempt and cross-source throttling, shared-phone privacy, and signed cross-phone resume.
-- Atomic pending-question persistence, pause-on-drop, pause SMS callback, same-phone and cross-phone resume, and no state advance on unclear audio.
-- Signed missed-call webhook with first-verb `<Reject reason="busy">`, deduplication, allowlists, quiet hours, rate limits, encrypted callback destination, outbound Twilio callback, and signed Realtime identity relay.
-- Signed, idempotent SMS controls for start, stop, pause, resume, time, days, progress, memory, and two-step deletion.
-- One-segment reviewed homework assignments with recipient-bound codes, signed/idempotent SMS replies, learner evidence, and an explicit no-secure-mastery cap for multiple-choice work.
-- Consent-gated recurring study plans and due-job locking; one dial per scheduled slot with no immediate application retry.
-- Low-literacy guardian keypad controls for progress, time, pause/resume, and two-step deletion.
-- Access/reliability/learning metric ledger and protected metrics API.
-- Mobile-first public landing page with no learner web classroom.
-- Three-, five-, and ten-minute lesson state, with duration-specific activity targets.
-- Language-first cold start: before a name or learner code is requested, a deployment-injected nine-key menu offers English, Hindi, Spanish, French, Kiswahili, Tamil, Bengali, Arabic, and Urdu. `*` accepts an additional spoken language. The selected language governs the rest of onboarding; the core remains BCP-47/config driven rather than branching on those nine languages.
-- Transcript-gated voice choices: server VAD does not create an automatic model response. Trusted code creates a response only after a nonempty input transcription; blank audio is ignored rather than replaying the current menu. Subject/duration transitions require the transcript to contain the selected localized alias or a valid DTMF choice. Silence, noise, a name, or model inference cannot select Science—or any other subject.
-- Interruptible keypad onboarding: a DTMF choice cancels an in-progress Realtime response and clears unplayed SIP audio before the next stage speaks, so pressing a language key does not leave the remaining language menu queued ahead of the name prompt.
-- Two-step trusted identity: saying a name saves only a pending name. Continuum must then receive an explicit localized “no” or all six learner-code digits before a new profile can be created or a portable profile can be loaded. A model cannot infer “no code” from the learner's name.
-- Signed scheduled-duration and access-mode relay into Realtime plus idempotent Twilio call lifecycle callbacks, no-answer handling, duration/price reconciliation, SMS segment/delivery receipts, sponsor-versus-learner-paid completion evidence, and aggregate cost-per-completed-lesson and retained-concept evidence.
-- Evidence-backed product proof now includes shared-phone completion, keypad-fallback conversion, exact drop/resume recovery, unclear-audio recovery, application response-latency percentiles, diagnostic-to-transfer improvement, hint reduction, teach-back success, strategy-switch success, and learner-reported helpfulness.
-- Offline demo, deterministic evaluator, strict TypeScript, and automated unit/integration tests remain zero-credit runnable.
-- Five Grade 6 starter packs now pass the complete release chain: official-source approval, GPT-5.6 compilation, independent verification, builder spot-check, digest-bound freeze, and 5/5 catalog validation.
-
-### Still gated before a public claim
-
-- A second measured carrier call must prove the corrected onboarding and teaching state machine.
-- Live missed-call callback, DTMF code, reviewed quiz, feedback, drop SMS, same/cross-phone resume, homework reply, schedule, no-answer, and guardian menu require carrier smoke tests.
-- The five-pack catalog is released in the repository; its exact production configuration and carrier menu still require deployment verification.
-- Carrier status callbacks and priced usage receipt collection are implemented; real completed/no-answer receipts must be captured before claiming measured call-completion or cost-per-lesson values.
-- English, Hindi-English, Spanish-English, and French-English must be described only as named tested adult-speaker patterns after the actual carrier matrix passes.
-- The language-first menu and silence-safe subject gate are automated; one adult-speaker carrier journey must still prove each publicly claimed spoken language pattern. Keypad selection proves routing, not speech-quality parity across languages.
-- Demo recording, YouTube upload, Devpost team acceptance, human-written submission copy, `/feedback` Session ID, clean-clone proof, and final repository sharing remain human submission gates.
-
-## Execution order
-
-1. Finish the flagship Math journey, voice/DTMF feedback, duration choices, homework SMS, and deterministic judge journey.
-2. Prove portable identity, exact drop recovery, missed-call callback, schedules, guardians, and deletion on the carrier.
-3. Human-review and freeze the four pending curriculum packs; hide every pack that misses the gate.
-4. Run five consecutive golden judge journeys, freeze features, record the three-minute demo, and complete clean-clone verification.
-5. Human-rewrite Devpost copy, retrieve `/feedback`, publish/share the repository, and submit by noon PT on July 21.
-
----
-
-# ARCHIVED V5 PLAN — HISTORICAL CONTEXT ONLY, DO NOT IMPLEMENT
-
-The material below records prior research and status receipts. Any reference to WhatsApp, camera input, or the older scope is superseded by v6 above.
-
-# CONTINUUM — FINAL BUILD PLAN (v5 · ARCHIVED)
-
-> **📋 STATUS AUDIT — Friday July 17, late night (verified against repo `Tanya-Khanna/nomad-ai` @ `3e11e8b`,
-> 55 commits, by independent clone + test run: 115/115 tests, 25/25 deterministic eval, REPL + resume verified live).**
-> This evidence snapshot remains tied to `3e11e8b`; later plan-only commits do not expand what was technically
-> verified. Re-run the clean-clone gate after the next implementation change.
-> Legend: ~~struck~~ ✅ = completely done and verified · ⏳ = partially done (note says what remains) · unmarked = not started.
-> **The remaining critical path: ① measured real-carrier behavior checks (configuration preflight 11/11 → PHONE_SETUP.md) ② human review of 4 subject
-> briefs → compile → freeze ③ landing-page minimum ④ Hinglish sample recording ⑤ demo video ⑥ human rewrite of
-> submission copy ⑦ submit.**
-
-> **🚀 DEPLOYMENT UPDATE — Saturday July 18:** commit `31a8988` is live at
-> [continuum-production-8971.up.railway.app](https://continuum-production-8971.up.railway.app). Railway built the
-> checked-in Dockerfile, attached a persistent `/data` volume, and passed public health, Mission Control,
-> unauthorized-access, authenticated-session, readiness, and writable-SQLite checks. The startup process prepares
-> the root-mounted volume and then drops to the unprivileged Node user. This closes the hosting prerequisite only:
-> phone configuration is now 11/11: the OpenAI project/webhook, upgraded Twilio account, voice-capable number,
-> number association, TLS SIP origination route, and verified signed `realtime.call.incoming` delivery have all
-> passed. Real codec, latency, VAD, barge-in, noisy-line, hang-up/redial, dashboard-session, and live-SMS behavior
-> remain unverified until the corresponding measured carrier checks run.
-
-> **📞 FIRST CARRIER-BEHAVIOR RESULT — Saturday July 18:** configuration reached 11/11, but the first
-> learner-facing call **failed** the product gate. After Tanya selected fractions and answered the first placement
-> question, Continuum replayed the guided-versus-Sandbox menu; Mission Control confirmed zero completed placement
-> or teaching turns. The fix replaces model-retained batch placement with server-driven one-answer-at-a-time
-> placement and uses Realtime `session.update` to expose only the tools valid for the active call stage. A regression
-> reproduces the exact `One by three` failure; 117/117 tests and the 25/25 deterministic eval pass. The fix is live
-> in Railway deployment `b8f1c012`; a second measured carrier call is required before any phone-experience claim is
-> marked complete.
-
-> **This is the only document Codex needs.** Everything is in here: product, judging-criteria engineering,
-> judge experience, complete feature manifest, architecture, schedule, demo, eval, submission package, risks.
-> (Deep research receipts & citations: NOMAD_FEATURES.md. Provenance: IDEAS.md. Rules: HACKATHON_INSTRUCTIONS.md.)
->
-> **Deadline control: July 21, 5:00 PM PT.** The official reminder and calendar weekday labels conflict, so the
-> absolute date/time controls. Verify the live Devpost countdown and target submission by noon PT on July 21.
-> **Goal: 1st place, Education track ($15,000), ~30k participants.**
-
----
-
-# 1 · THE PRODUCT
-
-> **Final product name: Continuum.** Tanya selected the name on July 17 after a human-led naming pass.
-
-**A GLOBAL product with one proven deployment.** An adaptive multilingual tutor that works on **any phone,
-anywhere**. Call a normal number — from a $15 feature phone, no smartphone, no app, no data — and a Socratic
-teacher follows the caller's language or code-switching pattern without a closed engine allowlist. The release
-must distinguish model-supported breadth from the finite language patterns actually tested. The release target is
-five Grade 6 subjects taught from **frozen, verified curriculum packs** compiled from official syllabus sources;
-only subjects that pass the full human-review and freeze gate become callable. It diagnoses misconceptions, never
-dumps answers, **remembers every learner by name** (shared-phone aware), and **resumes mid-lesson after dropped
-calls**. Same brain reachable by WhatsApp voice note.
-
-**The global mechanism (this IS the product, not a roadmap wish):** a deployment =
-`{locally tested language patterns + national syllabus + grade + local phone number}` — one config profile plus one Curriculum
-Compiler run. **Three expansion axes, one machine:** new language, new country, new grade — each is a config
-change + a compiler run, never a rebuild. Grade 6 ships first (fractions = the canonical misconception showcase;
-age ~11 = the documented heart of the learning crisis). Off-grade callers are never turned away: the placement
-diagnostic adapts difficulty, and the sandbox teaches any age, any topic.
-**Born global, proven in India first:** the flagship deployment showcased this week is India (Hindi/English/Hinglish,
-NCERT Grade 6) because it is a large multilingual deployment context, a 22-language society is a demanding
-code-switching test, and the builder speaks the flagship language pattern, so the demo can be authentic.
-India is deployment #1, not the boundary.
-
-- **Tagline:** *"The connection may drop. The learning continues."*
-- **Framing:** *"Two-way radio for the offline half of the world."*
-- **Three audiences:** (1) the usage gap — GSMA estimates 3.1B people are covered by mobile broadband but do not
-  use it, while ITU separately estimates 2.6B people offline globally (overlapping populations; never add them);
-  (2) low-literacy learners; (3) text-barrier learners (dyslexia) — voice as equalizer.
-- **Positioning:** "Bakame proved learners will call an AI. Viamo proved the channel scales to 22 countries.
-  1-800-ChatGPT proved frontier voice AI works over a phone line. **Nobody has put an actual teacher on that line.**
-  Continuum is that teacher." (Never claim channel novelty — always claim the teacher.)
-
-# 1.5 · THE PLAIN-ENGLISH PITCH (use for: Devpost opening, video voiceover, README hero, judge Q&A)
-
-**It's a teacher you call on the phone — or message on WhatsApp.**
-
-A kid in a village — no laptop, no internet, just a basic ₹1,000 phone — dials a regular phone number.
-A friendly voice answers: *"What do you want to learn today — Math, Science, English, History, Geography…
-or anything else you're curious about?"* And then it **teaches them. By talking.**
-
-- The kid can speak Hindi, English, or the mix everyone actually speaks — *"Didi, mujhe fractions samajh
-  nahi aata"* — and the teacher keeps up, mid-sentence.
-- It doesn't give answers like a homework machine. It teaches the way a good tutor does — asks questions,
-  uses examples from the kid's real life (*"if one roti is shared between four people…"*), and catches **why**
-  the kid is confused, not just that they're wrong.
-- It **remembers each child.** Call back tomorrow: *"Welcome back, Ravi — last time one-fourth and one-third
-  were confusing us. Let's try again."* Call drops mid-lesson? Call back — it continues from that exact sentence.
-- What it teaches comes from the real school syllabus — the stuff the kid is actually examined on — and it's
-  checked in advance so it never confidently teaches something wrong.
-- Parents can get a text afterward saying what their kid practiced.
-
-**Same teacher, two doors:**
-- **The phone door** — for the kid with a button phone: dial, a voice answers, the lesson happens live.
-- **The WhatsApp door** — for the kid or family with a cheap smartphone and patchy data: send a voice note,
-  get a voice note back. Same teacher, same memory, same Hinglish. Costs almost nothing in data; works when
-  the network is too weak for a call. Send a photo of the homework problem — it explains *that exact problem* out loud.
-
-And it's the **same brain behind both** — learn on a call today, ask a follow-up on WhatsApp tonight, and it
-remembers you're Ravi and you were fighting with fractions.
-
-**Who it's for:** the 3.1 billion people GSMA estimates are covered by mobile broadband but do not use it — plus kids who can't read well
-yet, and kids for whom reading itself is the barrier. Every learning app ever made assumes a screen, a download,
-and data. This assumes nothing but a dial tone — or a WhatsApp voice note.
-
-**And it's not an India-only architecture.** The same teacher can follow model-supported languages and
-code-switching patterns without a language-pair branch. Bringing it to a new country is a config file, reviewed
-curriculum compilation, and local language/accent testing—not a rebuild. India is deployment #1, not the boundary.
-
-**One sentence:** *A patient, personal tutor designed for a child who owns nothing but a phone—across reviewed
-subjects and locally tested, model-supported language patterns. If it can make a call, school is open.*
-
-Everything else in this document is the machinery to make that sentence credible by the July 21 deadline.
-
-# 2 · JUDGING CRITERIA, WORD BY WORD → ENGINEERING RESPONSE
-
-**Stage One (pass/fail):** *"reasonably fits the theme and reasonably applies the required APIs/SDKs."*
-→ Education track ✅. GPT-5.6 at the product's literal center (teaching engine, compiler, eval agents) ✅.
-Codex builds everything ✅. Cleared by architecture, not by claims.
-
-### Criterion 1 — Technological Implementation (1st tiebreaker = effectively highest weight)
-*"How thoroughly and skillfully does the project use **Codex**?"*
-— The first sentence of the top criterion is about **Codex usage itself**.
-→ **Thoroughly:** Codex builds code, tests, docs, and reviews its own PRs across the whole system.
-→ **Skillfully:** structured collaboration — plans first, then implementation, Codex-run code review, eval-driven
-iteration. **CODEX_NOTES.md maintained live** (what Codex built, what the human decided, what GPT-5.6 contributed)
-— this is evidence for the criterion, not garnish. One main Codex session = the `/feedback` Session ID.
-*"Does the **code** reflect genuine effort and a **working, non-trivial** implementation?"*
-→ Judges may read the repo: clean structure, meaningful commits, real tests (eval harness = the test suite),
-runnable via README. **Non-trivial:** self-built telephony↔AI orchestration (NO Vapi/Retell — Twilio is raw
-infrastructure only), SIP + G.711 handling, state machine with drop-resume, compiler pipeline, multi-agent QA.
-
-### Criterion 2 — Design
-*"Delivers a **working or runnable** project"* → runnable BY JUDGES: the phone number is the install.
-*"**complete** product experience"* → no dead ends: silence, nonsense, off-topic, abuse, disconnects — every path
-answered gracefully (lesson arc, recovery, rate limiting, recap).
-*"**coherent**"* → one thesis (a teacher on a dial tone); every feature serves it (coherence lesson: sprawl kills).
-*"**not just a technical proof of concept**"* → the exact failure mode of hackathon voice demos; answered by
-onboarding, named memory, lesson arc with recap, SMS follow-up, dashboard, safety behavior — a product, not a pipe.
-
-### Criterion 3 — Potential Impact
-*"**credible, specific** case"* → numbers, named audience, cost math (README evidence stack §8).
-*"**real problem** for a **real audience**"* → the usage-gap learner; UNESCO's projected 44M primary/secondary teacher deficit by 2030.
-*"does the solution **actually address** that problem **based on what's demonstrated**"* → **THE key phrase.**
-The demonstration must carry the claim → **the judge personally gets taught** (§3 Judge Experience), the video shows
-a real learner journey end-to-end, and the dashboard proves teaching (mastery evidence), not chatting.
-
-### Criterion 4 — Quality of the Idea
-*"**creative and novel** … **differ from existing concepts**"* → never claim channel novelty. Current products
-already demonstrate overlapping phone, voice, multilingual, subject, personalization, and low-bandwidth
-capabilities. Continuum's narrower distinction is the inspectable combination of frozen reviewed packs,
-source/reviewer provenance, per-subject placement and exact resume, trusted turn guards, and reproducible
-deterministic plus paid-agent evidence.
-*"genuine understanding of the problem space"* (site variant) → research-literate package: verified Adesua citation
-(executes its published future-work agenda; 93.75% helpfulness, n=16 caveat), transfer-problem pedagogy as design,
-code-switching as documented open problem (Cameroon paper), honest limitations section, honest competitor credit.
-
-# 3 · THE JUDGE EXPERIENCE (testing access designed as a lesson, not a feature tour)
-
-**Principle: the judge is not an evaluator watching teaching — the judge is a learner receiving it.**
-
-1. **The invitation (testing instructions, verbatim style):** *"You're about to be a Grade 6 learner. Call
-   +1-XXX-XXX-XXXX. Pick Math. When the tutor asks you to compare one-third and one-fourth — tell it one-fourth is
-   bigger, because four is bigger. See what happens to you."* → the judge personally experiences misconception
-   diagnosis + the Socratic strategy pivot.
-2. **The mirror:** dashboard shows the judge's OWN call live — transcript, the diagnosis JSON about THEM, their
-   mastery state flipping. Getting taught, then seeing the brain's reasoning about yourself, is the one-two punch.
-3. **The break-it menu (published in testing instructions):** "Try to make it just give you the answer." ·
-   "Hang up mid-lesson; call back." · "Interrupt it mid-sentence." · "Ask: *what have we learned together?*" ·
-   "Try another reviewed subject." Publish a subject-specific stress test only after that pack passes review,
-   compilation, independent verification, spot-checking, freeze, and routing.
-4. **The Hinglish exhibit:** judges can't produce code-switched speech → dashboard hosts a recorded sample Hinglish
-   session with synced transcript + the invitation: "try any Hindi word you know — even one."
-5. **English is first-class:** the entire experience works beautifully in pure English (placement diagnostic adapts
-   naturally to an adult English caller). Code-switching is the bonus wow, never a gate.
-5.5 **The multilingual invitation:** invite judges to try a language pattern they speak while naming every pattern
-   actually spot-checked. Describe arbitrary language tags and code-switching as an open architecture—not proof of
-   every language, dialect, accent, or noisy phone condition.
-6. **Zero friction:** no repo clone, no login, no sandbox code. The public landing page puts the verified phone
-   number first, explains call → learn → call back and continue, and links to Mission Control. Live through Aug 5.
-
-# 4 · COMPLETE FEATURE MANIFEST (the confirmed scope — build exactly this)
-
-### 4.1 CORE — BUILD (days 1–3)
-
-**Channel & pipeline**
-- ⏳ **F1 Zero-data dial-in** — ~~code + SIP target + signed-webhook boundary + paid voice number + Twilio TLS origination route + verified signed public delivery; configuration preflight 11/11~~ ✅; the end-to-end learner audio experience still needs a measured carrier call.
-- ⏳ **F7 2G/GSM-native** — inherited claim ready; needs one real G.711 carrier call to be true.
-- ~~**F8 Server-side inference** — phone is a dumb audio pipe; all intelligence in the cloud.~~ ✅
-- ⏳ **F9 G.711 μ-law 8kHz** — SIP path coded + schema-verified; live codec behavior unheard.
-- ⏳ **F10 Realtime streaming pipeline** — bridge (`realtime-teaching-bridge.ts`) + call-accept built and unit-tested; **no live call yet. Still THE critical path.**
-- ⏳ **F12 VAD + barge-in** — configured (commit `a41f2c8`); must be HEARD over a real call, not unit-tested.
-- ⏳ **F13/F50 Preambles + latency choreography** — coded in bridge; live latency tuning pending.
-- ⏳ **F14 Connection-degradation recovery** — ~~session-state drop→resume machinery~~ ✅ (verified: exact-question resume across process restart) · unclear-audio recovery coded (`7e9f4c3`) · live over-the-wire behavior pending.
-- ⏳ **F15 Warm voice, ~20% slower** — ~~voice configured (`6a091f8`) + persona named: **Continuum**~~ ✅ · live listen-through pending.
-
-**Language**
-- ~~**F16 Mid-sentence code-switching** — live text-model checks pass for Hindi/English, Spanish/English, and
-  French/English; deterministic multilingual fixtures also pass.~~ ✅ · real G.711 phone-audio proof remains in F19.
-- ~~**F17/F31 Concept bridging + in-context vocabulary** — pack-driven canonical terms with language tags + spoken meanings.~~ ✅
-- ~~**F18 Multi-language architecture** — engine contains no fixed language list or pair; arbitrary BCP-47-style
-  tags and code-switch combinations pass through the typed contract.~~ ✅ **Release contract:** publish the tested
-  language-pattern matrix; never turn architectural openness into an identical-quality claim for every language.
-- ⏳ **F19 Accent robustness** — needs builder's-own-voice validation over a real call.
-
-**Teaching (the authored layer: system prompt + curriculum packs)**
-- ~~**F20 Curious Sandbox mode** — Socratic, fact-hedging, no pack; eval-covered (`sandbox.ts`, sandbox hedging cases).~~ ✅
-- ~~**F21 Guided Path, five subjects** — Math flagship plus Science, English, History, and Geography passed source review,
-  compilation, independent verification, builder spot-check, digest-bound freeze, and the 5/5 release gate.~~ ✅ The released catalog contains
-  five genuinely callable guided subjects, each with at least
-  one coherent voice-first starter lesson, placement evidence, misconception handling, and a safe completion path—not
-  empty menu labels or unreviewed flavored Sandbox. If a pack misses its gate, hide that subject and state the
-  smaller verified menu honestly.
-- ⏳ **F22 Voice-menu onboarding** — per-subject routing built (`710a01f`); full five-subject menu gated on the 4 packs.
-- ~~**F23 Strict Socratic method** — enforced by eval ("just tell me" ×2, answer-request handling).~~ ✅
-- ~~**F24 Household experiments + anchor objects** — reviewed safe objects persisted through drops (`c161fa8`); no unreviewed nouns storable.~~ ✅
-- ~~**F25 Auditory mental modeling** — roti analogy live (verified in my own session: `concrete_analogy` strategy).~~ ✅
-- ~~**F26/F27 Micro-lessons + verbal checks**.~~ ✅
-- ~~**F28 Short-form structure**.~~ ✅
-- ~~**F29→F54 Placement diagnostic** — three-question, evidence-scored (`placement-diagnostic.ts` + live run).~~ ✅
-- ~~**F32-flavor Real-world grounding** — roti/household contexts in pack content.~~ ✅
-- ~~**F34 Radio-host turn-taking**.~~ ✅ ~~**F35 Judgment-free tone**.~~ ✅ ~~**F36 Adaptive pacing**.~~ ✅
-- ~~**F40 Voice-native output** — 100% voice-friendly rate on eval.~~ ✅
-- ~~**G4 Lesson arc** — phased with recap + `should_end_session` (`lesson-service.ts`).~~ ✅
-
-**Breadth release contract — this is part of the product, not a roadmap footnote**
-- **Guided Learning:** Math, Science, English, History, and Geography become public only as individually reviewed,
-  frozen packs. Memory, placement, resume, dashboard evidence, and mastery stay isolated per subject.
-- **Curious Sandbox:** accepts broader safe learning questions in the learner's language pattern, but never awards
-  guided-curriculum mastery and must hedge current, local, disputed, or unverifiable claims.
-- **Language:** the learner speaks naturally; there is no engine language picker or closed pair. Public copy names
-  the language/code-switch patterns actually tested in text and over the carrier path, while the architecture
-  remains open to additional model-supported patterns after local review.
-
-**Memory & learner model**
-- ~~**F41 Named continuity + resume + voice-queryable history** — SQLite, HMAC-pseudonymized numbers, exact-question resume (verified), history queries (live-history-run).~~ ✅
-- ~~**G1 Shared-phone identity** — Ravi and Asha coexist on one number without mixing progress (tested).~~ ✅
-- ~~**F47 Callback loop** — retrieval practice on return (retrieval cases in eval + engine support).~~ ✅
-- ~~**F48 Think-aloud diagnosis** — `ask_reasoning` strategy live (observed in verification session).~~ ✅
-
-**Intelligence & integrity**
-- ~~**F42 Hybrid routing (two-layer architecture)** — offline deterministic + live GPT-5.6 Structured-Outputs adapters (`store:false`); trusted code validates every turn against the frozen pack before speech/persist.~~ ✅
-- ~~**F37 Controlled curriculum grounding** — frozen reviewed packs only; no live web lookup during lessons.~~ ✅
-- ~~**F38/F39 Curriculum Compiler + G3** — compiler + schema + source review + compile + independent verification + builder spot-check + freeze.~~ ✅
-- ~~**F52 Computed math truth** — deterministic verification in engine + tests.~~ ✅
-- ~~**F56 Uncertainty honesty** — insufficient-evidence eval cases ×4 passing.~~ ✅
-
-**Trust, proof & product surface**
-- ⏳ **F44 SMS recap** — ~~Twilio SMS module + schema + tests~~ ✅ · live send blocked on Twilio upgrade/number; G8 parent registration pending.
-- ⏳ **F45 Mission-control dashboard** — ~~sessions, eval gate, Release tab, token-protected APIs, humanized states, browser-verified desktop+mobile, cost tracking, anonymized IDs~~ ✅ · **sample audio is synthetic Spanish-English — Hinglish recording (builder's voice) pending**; live-call mirror needs the phone leg.
-- **F60 Public judge landing page** — after the real-phone gate, ship a fast mobile-first page with the Continuum
-  name/tagline, Call → Learn → Resume story, the verified subject menu and tested-language matrix, and links to the
-  phone number, demo, Mission Control, repository, safety notes, and testing instructions. The call CTA stays gated
-  until 11/11 configuration and the real-carrier checks pass; the page contains no dashboard token or learner data.
-  Optional polish is one restrained GSAP disconnect→resume sequence with `prefers-reduced-motion`, followed only if
-  time remains by a user-triggered, captioned, controllable teaching sample. No autoplay or scroll-triggered sound.
-- ~~**F46 Child-safety guardrails** — PII redaction, safety evals, SAFETY_PRIVACY.md with consent/retention (G2).~~ ✅
-- ~~**G6 Abuse guard** — call-admission rate limiting + jailbreak eval cases ×2.~~ ✅
-- ~~**F51 Eval harness** — 25-case deterministic suite (25/25, 100% voice-friendly — independently re-verified) + paid
-  GPT-5.6 simulated-learner × evaluator agent eval (24-case full pass recorded, `1810ffa`) + results on dashboard +
-  enforced in CI on every push (clean-clone release gate, badge green).~~ ✅ *(exceeded plan: CI enforcement was never asked for)*
-
-### 4.2 STRETCH — day 4 only, strict order, never at stability's expense
-1. **F4 WhatsApp voice notes** — same brain, async channel; zero latency pressure = demo insurance; Twilio WhatsApp API.
-2. **F3 Missed-call callback** — hang up after one ring → server calls back; missed-call culture; ~2h webhook.
-3. **F5 WhatsApp text** — accessibility completeness on the same brain.
-4. **F6 Homework camera (WhatsApp)** — photo + voice explanation; executes Adesua's stated future work (citable).
-5. **F59 Keypad DTMF fallback** — "Press 1, 2, or 3" when audio fails; "Press 1 to practice tomorrow."
-6. **F55 Vocal-cue basics** — react to silence/monosyllables with reassurance or a step back.
-
-### 4.3 ROADMAP — README mentions ONLY (with citations where noted; zero build time)
-F2 toll-free/local numbers per country · F11 field-grade noise hardening · F15-accents · F18 more locally tested language patterns ·
-F29 full grade coverage · F30 pronunciation coaching · F32 full scenario curricula (market/commerce, exam prep,
-health basics) · F33-depth all-subject packs beyond Grade 6 · F43 budget enforcement caps · F49 rehearsal mode ·
-F53 collaborative oral storytelling (oral-tradition alignment) · F57 teacher SMS assignments · F58 cohort insights ·
-G5 proactive re-engagement nudges · deep emotional adaptation · canvas companion "act two" · workflow-embedded
-tutoring pattern · living simulations from real-world observation.
-
-### 4.4 DO NOT BUILD (binding)
-Grades beyond 6 · language-specific engine branches or untested every-language quality claims · native apps · WhatsApp as PRIMARY interface · parent
-accounts/payments · school management · live web search mid-call · real deployment with children · complex auth ·
-custom noise DSP · toll-free provisioning · managed voice platforms (Vapi/Retell/Bland).
-
-# 5 · SCHEDULE (gates are law)
-
-**⚠️ D0 — TONIGHT (Thu), 10 minutes, no code (triggered by Devpost forum finding, July 16):** The $100 Build Week
-credits are CODEX credits — they extend Codex usage, do NOT upgrade model access, and per forum reports do NOT
-apply to the API. Verify: ① your ChatGPT plan tier (Sol in Codex reportedly needs Pro+; **Terra/Luna ARE GPT-5.6
-and fully satisfy the rules** — the "Sol is mandatory" forum claim is wrong) ② ~~which models Codex's picker actually
-offers you~~ ✅ *(Sol, Terra, and Luna available)* ③ platform.openai.com → Billing: ~~do credits appear on the API
-side?~~ ✅ *(none initially; $5 of prepaid API credit added Jul 17 — Codex credits are separate)* ~~Payment method~~ ✅. **Use budget alerts and keep auto-recharge off** *(project budgets are soft alerts, not hard caps)* ④ Realtime
-API access on your API account. Consequences flow to routing (Terra-only mode if Sol gated) — the architecture
-absorbs every outcome; the point is knowing TONIGHT, not Friday noon.
-
-## 💰 API BUDGET: $5 INITIAL PREPAID CREDIT · ADD UP TO $5 MORE ONLY IF NEEDED
-
-Auto-recharge is off. Use project alerts at 50%, 80%, and 100%; the platform project budget is a soft alert, not a hard cutoff. Realtime voice is the main API expense; keep deterministic work offline, develop on Realtime Mini, and reserve full Realtime 2.1 for final-quality calls.
-**Burn rules:** ① iterate prompts/teaching logic in TEXT first (plain API calls, then the REPL) — voice only for
-latency, UX feel, and demos ② every live test call has a purpose ③ cost/call visible on dashboard from D2.
-
-| Day | Purpose | Budget |
+# CONTINUUM — THE PHONE TEACHER (v7 · CURRENT AUTHORITY)
+
+> Continuum is a teacher you call on the phone. Any phone.
+
+**Primary promise:** If you can make a phone call, school is open.
+
+**Supporting line:** A patient teacher for anyone with a phone—teaching anything, in the learner's language, remembering them, without a smartphone, app, or internet.
+
+**Continuity line:** The connection may drop. The learning continues.
+
+This document supersedes every earlier product plan. Earlier commits remain the historical record; this file is the only current scope and architecture authority.
+
+## 1. Locked product definition
+
+Continuum is one open-ended, multilingual teaching experience delivered through:
+
+- An ordinary phone call.
+- Natural speech.
+- The phone keypad.
+- Short, optional SMS follow-ups.
+
+It is built for learners who may have no reliable access to a human teacher. It extends a teacher's reach; it does not claim to replace teachers or schools.
+
+The learner does not need:
+
+- A smartphone.
+- An app or website.
+- Mobile data or internet.
+- A camera or WhatsApp.
+- An email address.
+- Strong reading skills.
+- A personal device.
+
+The first question after language and identity is always some natural equivalent of:
+
+> “What would you like to learn?”
+
+There is no subject menu, grade form, curriculum selection, Guided mode, Curious Sandbox, or course catalog. The learner may bring anything from a school problem to a spontaneous question:
+
+- “Teach me fractions.”
+- “Why does the Moon seem to follow our car?”
+- “Help me prepare for my science exam.”
+- “What is a verb?”
+- “Why does it rain?”
+- “I do not understand algebra.”
+
+“Anything” means broad access to learning within factual, safety, and high-stakes boundaries. It is not a claim of omniscience or guaranteed expertise in every live or disputed fact.
+
+## 2. The five product qualities
+
+1. **It teaches; it does not merely answer.** It diagnoses the obstacle, chooses a method, invites reasoning, changes approach when needed, and checks whether learning transferred.
+2. **It reaches an ordinary phone.** Speech, DTMF, and SMS form the complete learner experience. No screen-based classroom is required.
+3. **It teaches in the learner's language.** Language is selected before identity, then Continuum adapts vocabulary, pace, examples, and natural code-switching.
+4. **It is a continuing learning relationship.** It remembers only useful learning state, resumes dropped lessons exactly, and sends consented follow-ups.
+5. **It is safe for a child to use alone.** It behaves as a bounded teacher, never as a friend, parent, therapist, romantic companion, or substitute for human support.
+
+## 3. What Continuum is not
+
+Continuum is not:
+
+- A learner app, web classroom, or dashboard.
+- A question-answer hotline.
+- An LMS, fixed syllabus, curriculum-pack browser, or course catalog.
+- “ChatGPT with a teacher prompt.”
+- A companion bot.
+- A replacement for schools, teachers, guardians, or professional support.
+- A WhatsApp, camera, or mobile-data product.
+- A system that repeatedly calls a child.
+
+An internal proof view may help builders and judges inspect redacted state and learning evidence. It is observability, not the product or a learner surface.
+
+## 4. Why this is not just a GPT wrapper
+
+A thin wrapper would send the transcript to a model with “act as a teacher,” speak the response, and forget the interaction. Continuum must remain observably different even when the same underlying GPT model is available elsewhere.
+
+The product moat is the application-owned teaching system around the model:
+
+| Capability | GPT proposes | Trusted Continuum code owns |
 |---|---|---|
-| D1 Fri | pipeline bring-up + latency tests (~12 live min) | $3 |
-| D2 Sat | gate-test calls (teaching iterated in text first) | $4 |
-| D3 Sun | compiler runs + ~~25-case eval (text)~~ ✅ + 2–3 live smoke calls | $3 |
-| D4 Mon | demo takes, montage, WhatsApp tests | $5 |
-| D5 Tue | final verification calls | $1 |
-| Jul 22–Aug 5 | **judges' test calls (reserve — do not touch)** | $4 |
+| Conversation | A natural, language-matched teaching turn | Call stages, interruption handling, one-question rule, audio cancellation |
+| Diagnosis | A structured misconception hypothesis | Evidence requirements, uncertainty state, validation, persistence |
+| Teaching method | The next useful method and activity | Allowed transitions, failed-method history, no blind repetition |
+| Learning proof | Interpretation of an open response | Evidence ledger, keypad cap, transfer/retention policy, mastery state |
+| Memory | Candidate facts worth remembering | Consent, allowlisted fields, redaction, deletion, sibling isolation |
+| Continuity | A concise resume sentence | Atomic checkpoint before every prompt, exact resume token, session state |
+| Keypad | Reviewed choices for the current activity | Stage-aware DTMF routing; invalid digits cannot advance state |
+| SMS | A short candidate recap or practice item | Consent, recipient binding, signed webhooks, idempotency, reply matching |
+| Safety | A structured risk and boundary decision | Deterministic policy, blocked actions, human-support route, audit record |
 
-**Codex model rule all week:** batch focused sessions, use smaller models for disposable exploration, and reserve
-GPT-5.6 for submission-relevant reasoning. "Best" below = Sol if available, else Terra (equally rules-compliant).
+The release test for “not a wrapper” is concrete:
 
----
+- The controller can show why it chose and changed a teaching method.
+- A learner response creates inspectable evidence rather than only chat history.
+- A correct guess cannot become secure understanding.
+- The exact unfinished activity survives a call drop and another phone.
+- Keypad and SMS inputs enter the same learner state without bypassing policy.
+- Memory is selective, correctable, deletable, and isolated across siblings.
+- Safety and proactive-contact rules hold even if the model requests otherwise.
+- Deterministic and model-based evals can fail a pedagogically poor session.
 
-### 🌙 TONIGHT — Thu Jul 16, 10 PM (≤1 hour, then SLEEP)
-1. (20 min) **D0 checks above**: plan tier → ~~Codex model picker~~ ✅ → ~~API balance/credit-grant check~~ ✅ → ~~payment method + $5 prepaid API credit~~ ✅ *(auto-recharge off)* → Realtime API access.
-2. (15 min) Create accounts if missing: ~~Twilio account created~~ ✅ *(onboarding/verification still in progress; paid upgrade remains deferred per D2 gate)* · ~~GitHub repo created private with MIT license~~ ✅ *([Tanya-Khanna/nomad-ai](https://github.com/Tanya-Khanna/nomad-ai))*.
-~~3. Tell Claude the D0 findings → routing defaults get locked to reality.~~ ✅ *(recorded in CODEX_NOTES)*
-~~4. Skim §1–§5 once.~~ ✅
-- ~~**Codex: not tonight.**~~ ✅ *(superseded — Codex started the zero-credit offline build the same night, correctly: no API/telephony spend)*
+If these properties are absent, the build is too thin regardless of prompt quality.
 
-### 📅 FRI Jul 17 — D1: PROVE THE PIPE (Codex: BEST model, HIGH reasoning all day — this is the novel engineering)
-**Morning (~9 AM):**
-- ~~Open THE main Codex session (this becomes the `/feedback` session — everything core happens here). First prompt: point it at this file + repo init + AGENTS.md + CODEX_NOTES.md skeleton.~~ ✅
-- Access checks in practice: ~~first live structured-output API call to GPT-5.6 Luna~~ ✅ *(Jul 17; correct misconception diagnosis returned)*; Terra/Sol smoke checks; Realtime session hello-world; voice catalog listen-through (pick the warm voice; note accent options).
-- ~~Twilio: buy US number, configure SIP trunk → OpenAI Realtime SIP connector.~~ ✅ *(voice number active; do-not-record trunk routes to OpenAI over TLS)*
-**Afternoon:**
-- The bridge: phone call → Twilio → SIP → Realtime → AI voice answers. G.711 8kHz confirmed.
-- Measure real latency (phone-to-response). Tune VAD/barge-in settings.
-- If SIP path fails by 3 PM → switch to Media Streams ↔ own WebSocket server (Codex: BEST, xhigh — this is harder).
-**Evening:**
-- Minimal conversation loop with prompt v0 (Socratic + Hinglish sketch). Call it from your own phone; talk to it; note everything that feels wrong.
-- Commit milestones (≥3 today). CODEX_NOTES: 10 min.
-- **Exit: a real phone conversation with an AI exists. Latency number written down.**
-- **📦 Features landing today:** ~~F8 server-side inference~~ ✅ · ~~F15-voice configured + persona named (Continuum)~~ ✅ · **F1 · F7 · F9 · F10 · F12 · F19 — carrier configuration and signed webhook proof are 11/11; the measured audio/latency/barge-in/resume checks in PHONE_SETUP.md remain the #1 task.**
+## 5. End-to-end learner journeys
 
-### 📅 SAT Jul 18 — D2: PROVE THE TEACHER ⛔ GO/NO-GO (Codex: BEST, XHIGH for engine/state machine; BEST for prompt & pack authoring; Luna/Spark for boilerplate)
-**Morning:**
-- ~~Two-layer teaching engine: structured-JSON schema + Luna/Terra↔Sol routing (offline deterministic + live Structured-Outputs adapters) + trusted turn validation.~~ ✅ *(latency choreography coded in bridge; live tuning pending phone leg)*
-- ~~Quick TEXT loop harness (pre-REPL) so all teaching iteration today is text-first (cheap).~~ ✅ *(built early as `npm run chat` / `make chat`; offline by default)*
-**Afternoon:**
-- ~~Hand-build the fractions flagship pack: objectives, micro-lessons, verified question bank (code-checked answers, F52), misconception taxonomy (larger-denominator front and center), roti/paper-folding analogies.~~ ✅ *(schema-frozen, checked in as `builtin:india-ncert-grade-6-fractions`)*
-- ~~Learner DB: named profiles per number (G1 "Is this Ravi?"), resume state, placement diagnostic v0.~~ ✅ *(local SQLite; caller number stored as a keyed HMAC identifier)*
-- ~~Prompts v1: Socratic discipline, turn-taking, voice-math, code-switching (universal — multilingual eval ×5 passing), 8–10 min arc with recap phase, judgment-free tone.~~ ✅
-**Evening — ⛔ THE GATE:**
-- Live gate test (budget: ~6 live calls): a working Socratic fractions lesson, in Hinglish, over a real phone call, acceptable latency, **survives a mid-call disconnect and resumes**.
-- **PASS → celebrate, commit, THEN upgrade Twilio to Pay-as-you-go ($20 balance — deferred until the project earned it; trial's preamble + verified-caller limits are fine for D1–D2 dev but must be gone before eval calls, video, and judges). FAIL → activate fallback (grading copilot, IDEAS.md #1, 3 days runway). No rationalizing a marginal fail.** (Note: if trial mode blocks SIP-trunk config on Friday, either use media-streams fallback during trial or upgrade a day early.)
-- **📦 Features landing today:** ~~F42 two-layer architecture + hybrid routing · F14 drop recovery + resume machinery · F21-flagship fractions pack · F23 Socratic · F16 code-switching · F17/F31 bridging + vocabulary · F25 analogies · F26/F27 micro-lessons + checks · F28 short-form · F52 computed math · F40 voice-math · F34 turn-taking · F35 tone · F36 pacing · G4 lesson arc · F41 learner DB + resume · G1 shared-phone profiles · F54/F29 placement diagnostic · F56 uncertainty honesty · F48 think-aloud~~ **✅ ALL 20 DONE** · ⏳ F13/F50 latency choreography (coded; live tuning pending) · **⛔ THE GATE ITSELF (real Hinglish phone call + live disconnect/resume) REMAINS OPEN — blocked on phone leg**
+### 5.1 First call
 
-### 📅 SUN Jul 19 — D3: PROVE THE SCHOOL (Codex: Terra for compiler + eval harness; Luna/Spark for REPL + dashboard skeleton)
-**Morning:**
-- Curriculum Compiler: syllabus structure in → ORIGINAL lessons/questions out (G3 rule) → verifier-agent pass. Run
-  for Science, English, History, and Geography (Grade 6). Spot-check each pack yourself (~15 min each) → freeze.
-  Reject any pack that lacks a coherent voice-first starter lesson, placement evidence, misconception handling, or
-  safe completion path; never expose an empty or unreviewed subject merely to make the menu look broad.
-- ~~Text-mode REPL (`make chat`) — formalize the text loop into the judges' run path.~~ ✅ *(landed early)*
-**Afternoon:**
-- ⏳ Five-subject voice onboarding + flavored-sandbox fallbacks — per-subject routing built (`710a01f`); full menu gated on the 4 reviewed packs.
-- ~~Callback loop (retrieval practice on return) · voice-queryable history · shared-phone profiles polished.~~ ✅
-- ~~**Eval harness**: deterministic 25/25 green + paid GPT-5.6 agent-based judge pass (24-case full pass, `1810ffa`) + CI enforcement.~~ ✅
-**Evening:**
-- ~~Dashboard skeleton~~ ✅ *(exceeded: full Mission Control — Sessions/Eval/Sample/Release tabs, token-protected, browser-verified desktop+mobile)*.
-- ~~**Decisions due: tutor persona name + product name**~~ ✅ **CONTINUUM** *(human-selected Jul 17)*.
-- **Exit: ~~five subjects released~~ ✅ · ~~eval green~~ ✅ · ~~REPL works~~ ✅ · ~~dashboard~~ ✅ · ⏳ carrier-menu verification.**
-- **📦 Features landing today:** ~~F38/F39 compiler + G3 review gate · F37 frozen-pack grounding · F20 sandbox · F24 anchor objects · F32-flavor · F47 callback · F41-query history · F18 universal language architecture · F51 eval harness · §7.5 REPL · F45 dashboard · F15-persona · F21 five released subjects~~ **✅** · ⏳ **F22 production carrier-menu verification**
+1. The learner calls or requests a permitted callback.
+2. Continuum asks them to choose a language by saying its name or pressing a key.
+3. All later onboarding happens in that language.
+4. Continuum asks what name to use.
+5. It separately asks whether the learner already has a six-digit learner code.
+6. If not, trusted code creates a private six-digit code and reads it slowly.
+7. Continuum asks: “What would you like to learn?”
+8. The learner names any topic, question, problem, goal, or upcoming exam.
+9. Continuum begins teaching without making the learner navigate a subject or grade menu.
 
-### 📅 MON Jul 20 — D4: PROVE IT TO JUDGES (Codex: Luna/Spark for UI/SMS/stretch; Terra if logic gets hairy; Luna for README prose)
-**Morning:**
-- ~~Dashboard complete: eval-results page, anonymized IDs, cost/call, click-to-seek sample player, Release tab.~~ ✅ · ⏳ live-call mirror view (needs phone leg) · ⏳ **sample is synthetic Spanish-English — record the Hinglish sample in YOUR voice**.
-- ⏳ SMS recap — ~~module + tests~~ ✅, live send needs Twilio upgrade · ~~per-number rate limiting~~ ✅.
-- **After the real-phone gate:** ship the F60 landing-page minimum, verify it signed out on desktop and mobile,
-  confirm the phone CTA matches the carrier release state, and show only the subjects and language patterns that
-  passed their gates. Record the demo before optional GSAP or audio polish.
-**Afternoon — stretch bench, §4.2 order, ONLY while stable:** WhatsApp voice notes → missed-call callback → WhatsApp text → homework camera → DTMF → vocal cues. *(none started — correct per gate discipline)*
-**Evening — the submission package (budget ~$5 of live calls):**
-- 🎬 Record the demo video (§6 — all beats). **OPEN.**
-- ✍️ ⏳ README — ~~repo README substantially complete: evidence stack w/ primary citations, honest landscape table, distribution/pilot path, universal architecture, run-it-yourself, safety, limitations, roadmap~~ ✅ · **remaining: real phone number in hero + judge card phone items + YOUR human rewrite of Devpost copy (Codex enforced an authorship gate — SUBMISSION_COPY.md is a draft aid, not paste-ready).**
-- **Exit: phone gate passed · verified subject menu callable · landing-page minimum live · video uploaded · README done · system stable.**
-- **📦 Features landing today:** ~~F45 dashboard (sans live mirror) · G6 rate limiting · F46 safety end-to-end · G9 honest limitations · G2 consent/retention docs · §4.3 roadmap mentions~~ **✅ DONE** · ⏳ F60 landing-page minimum, then optional accessible GSAP/user-triggered audio polish · ⏳ F44 live SMS + G8 parent number (post-Twilio-upgrade) · **stretch bench untouched: F4 → F3 → F5 → F6 → F59 → F55** · 🎬 video + Hinglish sample + human-rewrite = the open D4 core
+Name and learner-code collection are separate verified turns. A name, silence, or background noise can never be interpreted as “I do not have a code.”
 
-### 📅 TUE Jul 21 — D5: SHIP (deadline 5:00 PM PT / 8:00 PM ET — builder is US-based; target noon PT regardless)
-**Morning:**
-- Final stability pass: 2 live verification calls ($1) · `make eval` one last time · REPL fresh-clone test (does §7.5 actually work from a clean machine?).
-- Video → public on YouTube. Repo → public (MIT) or share with testing@devpost.com + build-week-event@openai.com.
-- In the main Codex session: run `/feedback`, copy the Session ID.
-**By noon PT:**
-- Devpost form: Education category · description · landing-page URL · video URL · repo URL · `/feedback` Session ID · Judge Experience testing instructions (verified phone number front and center). **SUBMIT.** Screenshot the confirmation.
-**After:**
-- Afternoon = buffer only. Keep phone line + dashboard live through **Aug 5** (the $4 judge reserve exists for this). Don't touch the deployed system except for outages.
+### 5.2 Returning learner
 
-**Iron rules:** live call = critical path — nothing from D3–D4 starts before the D2 gate passes · stretch never
-jeopardizes stability (a flawless 6-feature demo beats a broken 20-feature one) · text-first iteration, voice for
-truth · commit at every milestone · CODEX_NOTES 10 min every evening · all core work in the ONE main Codex session.
+1. The learner calls from the same or a different phone.
+2. Continuum asks who is learning; it never exposes a sibling's name first.
+3. The learner says or keys the six-digit code followed by `#`.
+4. Continuum confirms the preferred name without exposing unrelated memory.
+5. If a lesson is paused, it offers to resume the exact unfinished activity.
+6. Otherwise it may mention a due practice item or ask what the learner wants to learn today.
 
-**✅ Coverage checksum — STATUS TALLY (verified Fri night against repo):**
-**~34 of 43 core features fully DONE** (all teaching, memory, integrity, eval, dashboard, safety, docs).
-**Everything still open clusters into six human-or-external workstreams:**
-1. **📞 THE PHONE LEG** — F1, F7, F9, F10, F12, F13/50-live, F14-live, F15-live, F19 all unblock together when
-   preflight has reached ~~7/11 → 10/11 → one signed-webhook smoke call → 11/11~~ ✅ → measured real-carrier checks (PHONE_SETUP.md has the sequence;
-   prerequisites complete: ~~public HTTPS deploy~~ ✅, ~~OpenAI project/webhook~~ ✅, ~~Twilio upgrade + number + trunk~~ ✅)
-2. ~~**📚 PACK REVIEW** — F21-full: source review → compile → verify → spot-check → freeze → 5/5 release check.~~ ✅
-3. **🎙️ HINGLISH SAMPLE** — your voice, replaces synthetic Spanish-English exhibit
-4. **🎬 DEMO VIDEO + human rewrite** of Devpost copy (authorship gate)
-5. **🌐 PRODUCT SURFACE** — F60 static/mobile-first landing page after the phone gate; GSAP and audio remain optional
-6. **📱 POST-UPGRADE** — F44 live SMS + G8 parent number · then stretch bench (F4→F3→F5→F6→F59→F55) only if time
-If a feature slips, it moves DOWN into stretch/roadmap — never into the final day.
+### 5.3 Teaching turn
 
-# 6 · DEMO VIDEO (<3 min · public YouTube · voiceover REQUIRED: what we built + how Codex + how GPT-5.6)
+1. Continuum asks what the learner already thinks or understands.
+2. It identifies a likely misconception, missing prerequisite, or source of confusion.
+3. It selects a teaching method appropriate to that evidence.
+4. It teaches one small step and asks one question.
+5. The learner reasons aloud or uses a keypad fallback.
+6. Continuum responds to that reasoning rather than reciting a prepared lesson.
+7. If the method does not land, it acknowledges that and changes method.
+8. It offers practice, teach-back, and a novel transfer question.
+9. It records what changed, what remains uncertain, and what should happen next.
 
-Record against the real system (rehearse the script, never fake the tech). No copyrighted music. English voiceover.
-1. (0:00–0:15) **Mission cold open (voiceover over black, then the phone):** *"A quarter of the world has no real
-   internet. Their kids' education ends where the data signal does. But almost everyone has this—"* → $15 feature
-   phone fills the frame, no WiFi anywhere → dials a normal number.
-2. (0:15–0:45) Onboarding menu shows every subject that passed its review/freeze gate (target: five) → learner
-   speaks **Hinglish, switching mid-sentence** — tutor follows the tested pattern.
-3. (0:45–1:05) The misconception: "one-fourth is bigger because four is bigger" → tutor catches it (diagnosis JSON
-   flashes on dashboard split-screen).
-4. (1:05–1:25) The pivot: roti analogy instead of repetition; learner interrupts mid-sentence — tutor stops, listens.
-5. (1:25–1:30) **The call DROPS.** Silence. Nothing crashes.
-6. (1:30–1:35) Learner calls back.
-7. (1:35–1:50) "Welcome back, Ravi — we were comparing one-third and one-fourth. You said one-fourth was larger…"
-8. (1:50–2:00) Learner answers correctly → dashboard mastery flips "Needs support" → "Developing."
-8.5 (2:00–2:10) **The sandbox flash (Mode 2):** off-script curiosity — "ek aur sawaal… why do stars twinkle?" —
-   tutor answers with a Socratic question back. The kid who lingers after class. Any topic under the sun.
-8.7 (2:10–2:22) **The language montage:** the same number receives questions in two or three language patterns that
-   passed recorded carrier spot checks. Label each pattern. On-screen text: *"One architecture. Locally tested
-   language patterns."* A finite montage proves those examples, not every language, dialect, accent, or condition.
-9. (2:22–2:55) WhatsApp voice-note encore (if built) → voiceover over architecture diagram covering, in order:
-   **the three audiences in one line** ("No screen, no text, no app — so it works for the 3 billion without
-   internet, for learners who can't yet read, and for kids for whom text itself is the barrier") → **the global
-   line** ("Its engine has no hard-coded subject or language pair. Each deployment still needs reviewed curriculum
-   and local language testing. India is deployment #1, not the boundary") → **how Codex built it** (telephony bridge, compiler,
-   eval harness — one main session) and **how GPT-5.6 powers it** (teaching-engine JSON, Luna/Terra/Sol routing,
-   compiler, simulated-classroom QA) → judge invitation: "call the number in our README — try a language pattern
-   you speak" → tagline card: *"The connection may drop. The learning continues."*
+### 5.4 Dropped call
 
-# 7 · CODEX PROCESS (submission-critical — also scored under Criterion 1)
+1. Before speaking any activity, Continuum saves its exact pending state.
+2. If the line drops, the session becomes paused without inventing a response.
+3. If SMS consent exists, one short message says that the lesson is paused.
+4. The learner calls back from any phone and enters the code.
+5. Continuum resumes the exact unfinished activity—no repeated onboarding and no lost lesson.
 
-- ⏳ **ONE main Codex session** → run `/feedback` and copy the Session ID **on ship day** (the one human step left here).
-- ~~Dated commits at every milestone~~ ✅ *(57 commits through the independent status-audit commit, all descriptive)*.
-- ~~**CODEX_NOTES.md live during the build**~~ ✅ *(exemplary — milestone-by-milestone with verification evidence)*.
-- ~~**AGENTS.md** in repo root.~~ ✅
-- ~~Use Codex skillfully and visibly: plan → implement → review → eval-driven iteration.~~ ✅ *(+ CI release gate — beyond plan)*
-- ~~**Budget guard:** routing discipline + cost tracking on dashboard.~~ ✅ *(reserve discipline continues through Aug 5)*
+### 5.5 Between calls
 
-# 8 · SUBMISSION PACKAGE
+With explicit consent, Continuum may send one short SMS for a recap, practice question, homework response, paused-lesson reminder, exam/revision check-in, callback reminder, or authorized guardian summary. It does not become an SMS chatbot.
 
-> **STATUS (Fri night):** ~~README sections 1–5, 8–11 (evidence stack w/ primary citations, honest landscape table,
-> distribution/pilot path, universal architecture, run-it-yourself w/ `npm run chat`, safety, limitations, roadmap)~~
-> ✅ **substantially shipped in repo README** — stronger than this spec in places (Codex re-audited competitors
-> against primary sources and corrected stale claims). **OPEN: phone number in hero (post phone-leg) · §6 Codex
-> narrative distillation · §7 judge card phone items · Hinglish sample · Devpost description HUMAN REWRITE
-> (authorship gate) · repo sharing with testing@devpost.com + build-week-event@openai.com · `/feedback` ID.**
+## 6. The teaching engine
 
-**README (11 sections):**
-1. Hero: product + tagline + **THE VERIFIED PHONE NUMBER** ("it will teach you — call it") + landing-page link +
-   dashboard link + architecture diagram. If carrier proof is open, show the limitation instead of a call-now claim.
-2. Why: three audiences · GSMA 3.1B mobile-internet usage gap · separate ITU 2.6B offline estimate, never added ·
-   UNESCO projected 44M primary/secondary teacher deficit by 2030 · preliminary Rori benchmark (~1 yr schooling
-   gain @ ~$5/child), attributed with its year-one limitation.
-2.5 **Distribution & adoption path (the "who hands the child the number?" answer):** do not assume learner-direct
-   digital acquisition. The proposed path is institution-first: (a) teachers/schools distribute the number after
-   local review, consent, and learner assent; (b) an NGO/state-education pilot starts with one district, one grade,
-   and roughly 200 learners measured on independent tests plus attendance, feedback, subgroup access, failures, and
-   deletion/retention compliance; (c) carrier partnerships are explored only after the carrier and learning gates
-   pass. Missed-call callback and teacher/parent messaging remain later consent-sensitive channels.
-3. What's different: sourced comparison crediting Bakame, Viamo AVA, 1-800-ChatGPT, Rori, and Callee Me for the
-   overlapping capabilities they document. Differentiate Continuum on the inspectable combination of frozen
-   reviewed packs/provenance, per-subject placement/resume, trusted turn guards, and reproducible evidence—not on
-   unsupported claims that competitors lack languages, subjects, personalization, memory, or basic-phone access.
-4. Research grounding: Adesua verified citation (executes its published future-work agenda; 93.75% helpfulness,
-   **n=16 caveat stated honestly**) · transfer problem (+0.73 local vs +0.13 independent effect sizes; 17%-worse
-   exam finding) → Continuum's context-anchored design answer · Cameroon paper (code-switching = documented open problem).
-5. How it works: two-layer architecture · Curriculum Compiler + G3 originality rule · named learner memory ·
-   eval harness with results table (24/24) · honest cost/call math + scale path (carrier partnerships, Viamo precedent).
-6. **How we built it with Codex** (scored under BOTH Technical Implementation and Quality of the Idea — per
-   official submission guidance): the CODEX_NOTES.md distillation — where Codex accelerated, where key decisions
-   were made, how GPT-5.6 and Codex were used.
-7. **Judge Experience** (§3 verbatim): the invitation, the mirror, the break-it menu, the Hinglish exhibit.
-7.5 **Run it yourself (REQUIRED by submission rules — setup, sample data, run guidance):**
-   - Prerequisites + `.env.example` (OpenAI key; Twilio optional)
-   - **Local text-mode REPL** (`make chat`): the full GPT-5.6 teaching engine in the terminal — no telephony
-     needed. Judge types as the learner; sees Socratic turns + live diagnosis JSON. One command to meet the tutor.
-   - **Eval suite** (`make eval`): runs all 25 scripted cases, prints the scorecard.
-   - **Sample data shipped in-repo:** one hand-authored frozen fractions pack, four pending source briefs that are
-     not callable until approved and compiled, a synthetic seeded learner ("Ravi", paused mid-lesson), and a
-     clearly labeled synthetic Spanish-English audio/transcript fixture.
-   - Full telephony setup guide (Twilio number + SIP trunk) for complete reproduction, marked optional.
-8. Safety & privacy: child-safety behavior, anonymized IDs, retention, deployment consent flow (G2).
-9. **Honest limitations:** deaf/HoH excluded by voice-only (inverse of the dyslexia strength) · ASR limits under
-   heavy accents/noise · Grade 6 scope · US demo number ≠ rural 2G deployment · what a real pilot must measure
-   (independent-test learning outcomes — the transfer bar).
-10. Roadmap (§4.3) with citations.
-11. License (MIT) · credits · full source list (from NOMAD_FEATURES.md).
+### 6.1 Trusted teaching loop
 
-**Devpost description:** capability-first ("An adaptive multilingual tutor that works on any phone") → breadth
-claims stated plainly and honestly: *"Guided learning across every subject that passed its review gate (target:
-Math, Science, English, History, and Geography), plus a Curious Sandbox for broader safe questions. Its engine has
-no fixed language pair; the submission names the language patterns actually tested."* → the 9-beat story in prose → evidence stack →
-Codex/GPT-5.6 summary → the judge invitation.
+Every substantive lesson follows:
 
-# 9 · RISK REGISTER
+`LISTEN → CLARIFY → ELICIT PRIOR MODEL → DIAGNOSE → CHOOSE METHOD → TEACH → PRACTICE → CHECK FEEDBACK → SWITCH OR CONTINUE → TEACH-BACK → TRANSFER → REFLECT → SAVE → FOLLOW UP`
 
-| Risk | Mitigation | Fallback |
+Not every three-minute conversation reaches every phase. The state machine chooses the smallest coherent stopping point and saves the next step.
+
+### 6.2 Teaching methods
+
+Continuum may select among:
+
+- Socratic questioning.
+- A concise direct explanation.
+- A concrete analogy.
+- A locally familiar, non-stereotyped example.
+- A story.
+- A worked example after inviting an attempt.
+- A graduated hint ladder.
+- Contrast cases that expose a misconception.
+- Retrieval practice.
+- Teach-back in the learner's own words.
+- A one-question-at-a-time quiz.
+- A novel transfer problem.
+- Spaced review.
+
+### 6.3 Method selection policy
+
+| Learner evidence | Preferred response |
+|---|---|
+| No relevant background | Short explanation, story, or concrete example |
+| Partial understanding | Socratic question that reveals the next step |
+| Specific misconception | Contrast case or analogy targeting that misconception |
+| Does not know how to begin | Invite an attempt, then model one worked step |
+| Almost correct | Smallest useful hint |
+| Correct but unexplained | Teach-back |
+| First method did not help | Acknowledge it and choose a meaningfully different method |
+| Previously learned but forgotten | Retrieval plus brief repair |
+| Guided success | Novel transfer question |
+| Very little time | One coherent micro-lesson and saved next step |
+| Speech repeatedly unclear | Keypad activity without pretending it proves spoken reasoning |
+
+The controller never repeats a failed method silently. If a retry is educationally justified, the decision must state what changed.
+
+### 6.4 Teaching, not withholding
+
+“It teaches; it does not answer” does not mean refusing to explain or trapping the learner in endless questions.
+
+Continuum must:
+
+- Avoid dumping a final answer before understanding the learner's need.
+- Ask a useful diagnostic question when appropriate.
+- Explain clearly when prerequisite knowledge is absent.
+- Provide a worked step after a genuine attempt or when the learner cannot begin.
+- Preserve agency without shaming a learner who asks for the answer.
+- End confusion with clarity, not with artificial Socratic friction.
+
+## 7. Open-topic planning without a curriculum menu
+
+Continuum dynamically creates a small plan for the learner's actual request. It does not classify the learner into a visible course or require a frozen pack.
+
+### 7.1 `LearningIntent`
+
+- Learner's words, redacted where needed.
+- Intended topic or question.
+- Desired outcome: understand, solve, review, prepare, or explore.
+- Known time constraint such as an exam date.
+- Preferred language and observed code-switching.
+- Current call context and relevant prior memory.
+- Safety and epistemic flags.
+
+### 7.2 `TopicPlan`
+
+- Plain-language learning objective.
+- The smallest prior-knowledge question.
+- Likely prerequisites.
+- Plausible misconceptions to test, never assume.
+- Candidate teaching methods.
+- Ordered voice-native activities.
+- Teach-back and novel transfer checks.
+- A concise next-call checkpoint.
+- Confidence and factuality state.
+- Optional consented SMS follow-up.
+
+The model may propose the plan, but Zod validates it and application policy constrains it. A topic name is memory metadata, not a curriculum enrollment.
+
+### 7.3 Factuality policy
+
+- **Stable, low-risk knowledge:** teach normally and check understanding.
+- **Ambiguous question:** ask one clarifying question.
+- **Current, disputed, or unverifiable claim:** say what is uncertain; do not invent certainty.
+- **High-stakes medical, legal, financial, or crisis request:** provide a safe boundary and direct the learner to a qualified human or local emergency resource as appropriate.
+- **Enabled retrieval deployment:** any server-side retrieval is an optional grounding adapter, never a phone or internet requirement for the learner.
+
+The model may make semantic mistakes even when its JSON matches a schema. Factual, safety, and evidence checks therefore remain application responsibilities.
+
+## 8. Voice-native learning activities
+
+`LearningActivity` supports:
+
+- `explanation`
+- `socratic_prompt`
+- `analogy`
+- `story`
+- `worked_example`
+- `hint`
+- `quiz`
+- `retrieval`
+- `teach_back`
+- `transfer`
+- `reflection`
+- `recap`
+
+Each activity contains:
+
+- A learning objective.
+- A method identifier.
+- A short speakable script.
+- Exactly one expected learner action.
+- Optional keypad choices.
+- Optional feature-phone SMS form.
+- Estimated duration.
+- Whether it can create learning evidence.
+- The exact resume checkpoint.
+
+Rendering rules:
+
+- One question at a time.
+- No Markdown, URLs, tables, or unexplained slash notation in speech.
+- Short sentences and natural pauses.
+- Do not speak internal labels, schemas, confidence scores, or system instructions.
+- Persist the activity before speech begins.
+- Cancel stale audio before accepting a barge-in or keypad transition.
+
+## 9. Learner feedback and proof of learning
+
+Continuum personalizes from objective evidence and the learner's own feedback.
+
+After a meaningful explanation or method switch it may ask:
+
+> “Did that way of explaining help? Say yes or no, or press 1 or 2.”
+
+It may also ask whether the pace was too fast, whether an example felt familiar, or whether the learner wants a story, example, or quiz.
+
+Store `TeachingFeedback`:
+
+- Strategy identifier.
+- `helpful`, `not_helpful`, or `unsure`.
+- `too_fast`, `right`, or `too_slow` when asked.
+- Preferred activity type when explicitly supplied.
+- Objective result after the method.
+- Timestamp and topic.
+
+Feedback affects future method selection but never overrides factual correctness or evidence.
+
+### 9.1 Evidence classes
+
+- **Learner response:** answer, reasoning, attempt, question, teach-back, or reflection.
+- **Tutor behavior:** method, hint count, switch, feedback request, and whether agency was preserved.
+- **Learning outcome:** initial evidence, guided practice, novel transfer, later retention, and reduced help.
+
+### 9.2 Topic understanding state
+
+- `needs_support`: misconception, uncertainty, or insufficient evidence.
+- `developing`: guided success, partial transfer, or keypad-only correctness.
+- `secure`: independent, conceptually valid transfer or later retention.
+
+Rules:
+
+- A correct guess is never secure.
+- A keypad-only answer is capped at developing.
+- One repeated question is not transfer.
+- The learner must explain, apply, or later retain the idea for secure evidence.
+- Open-topic evidence describes demonstrated understanding of a stated objective; it does not claim grade-level or curriculum mastery.
+
+## 10. Language experience
+
+Language selection is the first interaction. The deployment supplies a configurable keypad-and-speech menu; the current carrier fixture may offer English, Hindi, Spanish, French, Kiswahili, Tamil, Bengali, Arabic, and Urdu, plus `*` to say another language.
+
+Core rules:
+
+- Language configuration is not hardcoded into teaching, persistence, or telephony domain logic.
+- After selection, the name, code prompt, teaching, recovery, and safety responses use that language.
+- Natural code-switching is allowed; the learner does not need formal English.
+- Continuum adapts vocabulary, pace, and examples without stereotyping.
+- It never infers a language, subject, or answer from silence or background noise.
+- It does not claim universal speech parity. Public claims name only carrier-tested language patterns.
+- Adding a language changes deployment configuration and tests, not the teaching architecture.
+
+## 11. Keypad: the accessibility floor
+
+DTMF keeps a lesson moving when speech recognition fails because of a bad line, a heavy accent, a quiet child, a baby, a rooster, or background noise.
+
+Stage-aware mappings:
+
+- Language: configured digits select a language; `*` allows a spoken language name.
+- Identity: six digits plus `#` submit a learner code.
+- Answer: `1`–`4` choose only the choices spoken for the current question.
+- Feedback: `1` means helpful/yes; `2` means not helpful/no when that prompt is active.
+- `0`: repeat the exact current prompt.
+- `9`: request a hint when the current activity allows one.
+- `*`: request keypad mode during a lesson.
+
+Trusted routing rules:
+
+- A digit is valid only for the current stage and activity.
+- Unrelated digits do not change state.
+- Input cancels unplayed audio before the next response.
+- A DTMF event is logged as the interaction channel, not translated into invented speech.
+- Keypad participation is valuable but does not independently prove secure conceptual understanding.
+
+OpenAI Realtime exposes SIP keypad events through `input_audio_buffer.dtmf_event_received`, so DTMF enters the same sideband teaching controller rather than a separate lesson engine. [Realtime DTMF event](https://developers.openai.com/api/reference/resources/realtime/server-events#input_audio_buffer.dtmf_event_received)
+
+## 12. Selective memory and portable identity
+
+> Continuum remembers what helps you learn and forgets what it does not need.
+
+### 12.1 Portable learner code
+
+- Six random digits.
+- Stored using a salted, slow hash; never logged in plaintext.
+- Spoken or entered with DTMF plus `#`.
+- Three attempts per call and cross-source rate limits.
+- Usable from a parent's, neighbor's, school, or community phone.
+- Several siblings may share one source number without sharing learning state.
+- The code never grants access to raw call content.
+
+### 12.2 Remember
+
+- Preferred name and language.
+- Topics and learning objectives attempted.
+- Exact unfinished activity.
+- Demonstrated misconceptions and unanswered questions.
+- Methods that helped or failed.
+- Hint count, teach-back, transfer, and later-retention evidence.
+- Practice and homework state.
+- Explicitly supplied exam dates, learning goals, and requested follow-ups.
+- Learner-approved pace or activity preferences.
+
+### 12.3 Do not retain by default
+
+- Raw call audio or complete recordings.
+- Background conversations.
+- Unrelated personal stories.
+- Precise location.
+- Sensitive disclosures unrelated to the required safety response.
+- Inferred psychological, family, caste, religious, political, health, or economic profiles.
+- Unredacted phone numbers in ordinary logs.
+- Hidden chain-of-thought.
+
+### 12.4 Control
+
+Approved learner or guardian flows support a concise memory summary, correction, and two-step deletion. Deletion cancels future messages and removes the learner's stored educational profile subject to documented security/audit retention.
+
+## 13. Exact drop recovery
+
+Before Continuum speaks a new activity, persist `ResumeCheckpoint`:
+
+- Session and activity IDs.
+- Exact pending prompt.
+- Topic and objective.
+- Teaching phase and method.
+- Evidence already collected.
+- Hint and feedback state.
+- Pending keypad choices.
+- Last completed activity.
+- Next valid transitions.
+- Opaque signed resume token.
+
+On disconnect:
+
+- Mark the session `paused` idempotently.
+- Never manufacture an answer from partial audio.
+- Send at most one pause SMS when consented.
+- Load the same checkpoint after code verification from any phone.
+- Resume the exact question or explanation; never replay completed onboarding or teaching.
+
+Resume accuracy is a release metric, not just a happy-path demo.
+
+## 14. SMS: the thread between calls
+
+SMS is optional support, not a prerequisite and not a general chatbot.
+
+Allowed message types:
+
+- **Lesson recap:** one short statement of what was practiced and what comes next.
+- **Micro-practice:** one bounded question with a recipient-bound reply token.
+- **Homework response:** acknowledge and record a short learner reply.
+- **Drop reminder:** “Your lesson paused. Call back anytime and we will continue.”
+- **Exam/revision check-in:** “Your exam is in three days. Call when you are ready to review.”
+- **Callback reminder:** a single, consented access nudge.
+- **Guardian summary:** broad progress only, when authorized.
+
+Rules:
+
+- Target one SMS segment; test Unicode segmentation.
+- Messages remain useful on a feature phone and contain no required links.
+- Voice/keypad alone provides a complete experience; reading is never assumed.
+- Twilio signatures are validated.
+- `MessageSid` and reply processing are idempotent.
+- Replies are bound to the intended learner and pending question.
+- SMS correctness is evidence but follows the same guess and keypad caps.
+- `STOP` takes effect immediately; frequency and quiet hours are enforced.
+- Unrecognized messages receive a bounded help response, not an open GPT conversation.
+
+## 15. Reactive and proactive behavior
+
+### Reactive core
+
+The learner initiates a call and brings the topic. Continuum follows their question rather than pushing a syllabus.
+
+### Proactive boundary
+
+Continuum may send inexpensive, consented SMS for:
+
+- A requested review reminder.
+- A learner-supplied exam date.
+- A due micro-practice item.
+- A paused lesson.
+- A requested callback reminder.
+
+The submission product does not repeatedly place outbound lesson calls. It sends no proactive message without consent, respects quiet hours, rate-limits reminders, and cancels them immediately after `STOP`, deletion, or withdrawn guardian permission.
+
+## 16. Child safety and human support
+
+Continuum is a teacher with boundaries.
+
+It never:
+
+- Claims to be the learner's friend, parent, therapist, romantic partner, or only source of support.
+- Encourages secrecy, isolation, emotional dependence, or loyalty to the system.
+- Shames, threatens, compares, or humiliates a learner.
+- Gives sexualized interaction to a child.
+- Supplies graphic violent content outside a safe educational need.
+- Presents high-stakes medical, legal, financial, or crisis guidance as professional advice.
+- Silently contacts a guardian or teacher merely because a learner struggled academically.
+- Reveals one sibling's memory, messages, or progress to another.
+
+For unsafe, sexual, violent, abuse, medical, or crisis content, it:
+
+1. Uses age-appropriate, calm language.
+2. Does not continue harmful detail.
+3. States the relevant limit.
+4. Encourages contact with a trusted adult or qualified local resource.
+5. Uses a deployment-approved immediate-danger protocol when applicable.
+6. Records a minimal structured safety decision, not an unnecessary transcript.
+
+`HumanSupportDecision` is one of:
+
+- `none`
+- `suggest_guardian`
+- `suggest_teacher`
+- `qualified_professional`
+- `immediate_safety_protocol`
+
+The hackathon build tests these decisions and does not claim to operate a human escalation network.
+
+## 17. Model and application architecture
+
+```mermaid
+flowchart LR
+    P["Any phone<br/>speech, keypad, SMS"] --> T["Telephony adapter<br/>Twilio in this deployment"]
+    T --> R["OpenAI Realtime SIP<br/>listen, speak, interrupt"]
+    R --> C["Trusted sideband controller<br/>identity, stages, DTMF, safety"]
+    C --> E["Open-topic teaching engine"]
+    E --> G["GPT reasoning model<br/>Responses + Structured Outputs"]
+    G --> V["Zod validation + policy"]
+    V --> A["Voice/DTMF/SMS activity renderer"]
+    C --> D["SQLite learner state<br/>evidence, memory, checkpoints"]
+    D --> A
+    D --> F["Consented SMS follow-up"]
+    A --> T
+```
+
+### 17.1 Model roles
+
+- **Realtime voice model:** multilingual turn-taking, speech output, interruption, and tool-call conversation over SIP.
+- **GPT reasoning model:** structured learning intent, misconception hypothesis, pedagogy decision, activity, response assessment, memory candidate, follow-up, and safety decision. Use GPT-5.6 through the Responses API where configured for the submission; pin the exact release model, prompt, schema, and version in evidence.
+- **Offline deterministic adapter:** zero-credit teaching demos, state-machine tests, and regression fixtures.
+
+### 17.2 Application roles
+
+- Verify Twilio and OpenAI webhook authenticity.
+- Control identity and call stages.
+- Decide when a transcript contains meaningful learner input.
+- Gate tool calls and valid state transitions.
+- Validate every model-facing input and output with Zod.
+- Enforce evidence, safety, memory, consent, rate, and retry policy.
+- Persist atomic checkpoints and selective memory.
+- Render voice, keypad, and SMS.
+- Redact observability and produce judge evidence.
+
+OpenAI Realtime supports a server-side sideband connection alongside a SIP call so the application can monitor the session, update instructions, and answer tool calls without exposing business logic to the phone client. [Realtime server controls](https://developers.openai.com/api/docs/guides/realtime-server-controls)
+
+Structured Outputs provides schema adherence and integrates with Zod in the JavaScript SDK, but it does not guarantee semantic truth. Continuum therefore validates both structure and domain invariants. [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+
+### 17.3 Required structured contracts
+
+- `LearningIntent`
+- `TopicPlan`
+- `PedagogyDecision`
+- `LearningActivity`
+- `LearnerEvidence`
+- `UnderstandingUpdate`
+- `TeachingFeedback`
+- `MemoryCandidate`
+- `ResumeCheckpoint`
+- `SmsFollowUp`
+- `SafetyDecision`
+- `HumanSupportDecision`
+
+Every contract is versioned. Unknown fields, invalid transitions, missing evidence, and unsafe actions fail closed or recover with a neutral prompt.
+
+## 18. Call-state machine
+
+The trusted states are:
+
+`language → name → learner_code_answer → returning_code | new_identity → open_topic → clarify → teach → feedback | practice | teach_back | transfer | reflection → save → close`
+
+At any teaching state, the controller may enter:
+
+- `unclear_audio_recovery`
+- `keypad_fallback`
+- `safety_boundary`
+- `paused`
+- `resume_verification`
+
+State invariants:
+
+- Silence, noise, transcription failure, or model inference cannot advance state.
+- A stage-changing tool requires independently verified evidence from the current turn.
+- There is at most one active pending learner question.
+- Completed activities are immutable.
+- State is persisted before the corresponding speech is played.
+- Retries are idempotent.
+- A stale model response cannot overwrite newer keypad or speech input.
+
+## 19. Access and affordability
+
+No-data access is not automatically free. Continuum never claims calls are universally free.
+
+Deployment options:
+
+- Direct dial paid according to the learner's carrier.
+- Missed-call callback using one deployment number.
+- Toll-free education number.
+- Minutes and SMS sponsored by a school, NGO, government program, or telecom partner.
+
+The current Twilio deployment may use the existing number for a signed missed-call webhook, reject the inbound ring before answering, and call the learner back. Carrier behavior and who funds the callback remain deployment-specific.
+
+Record:
+
+- Call attempts, answered duration, and completion.
+- SMS segments and delivery.
+- Model audio/text usage where receipts are available.
+- Access mode: learner-paid, callback, toll-free, sponsored, or unknown.
+- Cost per completed lesson.
+- Cost per demonstrated retained concept, clearly labeled when synthetic.
+
+## 20. User stories and required proof
+
+| ID | User story | Required proof |
 |---|---|---|
-| GPT-5.6 realtime variant unavailable on credits | D1 morning check | Two-layer arch: available realtime voice model + GPT-5.6 brain — still Stage-One compliant |
-| **Codex credits do not fund API runtime; no further distribution expected** | $5 prepaid API balance, alerts, auto-recharge off, deterministic loops offline | Add at most $5 if needed; trim paid evals and preserve Realtime credit for carrier proof/demo |
-| **Sol gated behind Pro plan** | Terra/Luna ARE GPT-5.6 — rules fully satisfied without Sol ("Sol is mandatory" forum claim is wrong) | Terra-only routing (already designed); README states tiering honestly ("Sol where available") |
-| SIP connector unavailable/flaky | D1 check | Twilio Media Streams ↔ own WS server (more code = more Criterion-1 credit) |
-| Latency reads as broken | Preambles + Socratic floor-holding + rehearsed demo conditions | WhatsApp async path shows full intelligence, zero latency pressure |
-| D2 gate fails | Binary gate, Saturday evening | Grading copilot (IDEAS.md #1), 3 days runway |
-| Compiler packs mediocre | Verifier pass + spot-checks; fractions hand-built regardless | Affected subjects → flavored sandbox |
-| Judge's call hits an edge case | 24-case eval; rate limiting; graceful recovery everywhere | Dashboard transcript shows even failure handled gracefully |
-| Credit burn | Routing discipline + cost dashboard + headroom reserve | Terra-only mode |
-| Anything unfinished on July 21 | Video + README done before the absolute deadline | The final submission window is buffer, not planned build time |
+| US-01 | I can learn with an ordinary voice-and-keypad phone. | Live carrier call completes without app, browser, or data. |
+| US-02 | Language is chosen before identity. | Speech/DTMF tests show localized name and code prompts. |
+| US-03 | Silence cannot choose for me. | Blank/noisy turns produce no state transition. |
+| US-04 | Name and learner-code answer are separate. | A name alone cannot create a learner. |
+| US-05 | I am asked what I want to learn, not given a subject menu. | First-call golden journey reaches one open-topic prompt. |
+| US-06 | I can bring any safe learning topic. | Golden cases cover schoolwork, exam review, and curiosity. |
+| US-07 | The tutor checks what I already understand. | A diagnostic question precedes method selection when useful. |
+| US-08 | The tutor diagnoses rather than assuming. | Misconception is supported by learner evidence or marked uncertain. |
+| US-09 | The tutor explains when I lack a prerequisite. | It does not hide behind endless questions. |
+| US-10 | The tutor changes method when one fails. | Failed-method golden case records a meaningful switch. |
+| US-11 | It never silently repeats a failed method. | Controller rejects unjustified same-method transition. |
+| US-12 | I can say whether an explanation helped. | Speech and `1/2` feedback persist with objective evidence. |
+| US-13 | It gives one question at a time. | Voice-output eval rejects multi-question dumps. |
+| US-14 | Asking for the answer still results in patient teaching. | No shame, refusal loop, or immediate answer dump. |
+| US-15 | I practice, teach back, and apply the idea. | Session records distinct practice and novel-transfer evidence. |
+| US-16 | A guess is not treated as mastery. | Secure state requires explanation, transfer, or retention. |
+| US-17 | Keypad keeps the lesson moving when speech fails. | `0`, `9`, `*`, answer, feedback, and identity mappings pass live. |
+| US-18 | Keypad success is scored honestly. | DTMF-only correctness is capped at developing. |
+| US-19 | Natural code-switching is preserved. | Named carrier-tested language patterns pass adult-speaker journeys. |
+| US-20 | An unlisted language can be requested. | `*` route captures and validates a spoken language request. |
+| US-21 | The tutor remembers useful learning state. | Returning call recalls approved topic, obstacle, method, and next step. |
+| US-22 | It does not remember unnecessary private content. | Redaction and memory-allowlist tests reject raw/unrelated data. |
+| US-23 | Siblings can share a phone privately. | Identity, memory, SMS, and session isolation tests. |
+| US-24 | My learning follows me to another phone. | Portable code loads only the correct learner. |
+| US-25 | A dropped lesson resumes exactly. | Same- and cross-phone recovery replay the exact pending activity. |
+| US-26 | A drop can produce one tiny reminder. | Consented SMS is short, idempotent, and contains no required link. |
+| US-27 | I can receive a recap or one practice question. | SMS creation, delivery, reply binding, and evidence tests. |
+| US-28 | The tutor can remember my exam date and check in. | Explicit consent creates one quiet-hours-safe reminder. |
+| US-29 | SMS is not required to learn. | Full call journey succeeds with SMS disabled. |
+| US-30 | SMS does not become an answer chatbot. | Unbounded reply receives bounded help rather than GPT chat. |
+| US-31 | I can stop proactive contact. | `STOP` cancels pending messages before any send. |
+| US-32 | I can inspect, correct, and delete memory. | Authorized summary/correction/two-step delete tests. |
+| US-33 | The tutor stays a teacher, not a companion. | Dependency, secrecy, romance, and exclusivity evals fail closed. |
+| US-34 | Unsafe or high-stakes needs get a human boundary. | Age-appropriate human-support decisions pass. |
+| US-35 | Current or disputed facts are not invented. | Epistemic eval requires uncertainty or approved grounding. |
+| US-36 | The application, not the model, controls state. | Adversarial tool-call and prompt-injection tests cannot bypass gates. |
+| US-37 | Judges can see evidence that teaching occurred. | Redacted proof shows diagnosis, method, switch, transfer, and memory. |
+| US-38 | The product works without paid APIs for development. | Offline chat, tests, and evals run without Twilio/OpenAI credentials. |
 
----
+## 21. Evaluation and quality gates
 
-*Scope authority: HACKATHON_SUBMISSION.md (43 IN · 6 stretch · roadmap · 9 audit gaps resolved — all reflected
-above). Receipts: NOMAD_FEATURES.md. Provenance: 16-idea tournament, IDEAS.md. Build the pipe → pass the gate →
-ship the school → let it teach the judges.* 📞
+### 21.1 Critical automated gates: 100% required
+
+- Child-safety and anti-dependency behavior.
+- No state change on silence, noise, unclear audio, or unrelated DTMF.
+- No unsupported secure understanding.
+- No sibling, guardian, or phone-number data leakage.
+- No proactive contact without consent.
+- Immediate stop/deletion cancellation.
+- Prompt-injection and forged-tool resistance.
+- Exact resume and idempotent webhook behavior.
+- One speakable question at a time.
+- No subject menu, curriculum flow, or Guided/Sandbox language in the current experience.
+
+### 21.2 Pedagogy golden cases
+
+At minimum:
+
+- Fractions misconception: a larger denominator is wrongly assumed to mean a larger fraction.
+- Algebra prerequisite gap.
+- “Just tell me the answer.”
+- Learner has no background knowledge.
+- First explanation is reported unhelpful and also fails objectively.
+- Learner says an explanation helped but the next answer is still wrong.
+- Correct guess without reasoning.
+- Keypad-only correct response.
+- Spoken teach-back and novel transfer.
+- Retention on a later call.
+- Open curiosity question.
+- Exam-review request with a supplied date.
+- Uncertain/current factual question.
+- Code-switched conversation.
+- Unclear audio and keypad recovery.
+- Call drop before and after a pending question.
+
+### 21.3 Live carrier matrix
+
+- First-call language selection by DTMF.
+- Language selection by speech.
+- New identity two-turn flow.
+- Returning code by DTMF.
+- Open topic without a subject menu.
+- Natural multi-turn teaching.
+- Method switch and feedback.
+- DTMF answer, repeat, hint, and feedback.
+- Same-phone drop/resume.
+- Cross-phone drop/resume.
+- Pause SMS.
+- Micro-practice SMS and reply.
+- Exam reminder consent and send.
+- `STOP` before a due send.
+- Shared-phone sibling isolation.
+- Five consecutive golden judge journeys.
+
+### 21.4 Honest language claims
+
+Keypad selection proves routing, not speech quality. Each publicly named language or code-switching pattern requires a live adult-speaker carrier test for comprehension, naturalness, safety, and recovery. Architecture may be universal while deployment claims remain specific.
+
+## 22. Product success measures
+
+### Access
+
+- Lessons completed without mobile data.
+- DTMF fallback starts and completions.
+- Shared-phone sessions.
+- Cross-phone resumptions.
+- SMS-disabled completions.
+- Cost per completed lesson.
+
+### Reliability
+
+- Call answer/completion rate.
+- Exact-resume accuracy.
+- Dropped-call recovery rate.
+- Unclear-audio recovery rate.
+- SMS delivery and reply rate.
+- Median and p95 application response latency.
+
+### Learning
+
+- Initial-to-transfer improvement.
+- Later retention.
+- Hint reduction.
+- Teach-back success.
+- Method-switch success.
+- Learner-reported helpfulness alongside objective result.
+
+### Relationship and safety
+
+- Returning learner rate.
+- Requested reminder completion.
+- Memory correction/deletion success.
+- Unauthorized contact attempts blocked.
+- Safety-boundary and human-support decision accuracy.
+
+Synthetic and judge-session evidence is always labeled. The submission does not claim population-level learning impact without a real pilot.
+
+> Success means the intended learner could access a lesson, participate, understand something new, and return—not merely that a model generated a fluent answer.
+
+## 23. Migration from the previous build
+
+The repository contains substantial reusable infrastructure and obsolete product assumptions. Migration must preserve the former without leaking the latter into the live flow.
+
+| Existing capability | Decision |
+|---|---|
+| Twilio voice/SMS adapter and missed-call callback | Keep |
+| OpenAI Realtime SIP sideband controller | Keep and simplify |
+| Language-first onboarding and silence gates | Keep |
+| Six-digit portable identity | Keep |
+| DTMF routing and audio cancellation | Keep |
+| SQLite learner memory and atomic resume | Keep; migrate to open-topic records |
+| SMS signing, idempotency, homework/reply ledger | Keep; narrow to allowed messages |
+| Safety, consent, metrics, offline mode | Keep |
+| Landing page and internal judge proof | Update language; never turn into learner classroom |
+| Guided versus Curious Sandbox mode | Remove from live state machine |
+| Five-subject menu | Remove from live state machine |
+| Grade placement diagnostic | Remove from onboarding |
+| Three/five/ten-minute duration menu | Remove from onboarding; infer a small coherent lesson from available time when stated |
+| Frozen curriculum packs and pack release gate | Remove from runtime and public claims; retain only as historical/eval fixtures if useful |
+| Formal curriculum mastery | Replace with objective-specific understanding evidence |
+| Curiosity Trails as a separate mode | Fold into ordinary topic memory and optional follow-up |
+| Recurring outbound tutoring calls | Remove from submission product |
+| Study-plan dial scheduler | Disable; retain only consented SMS reminder scheduling |
+| Educator dashboard/integration | Out of current product scope |
+| Guardian controls | Keep only authorization, broad SMS summary, stop, memory, and deletion needed for child safety |
+
+Migration rules:
+
+- Never delete historical learner data merely to change schema.
+- Convert compatible old lesson history to private topic records; mark formal pack mastery as legacy.
+- Do not expose old subject, mode, or duration prompts after the migration flag is enabled.
+- Keep old pack artifacts immutable for audit; no pack path may be required to start an open-topic lesson.
+- Add a test that starts the server with no curriculum-pack environment variables.
+
+## 24. Implementation sequence
+
+### Phase 0 — Scope reset and contract tests
+
+- Make this plan and the agent guide authoritative.
+- Add failing tests forbidding subject menu, Guided/Sandbox, grade placement, and duration selection.
+- Define the open-topic state machine and versioned schemas.
+- Add a migration flag and preserve the previous flow only long enough for safe data migration.
+
+**Exit:** a new learner reaches “What would you like to learn?” after language and identity, with no course choice.
+
+### Phase 1 — Open-topic teaching brain
+
+- Implement `LearningIntent` and `TopicPlan` through the Responses API.
+- Implement structured diagnosis, method choice, activity, response assessment, and uncertainty.
+- Enforce one question, teaching-not-withholding, and meaningful method switches.
+- Add dynamic explanation, analogy, story, worked-example, hint, quiz, teach-back, transfer, reflection, and recap renderers.
+
+**Exit:** three unrelated topics pass the same multi-turn teaching loop without pack or engine changes.
+
+### Phase 2 — Evidence and memory
+
+- Replace curriculum mastery with objective-specific understanding state.
+- Store learner feedback beside objective evidence.
+- Persist helpful/failed methods, exact next point, exam dates, and requested follow-ups.
+- Complete memory inspection, correction, deletion, and legacy migration.
+
+**Exit:** a second call uses prior evidence appropriately without replaying or overclaiming it.
+
+### Phase 3 — Voice, keypad, and recovery
+
+- Map DTMF to every valid activity stage.
+- Preserve speech-first interaction and keypad evidence caps.
+- Make input cancellation and stale-response protection deterministic.
+- Verify atomic drop recovery and cross-phone identity.
+
+**Exit:** a noisy-line golden journey completes and a dropped question resumes exactly from another phone.
+
+### Phase 4 — SMS relationship thread
+
+- Implement recaps, one-question practice, replies, drop reminders, exam reminders, callback nudges, and guardian summaries.
+- Disable the outbound lesson-call scheduler.
+- Enforce consent, quiet hours, rate limits, `STOP`, one-segment targets, and bounded SMS behavior.
+
+**Exit:** an exam reminder and practice reply work without turning SMS into open chat.
+
+### Phase 5 — Safety, factuality, and anti-wrapper evals
+
+- Add dependency, secrecy, companion, high-stakes, abuse, prompt-injection, and disputed-fact cases.
+- Add evaluator assertions for diagnosis evidence, method switch, teach-back, transfer, memory, and exact resume.
+- Add traces proving trusted code—not model prose—made each state transition.
+
+**Exit:** all critical gates pass at 100%, and a judge can inspect why the product is more than a prompt.
+
+### Phase 6 — Carrier acceptance and release
+
+- Run the full carrier and language matrix.
+- Run five consecutive golden judge journeys.
+- Update the landing page and README to the exact locked definition.
+- Record the demonstration only after the tested deployment revision is pinned.
+- Freeze features and preserve call/SMS budget.
+
+**Exit:** clean clone, offline mode, automated gates, live carrier journey, public demo, and submission evidence all reference one commit.
+
+## 25. Judge journey
+
+A judge should be able to validate the product without learning a menu:
+
+1. Call from an ordinary phone.
+2. Press or say a language.
+3. Give a name, say they have no code, and receive a code.
+4. Hear: “What would you like to learn?”
+5. Ask to learn fractions—or any safe topic.
+6. Give an answer that exposes a misconception.
+7. Say the first explanation did not help.
+8. Hear a genuinely different explanation.
+9. Use `9` for a hint or `*` for keypad mode.
+10. Teach the idea back and solve a novel transfer case.
+11. Hang up during the next question.
+12. Receive one optional pause SMS.
+13. Call from another phone, enter the code, and resume exactly.
+14. See a redacted proof trace: evidence, method switch, transfer, checkpoint, and selective memory.
+
+## 26. Three-minute demo
+
+- `0:00–0:15` — A basic phone. “No smartphone, app, internet, or reading required.”
+- `0:15–0:32` — Language first, name, portable code, then “What would you like to learn?”
+- `0:32–1:12` — Learner brings a topic; Continuum reveals a misconception and teaches one step.
+- `1:12–1:34` — First explanation fails; learner says so; method changes.
+- `1:34–1:53` — Keypad fallback, teach-back, and a novel transfer answer.
+- `1:53–2:14` — Call drops; optional SMS arrives; another phone resumes the exact question.
+- `2:14–2:31` — Exam date is remembered; one consented SMS review check-in is shown.
+- `2:31–2:50` — Redacted proof: structured pedagogy, evidence, memory boundary, safety, and reliability.
+- `2:50–2:57` — GPT-5.6 Responses, Realtime SIP/DTMF, trusted controller, and Codex contribution.
+- `2:57–3:00` — “If you can make a phone call, school is open.”
+
+## 27. Submission checklist
+
+- Project builds from a clean clone.
+- `npm run chat`, `npm run eval`, `npm test`, `npm run typecheck`, and `npm run check` pass.
+- Server starts without curriculum-pack variables.
+- Deployed revision equals the tested commit.
+- Real carrier golden journey and DTMF/drop/SMS smoke pass.
+- Public claims name only tested languages and carrier behavior.
+- README explains setup, architecture, safety, privacy, limitations, Codex use, and GPT model use.
+- README explicitly explains why the system is not a prompt wrapper.
+- Demo is public, under three minutes, and shows a real working journey.
+- All synthetic evidence is labeled.
+- `/feedback` Session ID is retrieved from the primary build task.
+- Devpost team members have accepted invitations.
+- Private repository, if used, is shared with required judges before the deadline.
+- Project description is rewritten and verified in the builder's own voice.
+- Secrets, raw phone numbers, raw audio, and private learner data are absent from Git and demo assets.
+
+## 28. Risks and mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Judges see a GPT prompt wrapper | Show trusted state machine, structured decisions, evidence ledger, exact resume, DTMF/SMS convergence, and adversarial evals |
+| Open-topic teaching hallucinates | Epistemic state, uncertainty language, high-stakes boundary, optional server grounding, factual evals |
+| Socratic behavior becomes evasive | Teaching-not-withholding policy and answer-request golden cases |
+| Voice model advances on noise | Transcript evidence gates and no automatic response on blank/failed input |
+| Accent or carrier audio fails | DTMF fallback, repeat/hint controls, named live-language tests |
+| A correct button press is over-scored | Developing cap and spoken transfer/retention requirement |
+| Memory feels invasive | Allowlist, consent, redaction, inspection, correction, deletion, no raw audio |
+| Shared phones leak identity | Code-first retrieval, neutral greeting, sibling isolation tests |
+| Proactive behavior becomes spam | SMS-only submission boundary, consent, quiet hours, rate limits, immediate STOP |
+| Child forms emotional dependency | Teacher-role language, no exclusivity/secrecy, safety evals, human-support direction |
+| Call/SMS cost undermines access | Honest access modes, short interactions, sponsor/toll-free option, measured cost |
+| Scope expands back into an LMS | Automated forbidden-flow tests and this locked authority |
+
+## 29. Definition of done
+
+Continuum is submission-ready only when one deployed build proves all of the following:
+
+- A learner can use a real ordinary phone with no app or data.
+- Language is chosen before identity and natural code-switching works for each claimed tested pattern.
+- The learner is asked what they want to learn, with no subject or curriculum menu.
+- Three unrelated safe topics use the same open teaching architecture.
+- A misconception is supported by evidence, not invented.
+- The tutor changes method when teaching fails.
+- The learner completes teach-back and a novel transfer check.
+- Keypad fallback works and cannot falsely create secure understanding.
+- Useful learning state is remembered selectively.
+- A dropped activity resumes exactly from the same and another phone.
+- SMS recap, practice/reply, pause, and consented exam reminder work while SMS remains optional.
+- `STOP`, memory deletion, privacy, child-safety, and human-support boundaries pass.
+- Offline, deterministic, integration, carrier, and five-journey gates pass on one commit.
+- The README and demo clearly show that the product is a tested teaching system, not “GPT with a teacher prompt.”
+
+## 30. Scope locks
+
+Do not add before submission:
+
+- A learner-facing app or web classroom.
+- Subject or curriculum menus.
+- Grade placement or fixed packs.
+- Guided versus Curiosity modes.
+- Recurring outbound lesson calls.
+- WhatsApp or camera homework.
+- A large guardian, teacher, or analytics dashboard.
+- Emotional-companion mechanics.
+- Untested universal language claims.
+- Decorative animation or sound before carrier and pedagogy gates pass.
+
+Build the phone teacher. Prove that it teaches. Prove that it remembers safely. Prove that the learning continues when the connection does not.
