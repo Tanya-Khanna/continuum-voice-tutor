@@ -184,6 +184,41 @@ export type OpenTopicPlan = z.infer<typeof OpenTopicPlanSchema>;
 export type OpenTopicRequest = z.infer<typeof OpenTopicRequestSchema>;
 export type OpenTopicModelTurn = z.infer<typeof OpenTopicModelTurnSchema>;
 
+export function openTopicVoicePolicyFailures(
+  turn: OpenTopicModelTurn,
+): string[] {
+  const failures: string[] = [];
+  const questions = turn.spokenResponse.match(/[?？؟]/gu)?.length ?? 0;
+  const expectedQuestions = turn.shouldEndSession ? 0 : 1;
+  if (questions !== expectedQuestions) {
+    failures.push(
+      `spoken response had ${questions} questions; expected ${expectedQuestions}`,
+    );
+  }
+  const sentences = turn.spokenResponse
+    .split(/[.!?。！？।؟]+/u)
+    .map((part) => part.trim())
+    .filter(Boolean).length;
+  if (sentences > 3) failures.push("spoken response exceeded three sentences");
+  if (/[#*_`]|https?:\/\//u.test(turn.spokenResponse)) {
+    failures.push("spoken response contained markup or a URL");
+  }
+  if (/\d+\s*\/\s*\d+|[¼½¾⅐-⅞]/u.test(turn.spokenResponse)) {
+    failures.push("spoken response contained a symbolic fraction");
+  }
+  const nextQuestions = turn.nextQuestion.match(/[?？؟]/gu)?.length ?? 0;
+  if (nextQuestions !== 1) {
+    failures.push("next question must contain exactly one voice question");
+  }
+  if (
+    !turn.shouldEndSession &&
+    !turn.spokenResponse.endsWith(turn.nextQuestion)
+  ) {
+    failures.push("saved question was not the exact spoken final question");
+  }
+  return failures;
+}
+
 export function applyTrustedOpenTopicInvariants(
   request: OpenTopicRequest,
   proposed: OpenTopicModelTurn,

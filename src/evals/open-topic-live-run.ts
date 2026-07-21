@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   OpenTopicRequestSchema,
+  openTopicVoicePolicyFailures,
   openTopicPolicyFailures,
   type OpenTopicModelTurn,
   type OpenTopicRequest,
@@ -42,29 +43,6 @@ function request(overrides: Partial<OpenTopicRequest>): OpenTopicRequest {
 function languageIncludes(value: string, expected: string[]): boolean {
   const tags = new Set(value.split("+").map((tag) => tag.split("-")[0]));
   return expected.every((tag) => tags.has(tag));
-}
-
-function spokenPolicyFailures(turn: OpenTopicModelTurn): string[] {
-  const failures: string[] = [];
-  const questions = turn.spokenResponse.match(/[?？؟]/gu)?.length ?? 0;
-  const expectedQuestions = turn.shouldEndSession ? 0 : 1;
-  if (questions !== expectedQuestions) {
-    failures.push(
-      `spoken response had ${questions} questions; expected ${expectedQuestions}`,
-    );
-  }
-  const sentences = turn.spokenResponse
-    .split(/[.!?。！？।؟]+/u)
-    .map((part) => part.trim())
-    .filter(Boolean).length;
-  if (sentences > 3) failures.push("spoken response exceeded three sentences");
-  if (/[#*_`]|https?:\/\//u.test(turn.spokenResponse)) {
-    failures.push("spoken response contained markup or a URL");
-  }
-  if (!turn.shouldEndSession && !turn.spokenResponse.endsWith(turn.nextQuestion)) {
-    failures.push("saved question was not the exact spoken final question");
-  }
-  return failures;
 }
 
 export const openTopicLiveCases: LiveCase[] = [
@@ -279,7 +257,7 @@ export async function runOpenTopicLiveEvaluation(): Promise<void> {
       const policyFailures = openTopicPolicyFailures(entry.request, taught.value);
       const failures = [
         ...policyFailures,
-        ...spokenPolicyFailures(taught.value),
+        ...openTopicVoicePolicyFailures(taught.value),
         ...entry.assert(taught.value),
       ];
       results.push({

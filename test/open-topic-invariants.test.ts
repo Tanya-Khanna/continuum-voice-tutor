@@ -3,6 +3,7 @@ import {
   OpenTopicModelTurnSchema,
   OpenTopicRequestSchema,
   applyTrustedOpenTopicInvariants,
+  openTopicVoicePolicyFailures,
   openTopicPolicyFailures,
 } from "../src/domain/open-topic.js";
 
@@ -76,5 +77,17 @@ describe("trusted open-topic invariants", () => {
     expect(turn.topicPlan.knowledgeState).toBe("unsafe");
     expect(turn.humanSupport).toBe("immediate_safety_protocol");
     expect(openTopicPolicyFailures(request, turn)).toEqual([]);
+  });
+
+  it("rejects a multi-question voice turn before telephony", () => {
+    const { proposed } = fixture();
+    const malformed = OpenTopicModelTurnSchema.parse({
+      ...proposed,
+      spokenResponse: "What do you think? Can you explain why?",
+      nextQuestion: "Can you explain why?",
+    });
+    expect(openTopicVoicePolicyFailures(malformed)).toContain(
+      "spoken response had 2 questions; expected 1",
+    );
   });
 });

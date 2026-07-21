@@ -10,6 +10,7 @@ import {
   OpenTopicModelTurnSchema,
   OpenTopicRequestSchema,
   enforceHumanSupportForKnowledgeState,
+  openTopicVoicePolicyFailures,
   openTopicPolicyFailures,
   type OpenTopicModelTurn,
   type OpenTopicRequest,
@@ -277,7 +278,7 @@ const definitions: EvalDefinition[] = [
           "What do you already think changes a shadow's length?",
           "What do you already think changes a shadow's length?",
         ),
-      ).length === 0,
+      ).length === 0 && openTopicVoicePolicyFailures(modelTurn()).length === 0,
   },
   {
     id: "voice-rejects-question-dump",

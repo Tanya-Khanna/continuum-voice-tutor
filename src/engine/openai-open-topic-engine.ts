@@ -6,6 +6,7 @@ import {
   OpenTopicModelTurnSchema,
   OpenTopicRequestSchema,
   applyTrustedOpenTopicInvariants,
+  openTopicVoicePolicyFailures,
   openTopicPolicyFailures,
   type OpenTopicModelTurn,
   type OpenTopicRequest,
@@ -144,6 +145,7 @@ export class OpenAIOpenTopicEngine implements OpenTopicTeachingEngine {
         OpenTopicModelTurnSchema.parse(response.output_parsed),
       );
       const failures = openTopicPolicyFailures(request, turn);
+      failures.push(...openTopicVoicePolicyFailures(turn));
       if (request.responseMode === "dtmf" && turn.masteryStatus === "secure") {
         failures.push("awarded secure understanding from DTMF input");
       }
