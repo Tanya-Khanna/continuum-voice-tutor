@@ -106,6 +106,51 @@ describe("missed-call callback access", () => {
     repository.close();
   });
 
+  it("allows a new callback request after the one-minute duplicate window", () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    let now = new Date("2026-07-18T12:00:00.000Z");
+    let id = 0;
+    const callbacks = new MissedCallCallbackService({
+      repository,
+      secret: SECRET,
+      phoneHashSecret: "phone-hash-test-secret",
+      allowedPrefixes: ["+91"],
+      timeZone: "Asia/Kolkata",
+      quietStartHour: 21,
+      quietEndHour: 7,
+      perNumberDailyLimit: 3,
+      globalDailyLimit: 100,
+      allowAdultDemo: true,
+      clock: () => now,
+      makeId: () => `one-minute-callback-${++id}`,
+    });
+
+    expect(
+      callbacks.enqueue({
+        CallSid: CALL_SID,
+        From: "+919999900001",
+        To: "+14155550100",
+      }).status,
+    ).toBe("queued");
+    now = new Date("2026-07-18T12:00:59.000Z");
+    expect(
+      callbacks.enqueue({
+        CallSid: `CA${"c".repeat(32)}`,
+        From: "+919999900001",
+        To: "+14155550100",
+      }).status,
+    ).toBe("duplicate");
+    now = new Date("2026-07-18T12:01:01.000Z");
+    expect(
+      callbacks.enqueue({
+        CallSid: `CA${"d".repeat(32)}`,
+        From: "+919999900001",
+        To: "+14155550100",
+      }).status,
+    ).toBe("queued");
+    repository.close();
+  });
+
   it("lets an unregistered adult demo caller test outside learner quiet hours", () => {
     const repository = new SqliteLearningRepository(":memory:");
     const callbacks = new MissedCallCallbackService({

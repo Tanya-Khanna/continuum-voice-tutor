@@ -18,6 +18,7 @@ import {
 } from "../domain/product-metrics.js";
 
 const E164Schema = z.string().regex(/^\+[1-9]\d{7,14}$/u);
+const CALLBACK_DUPLICATE_WINDOW_MS = 60_000;
 
 export const MissedCallWebhookSchema = z.object({
   CallSid: z.string().regex(/^CA[0-9a-fA-F]{32}$/u),
@@ -246,7 +247,7 @@ export class MissedCallCallbackService {
       return { status: "blocked", reason: "quiet_hours" };
     }
     const duplicateSince = new Date(
-      nowDate.getTime() - 10 * 60_000,
+      nowDate.getTime() - CALLBACK_DUPLICATE_WINDOW_MS,
     ).toISOString();
     const recent = this.#repository.findRecentCallbackJob({
       callerPhoneHash,

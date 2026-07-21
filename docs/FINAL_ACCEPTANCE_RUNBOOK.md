@@ -40,7 +40,7 @@ Railway, the received SMS, and Mission Control without exposing credentials.
 
 1. **Missed-call callback:** ring once and hang up. Confirm Twilio rejects the
    inbound call without answering, creates one job, and calls back once. A duplicate
-   ring inside ten minutes must not create another callback.
+   ring inside one minute must not create another callback.
 2. **Cold start and duration:** provide a name, receive a six-digit learner code,
    select Math, and select three, five, then ten minutes across separate profiles.
 3. **Real teaching:** give the larger-denominator misconception. Confirm Continuum
