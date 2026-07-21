@@ -9,6 +9,7 @@ import {
   RealtimeTeachingController,
   type RealtimeClientEvent,
 } from "../src/telephony/realtime-teaching-bridge.js";
+import { DEFAULT_VOICE_LANGUAGE_MENU } from "../src/config/voice-language-menu.js";
 
 const PHONE_HASH_SECRET = "catalog-test-phone-secret";
 
@@ -182,6 +183,8 @@ describe("CatalogLessonService", () => {
       callerNumber: "+919999900103",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
+      languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
+      initialLanguageMode: "en",
     });
     const sent: RealtimeClientEvent[] = [];
     const send = (event: RealtimeClientEvent) => sent.push(event);
@@ -214,10 +217,72 @@ describe("CatalogLessonService", () => {
     ).toBeUndefined();
 
     await controller.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "background_noise_audio",
+        transcript: "background noise",
+      },
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "catalog_phantom_science",
+        name: "choose_learning_mode",
+        arguments: { mode: "guided", subject: "Science" },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      ok: false,
+      state_changed: false,
+    });
+    expect(
+      repository.findResumableLesson(start.learner_id as string),
+    ).toBeUndefined();
+
+    await controller.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "science_choice_audio",
+        transcript: "Science",
+      },
+      send,
+    );
+    await controller.handleServerEvent(
       functionCallEvent({
         callId: "catalog_science",
         name: "choose_learning_mode",
         arguments: { mode: "guided", subject: "science" },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      ok: true,
+      selected_subject: "Science",
+      pending_duration: true,
+      state_changed: false,
+    });
+    expect(
+      repository.findResumableLesson(start.learner_id as string),
+    ).toBeUndefined();
+
+    await controller.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "science_duration_audio",
+        transcript: "5 minutes",
+      },
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "catalog_science_duration",
+        name: "choose_learning_mode",
+        arguments: {
+          mode: "guided",
+          subject: "science",
+          duration_minutes: 5,
+        },
       }),
       send,
     );
@@ -231,10 +296,43 @@ describe("CatalogLessonService", () => {
     ).toMatchObject({ curriculumPackId: sciencePack.id });
 
     await controller.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "math_choice_audio",
+        transcript: "Math",
+      },
+      send,
+    );
+    await controller.handleServerEvent(
       functionCallEvent({
         callId: "catalog_switch_math",
         name: "choose_learning_mode",
         arguments: { mode: "guided", subject: "Math" },
+      }),
+      send,
+    );
+    expect(parseToolOutput(sent.at(-2)!)).toMatchObject({
+      ok: true,
+      selected_subject: "Math",
+      pending_duration: true,
+    });
+    await controller.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "math_duration_audio",
+        transcript: "3 minutes",
+      },
+      send,
+    );
+    await controller.handleServerEvent(
+      functionCallEvent({
+        callId: "catalog_switch_math_duration",
+        name: "choose_learning_mode",
+        arguments: {
+          mode: "guided",
+          subject: "Math",
+          duration_minutes: 3,
+        },
       }),
       send,
     );

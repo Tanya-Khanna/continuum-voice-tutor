@@ -8,6 +8,7 @@ import {
   loadCurriculumCatalog,
 } from "./config/curriculum.js";
 import { loadEnvironment, requireOpenAIKey } from "./config/env.js";
+import { DEFAULT_VOICE_LANGUAGE_MENU } from "./config/voice-language-menu.js";
 import { DASHBOARD_HTML } from "./dashboard/page.js";
 import { runOfflineEvaluation } from "./evals/offline-evaluator.js";
 import { readAgentEvalReport } from "./evals/agent/report.js";
@@ -1078,7 +1079,7 @@ export const server = createServer(async (request, response) => {
                 prefix_padding_ms:
                   environment.NOMAD_VAD_PREFIX_PADDING_MS,
                 silence_duration_ms: environment.NOMAD_VAD_SILENCE_MS,
-                create_response: true,
+                create_response: false,
                 interrupt_response: true,
               },
               environment.OPENAI_REALTIME_SPEED,
@@ -1109,6 +1110,7 @@ export const server = createServer(async (request, response) => {
             portableIdentity: runtime.portableIdentity,
             guardianAccess: runtime.guardianAccess,
             guardianControls: runtime.guardianControls,
+            languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
             ...(scheduledLearner ? { initialLearner: scheduledLearner } : {}),
             ...(scheduledLearner && scheduledDurationMinutes
               ? { initialDurationMinutes: scheduledDurationMinutes }

@@ -28,10 +28,27 @@ import {
   buildRealtimeSessionToolUpdate,
   type RealtimeToolStage,
 } from "./realtime-sip.js";
+import {
+  buildVoiceLanguageMenuPrompt,
+  hasMeaningfulTranscript,
+  languageOptionByKey,
+  languageOptionByMode,
+  transcriptSelectsCuriosity,
+  transcriptSelectsDuration,
+  transcriptSelectsLanguage,
+  transcriptSelectsSubject,
+  VoiceLanguageMenuSchema,
+  VoiceLanguageOptionSchema,
+  type VoiceLanguageMenu,
+  type VoiceLanguageOption,
+} from "../language/voice-language-menu.js";
+
+const SelectLanguageArgumentsSchema = z.object({
+  language_mode: ResolvedLanguageModeSchema,
+});
 
 const StartLessonArgumentsSchema = z.object({
   learner_name: z.string().trim().min(1).max(80),
-  language_mode: ResolvedLanguageModeSchema.optional(),
   learner_code: z.string().regex(/^\d{6}$/u).optional(),
 });
 
@@ -135,6 +152,21 @@ const DtmfEventSchema = z
   .object({
     type: z.literal("input_audio_buffer.dtmf_event_received"),
     event: z.string().regex(/^[0-9*#]$/u),
+  })
+  .passthrough();
+
+const InputTranscriptionCompletedSchema = z
+  .object({
+    type: z.literal("conversation.item.input_audio_transcription.completed"),
+    item_id: z.string().min(1),
+    transcript: z.string(),
+  })
+  .passthrough();
+
+const InputTranscriptionFailedSchema = z
+  .object({
+    type: z.literal("conversation.item.input_audio_transcription.failed"),
+    item_id: z.string().min(1),
   })
   .passthrough();
 
@@ -306,14 +338,34 @@ function speakExactTextEvent(text: string): RealtimeClientEvent {
   };
 }
 
-export function buildRealtimeOpeningEvent(): RealtimeClientEvent {
+function speakLocalizedTextEvent(
+  text: string,
+  languageMode: string,
+): RealtimeClientEvent {
   return {
     type: "response.create",
     response: {
-      instructions:
-        "Warmly introduce yourself as Continuum in one short sentence, then ask only what name the learner wants you to use. After they answer, ask whether they already have a six-digit learner code. Do not start teaching yet.",
+      instructions: `Say this authoritative onboarding message in ${JSON.stringify(languageMode)}, preserving every number, option, and meaning. Add nothing: ${JSON.stringify(text)}`,
     },
   };
+}
+
+function respondToVerifiedTranscriptEvent(
+  transcript: string,
+  stage: RealtimeToolStage,
+): RealtimeClientEvent {
+  return {
+    type: "response.create",
+    response: {
+      instructions: `The server verified this learner transcript for the current ${stage} stage: ${JSON.stringify(transcript)}. Treat only these words as the learner's input. Follow the current stage instructions and available tools. Do not infer a choice that these words do not explicitly contain.`,
+    },
+  };
+}
+
+export function buildRealtimeOpeningEvent(
+  languageMenu: VoiceLanguageMenu,
+): RealtimeClientEvent {
+  return speakExactTextEvent(buildVoiceLanguageMenuPrompt(languageMenu));
 }
 
 export class RealtimeTeachingController {
@@ -326,6 +378,7 @@ export class RealtimeTeachingController {
   readonly #handledUsageIds = new Set<string>();
   readonly #modelRoute: string;
   readonly #accessMode: AccessMode;
+  readonly #languageMenu: VoiceLanguageMenu;
   readonly #dynamicToolRouting: boolean;
   readonly #onError: (error: Error) => void;
   readonly #onLessonCompleted:
@@ -343,8 +396,15 @@ export class RealtimeTeachingController {
   #queue: Promise<void> = Promise.resolve();
   #pendingUsage: ModelUsage[] = [];
   #placementAnswers: { questionId: string; answer: string }[] = [];
-  #toolStage: RealtimeToolStage = "identity";
+  #toolStage: RealtimeToolStage = "language";
   #dtmfBuffer = "";
+  #selectedLanguage: VoiceLanguageOption | undefined;
+  #allowUnlistedLanguage = false;
+  #lastVerifiedTranscript: string | undefined;
+  #pendingLearningSelection:
+    | { mode: "guided"; subject: string }
+    | undefined;
+  #dtmfSelectionAuthorized = false;
   #keypadFallbackPending = false;
   #codeAttempts = 0;
   #pendingCodeLearner: LearnerProfile | undefined;
@@ -365,10 +425,12 @@ export class RealtimeTeachingController {
     callerNumber: string;
     lessonService: LessonOrchestrator;
     modelRoute: string;
+    languageMenu: VoiceLanguageMenu;
     portableIdentity?: PortableIdentityService;
     guardianAccess?: GuardianAccessService;
     guardianControls?: GuardianControlService;
     initialLearner?: LearnerProfile;
+    initialLanguageMode?: string;
     initialDurationMinutes?: 3 | 5 | 10;
     initialAccessMode?: AccessMode;
     dynamicToolRouting?: boolean;
@@ -386,12 +448,27 @@ export class RealtimeTeachingController {
     this.#guardianAccess = options.guardianAccess;
     this.#guardianControls = options.guardianControls;
     this.#modelRoute = options.modelRoute;
+    this.#languageMenu = VoiceLanguageMenuSchema.parse(options.languageMenu);
     this.#accessMode = options.initialAccessMode ?? "unknown";
     this.#dynamicToolRouting = options.dynamicToolRouting ?? false;
     this.#onError = options.onError ?? (() => undefined);
     this.#onLessonCompleted = options.onLessonCompleted;
     this.#onLessonPaused = options.onLessonPaused;
+    if (options.initialLanguageMode) {
+      this.#selectedLanguage = languageOptionByMode(
+        this.#languageMenu,
+        ResolvedLanguageModeSchema.parse(options.initialLanguageMode),
+      );
+      if (!this.#selectedLanguage) {
+        throw new Error("The initial language must exist in the voice-language menu.");
+      }
+      this.#toolStage = "identity";
+    }
     if (options.initialLearner) {
+      this.#selectedLanguage = languageOptionByMode(
+        this.#languageMenu,
+        options.initialLearner.preferredLanguage,
+      );
       this.#learner = options.initialLearner;
       this.#context = this.#lessonService.beginOrResumeSubject(
         options.initialLearner,
@@ -417,10 +494,21 @@ export class RealtimeTeachingController {
   }
 
   openingEvent(): RealtimeClientEvent {
-    if (!this.#context || !this.#learner) return buildRealtimeOpeningEvent();
+    if (!this.#context || !this.#learner) {
+      return buildRealtimeOpeningEvent(this.#languageMenu);
+    }
     return speakExactTextEvent(
       `Hello, ${this.#learner.name}. This is your scheduled Continuum lesson. Press 1 to begin or 2 to skip today.`,
     );
+  }
+
+  #learningMenuText(): string {
+    const subjects = this.#lessonService.availableSubjects().slice(0, 5);
+    const subjectOptions = subjects
+      .map((subject, index) => `Press ${index + 1} or say guided ${subject}.`)
+      .join(" ");
+    const welcome = this.#learner ? `Welcome, ${this.#learner.name}. ` : "";
+    return `${welcome}${subjectOptions} Press 6 or say Curious Sandbox to ask anything. A guardian can press 8. Say or press only one choice.`;
   }
 
   handleServerEvent(
@@ -432,6 +520,29 @@ export class RealtimeTeachingController {
         const dtmf = DtmfEventSchema.safeParse(event);
         if (dtmf.success) {
           await this.#handleDtmf(dtmf.data.event, send);
+          return;
+        }
+        const transcription = InputTranscriptionCompletedSchema.safeParse(event);
+        if (transcription.success) {
+          const transcript = transcription.data.transcript.trim();
+          if (!hasMeaningfulTranscript(transcript)) {
+            const recovery =
+              this.#toolStage === "language"
+                ? buildVoiceLanguageMenuPrompt(this.#languageMenu)
+                : "I did not catch any words. Please say that again, or use the keypad.";
+            send(speakExactTextEvent(recovery));
+            return;
+          }
+          this.#lastVerifiedTranscript = transcript;
+          send(respondToVerifiedTranscriptEvent(transcript, this.#toolStage));
+          return;
+        }
+        if (InputTranscriptionFailedSchema.safeParse(event).success) {
+          const recovery =
+            this.#toolStage === "language"
+              ? buildVoiceLanguageMenuPrompt(this.#languageMenu)
+              : "I could not understand the audio. Please say that again, or use the keypad.";
+          send(speakExactTextEvent(recovery));
           return;
         }
         const usage = usageFromRealtimeEvent(event, this.#modelRoute);
@@ -484,6 +595,36 @@ export class RealtimeTeachingController {
           ),
         );
       }
+      return;
+    }
+    if (this.#toolStage === "language") {
+      if (digit === "0") {
+        send(speakExactTextEvent(buildVoiceLanguageMenuPrompt(this.#languageMenu)));
+        return;
+      }
+      if (digit === "*") {
+        this.#allowUnlistedLanguage = true;
+        this.#lastVerifiedTranscript = undefined;
+        send(
+          speakExactTextEvent(
+            "Please say the name of your language. You can say any language, even if it was not in the keypad list.",
+          ),
+        );
+        return;
+      }
+      const option = languageOptionByKey(this.#languageMenu, digit);
+      if (!option) {
+        send(speakExactTextEvent(buildVoiceLanguageMenuPrompt(this.#languageMenu)));
+        return;
+      }
+      this.#selectedLanguage = option;
+      this.#allowUnlistedLanguage = false;
+      this.#lastVerifiedTranscript = undefined;
+      this.#toolStage = "identity";
+      if (this.#dynamicToolRouting) {
+        send(buildRealtimeSessionToolUpdate("identity"));
+      }
+      send(speakExactTextEvent(option.identityPrompt));
       return;
     }
     if (this.#toolStage === "identity") {
@@ -751,6 +892,34 @@ export class RealtimeTeachingController {
       return;
     }
 
+    if (
+      this.#toolStage === "menu" &&
+      this.#pendingLearningSelection &&
+      (digit === "1" || digit === "2" || digit === "3")
+    ) {
+      const duration = digit === "1" ? 3 : digit === "2" ? 5 : 10;
+      this.#dtmfSelectionAuthorized = true;
+      send({
+        type: "response.create",
+        response: {
+          instructions: `The learner selected ${duration} minutes by keypad. Call choose_learning_mode now with mode guided, subject ${JSON.stringify(this.#pendingLearningSelection.subject)}, and duration_minutes ${duration}. Do not speak before the tool result.`,
+        },
+      });
+      return;
+    }
+
+    if (this.#toolStage === "menu" && this.#pendingLearningSelection) {
+      if (digit === "0") {
+        send(
+          speakLocalizedTextEvent(
+            "Choose the lesson length. Press 1 for 3 minutes, 2 for 5 minutes, or 3 for 10 minutes. You may also say the duration.",
+            this.#selectedLanguage?.languageMode ?? "en",
+          ),
+        );
+      }
+      return;
+    }
+
     if (this.#toolStage === "menu" && digit === "8") {
       this.#toolStage = "guardian";
       this.#dtmfBuffer = "";
@@ -763,16 +932,43 @@ export class RealtimeTeachingController {
       return;
     }
 
-    if (this.#toolStage === "menu" && (digit === "1" || digit === "2")) {
-      send({
-        type: "response.create",
-        response: {
-          instructions:
-            digit === "1"
-              ? "The learner selected guided learning by pressing 1. Call choose_learning_mode now with mode guided and the first available guided subject. Do not speak before the tool result."
-              : "The learner selected Curious Sandbox by pressing 2. Call choose_learning_mode now with mode curious_sandbox. Do not speak before the tool result.",
-        },
-      });
+    if (this.#toolStage === "menu") {
+      const subjects = this.#lessonService.availableSubjects();
+      const subjectIndex = Number(digit) - 1;
+      const selectedSubject = subjects[subjectIndex];
+      if (selectedSubject && subjectIndex >= 0 && subjectIndex < 5) {
+        this.#pendingLearningSelection = {
+          mode: "guided",
+          subject: selectedSubject,
+        };
+        this.#lastVerifiedTranscript = undefined;
+        send(
+          speakLocalizedTextEvent(
+            `You chose ${selectedSubject}. Choose the lesson length. Press 1 for 3 minutes, 2 for 5 minutes, or 3 for 10 minutes. You may also say the duration.`,
+            this.#selectedLanguage?.languageMode ?? "en",
+          ),
+        );
+        return;
+      }
+      if (digit === "6") {
+        this.#dtmfSelectionAuthorized = true;
+        send({
+          type: "response.create",
+          response: {
+            instructions:
+              "The learner selected Curious Sandbox by pressing 6. Call choose_learning_mode now with mode curious_sandbox. Do not speak before the tool result.",
+          },
+        });
+        return;
+      }
+      if (digit === "0") {
+        send(
+          speakLocalizedTextEvent(
+            this.#learningMenuText(),
+            this.#selectedLanguage?.languageMode ?? "en",
+          ),
+        );
+      }
     }
   }
 
@@ -898,9 +1094,65 @@ export class RealtimeTeachingController {
         | "localize_recovery" = "exact";
       let nextToolStage: RealtimeToolStage | undefined;
       let completedLesson: CompletedGuidedLesson | undefined;
-      if (call.name === "start_lesson") {
+      if (call.name === "select_language") {
+        const args = SelectLanguageArgumentsSchema.parse(
+          JSON.parse(call.arguments),
+        );
+        const listedOption = languageOptionByMode(
+          this.#languageMenu,
+          args.language_mode,
+        );
+        const transcript = this.#lastVerifiedTranscript ?? "";
+        const listedSelectionIsExplicit =
+          listedOption !== undefined &&
+          transcriptSelectsLanguage(transcript, listedOption);
+        if (!listedSelectionIsExplicit && !this.#allowUnlistedLanguage) {
+          output = {
+            ok: false,
+            language_selected: false,
+            spoken_response: buildVoiceLanguageMenuPrompt(this.#languageMenu),
+          };
+          nextToolStage = "language";
+        } else {
+          this.#selectedLanguage =
+            listedOption ??
+            VoiceLanguageOptionSchema.parse({
+              key: "9",
+              languageMode: args.language_mode,
+              displayName: args.language_mode,
+              selectionPrompt: "Unlisted language.",
+              identityPrompt:
+                "Welcome to Continuum. What name would you like me to use for you?",
+              languageAliases: [transcript],
+              subjectAliases: {},
+              curiosityAliases: ["curious sandbox", "ask anything"],
+              durationAliases: {
+                3: ["3"],
+                5: ["5"],
+                10: ["10"],
+              },
+            });
+          this.#allowUnlistedLanguage = false;
+          output = {
+            ok: true,
+            language_selected: true,
+            language_mode: this.#selectedLanguage.languageMode,
+            spoken_response: this.#selectedLanguage.identityPrompt,
+          };
+          speechPolicy = listedOption ? "exact" : "localize_onboarding";
+          nextToolStage = "identity";
+        }
+        this.#lastVerifiedTranscript = undefined;
+      } else if (call.name === "start_lesson") {
         const args = StartLessonArgumentsSchema.parse(JSON.parse(call.arguments));
-        if (this.#learner) {
+        if (!this.#selectedLanguage) {
+          output = {
+            ok: false,
+            language_selected: false,
+            spoken_response: buildVoiceLanguageMenuPrompt(this.#languageMenu),
+          };
+          nextToolStage = "language";
+        } else if (this.#learner) {
           output = {
             ok: false,
             spoken_response:
@@ -924,7 +1176,10 @@ export class RealtimeTeachingController {
               send(speakToolOutputEvent("localize_onboarding"));
               return;
             }
-            this.#learner = this.#pendingCodeLearner;
+            this.#learner = {
+              ...this.#pendingCodeLearner,
+              preferredLanguage: this.#selectedLanguage.languageMode,
+            };
             this.#pendingCodeLearner = undefined;
           } else if (args.learner_code && this.#portableIdentity) {
             const verification = this.#portableIdentity.verify({
@@ -948,14 +1203,15 @@ export class RealtimeTeachingController {
               send(speakToolOutputEvent("localize_onboarding"));
               return;
             }
-            this.#learner = verification.learner;
+            this.#learner = {
+              ...verification.learner,
+              preferredLanguage: this.#selectedLanguage.languageMode,
+            };
           } else {
             this.#learner = this.#lessonService.identifyLearner({
               phoneNumber: this.#callerNumber,
               learnerName: args.learner_name,
-              ...(args.language_mode
-                ? { preferredLanguage: args.language_mode }
-                : {}),
+              preferredLanguage: this.#selectedLanguage.languageMode,
             });
             if (
               this.#portableIdentity &&
@@ -976,17 +1232,142 @@ export class RealtimeTeachingController {
             resume_status: "pending_subject_selection",
             menu_options: ["guided", "curious_sandbox"],
             guided_subjects: this.#lessonService.availableSubjects(),
-            spoken_response: `${spokenCode}${this.#lessonService.learningMenu({
-              learner: this.#learner,
-            })}`,
+            subject_keypad_options: this.#lessonService
+              .availableSubjects()
+              .slice(0, 5)
+              .map((subject, index) => ({ key: String(index + 1), subject })),
+            spoken_response: `${spokenCode}${this.#learningMenuText()}`,
           };
           speechPolicy = "localize_onboarding";
           nextToolStage = "menu";
         }
       } else if (call.name === "choose_learning_mode") {
-        const args = LearningModeArgumentsSchema.parse(
+        let args = LearningModeArgumentsSchema.parse(
           JSON.parse(call.arguments),
         );
+        const subjects = this.#lessonService.availableSubjects();
+        const selectedSubjectFromArgs = args.subject
+          ? subjects.find(
+              (subject) =>
+                subject.toLocaleLowerCase("en-US") ===
+                args.subject!.toLocaleLowerCase("en-US"),
+            )
+          : undefined;
+        const languageOption = this.#selectedLanguage;
+        if (
+          this.#learner &&
+          subjects.length > 1 &&
+          !this.#pendingLearningSelection &&
+          args.mode === "guided"
+        ) {
+          const explicitlySelected =
+            this.#dtmfSelectionAuthorized ||
+            (selectedSubjectFromArgs !== undefined &&
+              transcriptSelectsSubject({
+                transcript: this.#lastVerifiedTranscript ?? "",
+                subject: selectedSubjectFromArgs,
+                ...(languageOption ? { languageOption } : {}),
+              }));
+          this.#dtmfSelectionAuthorized = false;
+          this.#lastVerifiedTranscript = undefined;
+          if (!selectedSubjectFromArgs || !explicitlySelected) {
+            output = {
+              ok: false,
+              state_changed: false,
+              guided_subjects: subjects,
+              spoken_response: this.#learningMenuText(),
+            };
+          } else {
+            this.#pendingLearningSelection = {
+              mode: "guided",
+              subject: selectedSubjectFromArgs,
+            };
+            output = {
+              ok: true,
+              state_changed: false,
+              pending_duration: true,
+              selected_subject: selectedSubjectFromArgs,
+              spoken_response: `You chose ${selectedSubjectFromArgs}. Choose the lesson length. Press 1 for 3 minutes, 2 for 5 minutes, or 3 for 10 minutes. You may also say the duration.`,
+            };
+          }
+          speechPolicy = "localize_onboarding";
+          nextToolStage = "menu";
+          send(toolOutputEvent(call.call_id, output));
+          if (this.#dynamicToolRouting) {
+            send(buildRealtimeSessionToolUpdate("menu"));
+          }
+          send(speakToolOutputEvent(speechPolicy));
+          return;
+        }
+        if (this.#pendingLearningSelection) {
+          const pending = this.#pendingLearningSelection;
+          const durationIsExplicit =
+            args.duration_minutes !== undefined &&
+            (this.#dtmfSelectionAuthorized ||
+              transcriptSelectsDuration({
+                transcript: this.#lastVerifiedTranscript ?? "",
+                duration: args.duration_minutes,
+                ...(languageOption ? { languageOption } : {}),
+              }));
+          this.#dtmfSelectionAuthorized = false;
+          this.#lastVerifiedTranscript = undefined;
+          if (
+            args.mode !== "guided" ||
+            (args.subject !== undefined &&
+              args.subject.localeCompare(pending.subject, undefined, {
+                sensitivity: "base",
+              }) !== 0) ||
+            !durationIsExplicit
+          ) {
+            output = {
+              ok: false,
+              state_changed: false,
+              pending_duration: true,
+              selected_subject: pending.subject,
+              spoken_response:
+                "Choose the lesson length. Press 1 for 3 minutes, 2 for 5 minutes, or 3 for 10 minutes. You may also say the duration.",
+            };
+            speechPolicy = "localize_onboarding";
+            nextToolStage = "menu";
+            send(toolOutputEvent(call.call_id, output));
+            if (this.#dynamicToolRouting) {
+              send(buildRealtimeSessionToolUpdate("menu"));
+            }
+            send(speakToolOutputEvent(speechPolicy));
+            return;
+          }
+          args = { ...args, mode: "guided", subject: pending.subject };
+          this.#pendingLearningSelection = undefined;
+        }
+        if (
+          this.#learner &&
+          args.mode === "curious_sandbox" &&
+          !this.#context
+        ) {
+          const explicitlySelected =
+            this.#dtmfSelectionAuthorized ||
+            transcriptSelectsCuriosity(
+              this.#lastVerifiedTranscript ?? "",
+              languageOption,
+            );
+          this.#dtmfSelectionAuthorized = false;
+          this.#lastVerifiedTranscript = undefined;
+          if (!explicitlySelected) {
+            output = {
+              ok: false,
+              state_changed: false,
+              spoken_response: this.#learningMenuText(),
+            };
+            speechPolicy = "localize_onboarding";
+            nextToolStage = "menu";
+            send(toolOutputEvent(call.call_id, output));
+            if (this.#dynamicToolRouting) {
+              send(buildRealtimeSessionToolUpdate("menu"));
+            }
+            send(speakToolOutputEvent(speechPolicy));
+            return;
+          }
+        }
         if (!this.#learner) {
           output = {
             ok: false,
@@ -1030,7 +1411,6 @@ export class RealtimeTeachingController {
               : "curious_sandbox";
           speechPolicy = "localize_onboarding";
         } else {
-          const subjects = this.#lessonService.availableSubjects();
           const selectedSubject = args.subject
             ? subjects.find(
                 (subject) =>
@@ -1374,6 +1754,7 @@ export class RealtimeTeachingController {
         const retryLead =
           "I did not catch that clearly over the connection. Please say it once more.";
         let recoveryStage:
+          | "language"
           | "identity"
           | "menu"
           | "placement"
@@ -1381,7 +1762,10 @@ export class RealtimeTeachingController {
           | "curious_sandbox"
           | "guardian";
         let pendingPrompt: string;
-        if (this.#toolStage === "guardian") {
+        if (this.#toolStage === "language") {
+          recoveryStage = "language";
+          pendingPrompt = buildVoiceLanguageMenuPrompt(this.#languageMenu);
+        } else if (this.#toolStage === "guardian") {
           recoveryStage = "guardian";
           pendingPrompt = this.#guardianAuthorization
             ? "Press 1 for progress, 2 to change lesson time, 3 to pause or resume calls, or 4 to delete the profile."
@@ -1391,9 +1775,9 @@ export class RealtimeTeachingController {
           pendingPrompt = "What name would you like me to use?";
         } else if (!this.#learningMode || !this.#context) {
           recoveryStage = "menu";
-          pendingPrompt = this.#lessonService.learningMenu({
-            learner: this.#learner,
-          });
+          pendingPrompt = this.#pendingLearningSelection
+            ? "Choose the lesson length. Press 1 for 3 minutes, 2 for 5 minutes, or 3 for 10 minutes."
+            : this.#learningMenuText();
         } else if (
           this.#learningMode === "guided" &&
           this.#lessonService.requiresPlacement(this.#context)
@@ -1503,10 +1887,12 @@ export class RealtimeTeachingBridge {
     callId: string;
     callerNumber: string;
     lessonService: LessonOrchestrator;
+    languageMenu: VoiceLanguageMenu;
     portableIdentity?: PortableIdentityService;
     guardianAccess?: GuardianAccessService;
     guardianControls?: GuardianControlService;
     initialLearner?: LearnerProfile;
+    initialLanguageMode?: string;
     initialDurationMinutes?: 3 | 5 | 10;
     initialAccessMode?: AccessMode;
     modelRoute: string;
@@ -1527,6 +1913,7 @@ export class RealtimeTeachingBridge {
     this.#controller = new RealtimeTeachingController({
       callerNumber: options.callerNumber,
       lessonService: options.lessonService,
+      languageMenu: options.languageMenu,
       ...(options.portableIdentity
         ? { portableIdentity: options.portableIdentity }
         : {}),
@@ -1538,6 +1925,9 @@ export class RealtimeTeachingBridge {
         : {}),
       ...(options.initialLearner
         ? { initialLearner: options.initialLearner }
+        : {}),
+      ...(options.initialLanguageMode
+        ? { initialLanguageMode: options.initialLanguageMode }
         : {}),
       ...(options.initialDurationMinutes
         ? { initialDurationMinutes: options.initialDurationMinutes }

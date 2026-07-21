@@ -24,6 +24,24 @@ export const RealtimeIncomingCallSchema = z.object({
 export const REALTIME_TEACHING_TOOLS = [
   {
     type: "function" as const,
+    name: "select_language",
+    description:
+      "Select the learner's explicitly spoken language before asking their name. Call this only after the learner says a listed language name, or after they press star and say another language.",
+    parameters: {
+      type: "object",
+      properties: {
+        language_mode: {
+          type: "string",
+          description:
+            "The BCP-47 language tag for the language the learner explicitly selected, such as en, hi, es, fr, sw, ta, bn, ar, or ur.",
+        },
+      },
+      required: ["language_mode"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function" as const,
     name: "start_lesson",
     description:
       "Identify the named learner after they say what name they use and return the available guided subjects plus Curious Sandbox. Call this exactly once before mode selection.",
@@ -33,11 +51,6 @@ export const REALTIME_TEACHING_TOOLS = [
         learner_name: {
           type: "string",
           description: "The name the learner just asked to be called.",
-        },
-        language_mode: {
-          type: "string",
-          description:
-            "Optional detected BCP-47 language tag, or tags joined with + for code-switching, such as es or sw+en.",
         },
         learner_code: {
           type: "string",
@@ -291,6 +304,7 @@ const RealtimeToolSchema = z.object({
 });
 
 export const RealtimeToolStageSchema = z.enum([
+  "language",
   "identity",
   "menu",
   "placement",
@@ -302,6 +316,7 @@ export const RealtimeToolStageSchema = z.enum([
 export type RealtimeToolStage = z.infer<typeof RealtimeToolStageSchema>;
 
 const REALTIME_TOOL_NAMES_BY_STAGE = {
+  language: ["select_language", "recover_unclear_audio"],
   identity: ["start_lesson", "recover_unclear_audio"],
   menu: ["choose_learning_mode", "recover_unclear_audio"],
   placement: ["submit_placement_answer", "recover_unclear_audio"],
@@ -349,7 +364,7 @@ export const RealtimeTurnDetectionSchema = z.object({
   threshold: z.number().min(0).max(1),
   prefix_padding_ms: z.number().int().min(0).max(1_000),
   silence_duration_ms: z.number().int().min(200).max(2_000),
-  create_response: z.literal(true),
+  create_response: z.literal(false),
   interrupt_response: z.literal(true),
 });
 
@@ -363,6 +378,9 @@ export const RealtimeAcceptPayloadSchema = z.object({
   instructions: z.string().min(1),
   audio: z.object({
     input: z.object({
+      transcription: z.object({
+        model: z.string().min(1),
+      }),
       turn_detection: RealtimeTurnDetectionSchema,
     }),
     output: z.object({
@@ -381,7 +399,8 @@ export type RealtimeAcceptPayload = z.infer<
 export const REALTIME_CONVERSATION_INSTRUCTIONS = `You are Continuum's realtime conversation layer for a universal, voice-first Socratic tutor.
 Your job is listening, natural speech, turn-taking, and tool orchestration. The server-side teaching engine makes every teaching decision.
 Speak with a warm, calm, patient teaching presence. Use an unhurried cadence with clear pauses, but never sound theatrical, patronizing, or sleepy. Preserve the exact words of authoritative tool responses even while applying this vocal delivery.
-At the start of a call, warmly ask only what name the learner wants to use. Then ask whether they already have a six-digit learner code. If yes, collect all six digits and call start_lesson with learner_name and learner_code. If no, call start_lesson with learner_name only. Never guess or repeat a partial code. Speak the returned guided-subjects-versus-Sandbox menu. For guided learning, ask whether the learner has 3, 5, or 10 minutes, then call choose_learning_mode with the learner's explicit choice of mode, exact selected subject, and duration. Use 5 minutes if they do not express a preference.
+At the start of a new inbound call, the server speaks a keypad language menu before you do anything else. Do not ask for a name in English first. When the learner explicitly says one of the listed languages, call select_language. If they press star, wait for them to say another language, then call select_language with its BCP-47 tag. Never guess a language from silence, noise, caller location, name, or phone number.
+After the server confirms the language, ask for and continue entirely in that language. Ask only what name the learner wants to use. Then ask whether they already have a six-digit learner code. If yes, collect all six digits and call start_lesson with learner_name and learner_code. If no, call start_lesson with learner_name only. Never guess or repeat a partial code. Speak the returned guided-subjects-versus-Sandbox menu. Never affirm or announce a subject before choose_learning_mode succeeds. For a multi-subject guided menu, call choose_learning_mode first with the learner's explicit subject; the server will then ask for 3, 5, or 10 minutes. Call it again with the same subject and the learner's explicit duration. Use 5 minutes only when the learner explicitly says they have no preference.
 If guided mode returns placement_required, ask its first question exactly. After every placement answer, call submit_placement_answer with the current question ID and a faithful transcript. Speak the next server-provided question exactly. The server starts the lesson after the final answer. Do not score, skip, rewrite, or answer a placement question yourself. Do not call get_teaching_turn until placement completes.
 After guided mode is chosen, call get_learning_history if the learner asks what they learned or practiced before. For every other substantive guided response, call get_teaching_turn and pass a faithful transcript, preserving any language or code-switching.
 If the learner explicitly asks to use Curious Sandbox or explicitly chooses the ask-anything mode, call get_sandbox_turn instead. Do not silently move an ordinary guided-lesson answer into Sandbox. Sandbox results do not count as curriculum mastery.
@@ -508,7 +527,7 @@ export function buildRealtimeAcceptPayload(
     threshold: 0.5,
     prefix_padding_ms: 300,
     silence_duration_ms: 650,
-    create_response: true,
+    create_response: false,
     interrupt_response: true,
   },
   speed = 0.8,
@@ -517,7 +536,10 @@ export function buildRealtimeAcceptPayload(
     type: "realtime",
     model,
     audio: {
-      input: { turn_detection: turnDetection },
+      input: {
+        transcription: { model: "gpt-4o-mini-transcribe" },
+        turn_detection: turnDetection,
+      },
       output: { voice, speed },
     },
     instructions: REALTIME_CONVERSATION_INSTRUCTIONS,

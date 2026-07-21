@@ -21,12 +21,13 @@ describe("Realtime SIP boundary", () => {
       model: "gpt-realtime-2.1-mini",
       audio: {
         input: {
+          transcription: { model: "gpt-4o-mini-transcribe" },
           turn_detection: {
             type: "server_vad",
             threshold: 0.5,
             prefix_padding_ms: 300,
             silence_duration_ms: 650,
-            create_response: true,
+            create_response: false,
             interrupt_response: true,
           },
         },
@@ -35,6 +36,7 @@ describe("Realtime SIP boundary", () => {
       tool_choice: "auto",
     });
     expect(buildRealtimeAcceptPayload().tools.map((tool) => tool.name)).toEqual([
+      "select_language",
       "start_lesson",
       "choose_learning_mode",
       "complete_placement",
@@ -62,7 +64,7 @@ describe("Realtime SIP boundary", () => {
       "must not judge correctness",
     );
     expect(buildRealtimeAcceptPayload().instructions).toContain(
-      "explicit choice",
+      "explicit subject",
     );
     expect(buildRealtimeAcceptPayload().instructions).toContain(
       "call recover_unclear_audio",
@@ -80,6 +82,11 @@ describe("Realtime SIP boundary", () => {
   });
 
   it("exposes only the tools needed for each live call stage", () => {
+    expect(
+      buildRealtimeSessionToolUpdate("language").session.tools.map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(["select_language", "recover_unclear_audio"]);
     expect(
       buildRealtimeSessionToolUpdate("identity").session.tools.map(
         (tool) => tool.name,
@@ -109,7 +116,7 @@ describe("Realtime SIP boundary", () => {
         threshold: 0.65,
         prefix_padding_ms: 450,
         silence_duration_ms: 900,
-        create_response: true,
+        create_response: false,
         interrupt_response: true,
       }).audio.input.turn_detection,
     ).toEqual({
@@ -117,7 +124,7 @@ describe("Realtime SIP boundary", () => {
       threshold: 0.65,
       prefix_padding_ms: 450,
       silence_duration_ms: 900,
-      create_response: true,
+      create_response: false,
       interrupt_response: true,
     });
   });

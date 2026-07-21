@@ -50,6 +50,8 @@ Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-
 - Access/reliability/learning metric ledger and protected metrics API.
 - Mobile-first public landing page with no learner web classroom.
 - Three-, five-, and ten-minute lesson state, with duration-specific activity targets.
+- Language-first cold start: before a name or learner code is requested, a deployment-injected nine-key menu offers English, Hindi, Spanish, French, Kiswahili, Tamil, Bengali, Arabic, and Urdu. `*` accepts an additional spoken language. The selected language governs the rest of onboarding; the core remains BCP-47/config driven rather than branching on those nine languages.
+- Transcript-gated voice choices: server VAD does not create an automatic model response. Trusted code creates a response only after a nonempty input transcription, and subject/duration transitions require the transcript to contain the selected localized alias or a valid DTMF choice. Silence, noise, a name, or model inference cannot select Science—or any other subject.
 - Signed scheduled-duration and access-mode relay into Realtime plus idempotent Twilio call lifecycle callbacks, no-answer handling, duration/price reconciliation, SMS segment/delivery receipts, sponsor-versus-learner-paid completion evidence, and aggregate cost-per-completed-lesson and retained-concept evidence.
 - Evidence-backed product proof now includes shared-phone completion, keypad-fallback conversion, exact drop/resume recovery, unclear-audio recovery, application response-latency percentiles, diagnostic-to-transfer improvement, hint reduction, teach-back success, strategy-switch success, and learner-reported helpfulness.
 - Offline demo, deterministic evaluator, strict TypeScript, and automated unit/integration tests remain zero-credit runnable.
@@ -62,6 +64,7 @@ Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-
 - The five-pack catalog is released in the repository; its exact production configuration and carrier menu still require deployment verification.
 - Carrier status callbacks and priced usage receipt collection are implemented; real completed/no-answer receipts must be captured before claiming measured call-completion or cost-per-lesson values.
 - English, Hindi-English, Spanish-English, and French-English must be described only as named tested adult-speaker patterns after the actual carrier matrix passes.
+- The language-first menu and silence-safe subject gate are automated; one adult-speaker carrier journey must still prove each publicly claimed spoken language pattern. Keypad selection proves routing, not speech-quality parity across languages.
 - Demo recording, YouTube upload, Devpost team acceptance, human-written submission copy, `/feedback` Session ID, clean-clone proof, and final repository sharing remain human submission gates.
 
 ## Execution order

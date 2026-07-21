@@ -12,8 +12,22 @@ import {
 import { PortableIdentityService } from "../src/domain/portable-identity.js";
 import { GuardianAccessService } from "../src/guardian/guardian-access-service.js";
 import { GuardianControlService } from "../src/guardian/guardian-control-service.js";
+import { DEFAULT_VOICE_LANGUAGE_MENU } from "../src/config/voice-language-menu.js";
 
 const PHONE_HASH_SECRET = "realtime-test-secret-12345";
+
+function makeController(
+  options: Omit<
+    ConstructorParameters<typeof RealtimeTeachingController>[0],
+    "languageMenu" | "initialLanguageMode"
+  >,
+): RealtimeTeachingController {
+  return new RealtimeTeachingController({
+    ...options,
+    languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
+    initialLanguageMode: "en",
+  });
+}
 
 function functionCallEvent(options: {
   callId: string;
@@ -62,14 +76,80 @@ async function makePlacedLearner(options: {
 
 describe("Realtime teaching controller", () => {
   it("introduces the human-selected Continuum identity", () => {
-    expect(buildRealtimeOpeningEvent()).toMatchObject({
+    expect(buildRealtimeOpeningEvent(DEFAULT_VOICE_LANGUAGE_MENU)).toMatchObject({
       type: "response.create",
       response: {
         instructions: expect.stringContaining(
-          "introduce yourself as Continuum",
+          "Choose your language",
         ),
       },
     });
+  });
+
+  it("starts with a nine-language keypad menu and changes no state on silence", async () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const productionController = new RealtimeTeachingController({
+      callerNumber: "+14155550123",
+      lessonService: service,
+      modelRoute: "gpt-realtime-2.1-mini",
+      languageMenu: DEFAULT_VOICE_LANGUAGE_MENU,
+      dynamicToolRouting: true,
+    });
+    const sent: RealtimeClientEvent[] = [];
+    const send = (event: RealtimeClientEvent) => sent.push(event);
+
+    expect(productionController.openingToolStage()).toBe("language");
+    expect(JSON.stringify(productionController.openingEvent())).toContain(
+      "हिंदी के लिए 2",
+    );
+    expect(JSON.stringify(productionController.openingEvent())).toContain(
+      "Kwa Kiswahili, bonyeza 5",
+    );
+    expect(JSON.stringify(productionController.openingEvent())).toContain(
+      "اردو کے لیے 9",
+    );
+
+    await productionController.handleServerEvent(
+      {
+        type: "conversation.item.input_audio_transcription.completed",
+        item_id: "silent_turn",
+        transcript: "   ",
+      },
+      send,
+    );
+    expect(productionController.openingToolStage()).toBe("language");
+    expect(JSON.stringify(sent.at(-1))).toContain("Choose your language");
+
+    await productionController.handleServerEvent(
+      { type: "input_audio_buffer.dtmf_event_received", event: "3" },
+      send,
+    );
+    expect(productionController.openingToolStage()).toBe("identity");
+    expect(JSON.stringify(sent.at(-1))).toContain("Bienvenido a Continuum");
+
+    await productionController.handleServerEvent(
+      functionCallEvent({
+        callId: "spanish_name",
+        name: "start_lesson",
+        arguments: { learner_name: "Daniel" },
+      }),
+      send,
+    );
+    const output = parseToolOutput(
+      sent.filter((event) => event.type === "conversation.item.create").at(-1)!,
+    );
+    expect(output).toMatchObject({ ok: true });
+    expect(repository.findLearner(output.learner_id as string)).toMatchObject({
+      preferredLanguage: "es",
+    });
+    await productionController.close();
+    repository.close();
   });
 
   it("accepts a portable learner code through SIP DTMF and confirms the name", async () => {
@@ -90,7 +170,7 @@ describe("Realtime teaching controller", () => {
       makeCode: () => "482913",
     });
     portableIdentity.issue(learner.id);
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900099",
       lessonService: service,
       portableIdentity,
@@ -149,7 +229,7 @@ describe("Realtime teaching controller", () => {
       phoneNumber: "+919999900012",
       learnerName: "Meena",
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900012",
       lessonService: service,
       initialLearner: learner,
@@ -204,7 +284,7 @@ describe("Realtime teaching controller", () => {
       smsAllowed: true,
       proactiveCallsAllowed: false,
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900013",
       lessonService: service,
       guardianAccess,
@@ -253,7 +333,7 @@ describe("Realtime teaching controller", () => {
       phoneNumber: "+919999900014",
       name: "Meena",
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900014",
       lessonService: service,
       initialLearner: learner,
@@ -312,7 +392,7 @@ describe("Realtime teaching controller", () => {
       phoneNumber: "+919999900015",
       name: "Meena",
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900015",
       lessonService: service,
       initialLearner: learner,
@@ -358,7 +438,7 @@ describe("Realtime teaching controller", () => {
       phoneNumber: "+919999900016",
       name: "Meena",
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900016",
       lessonService: service,
       initialLearner: learner,
@@ -428,7 +508,7 @@ describe("Realtime teaching controller", () => {
       phoneHashSecret: PHONE_HASH_SECRET,
       curriculumPack: fractionsPack,
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900001",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
@@ -596,7 +676,7 @@ describe("Realtime teaching controller", () => {
       phoneHashSecret: PHONE_HASH_SECRET,
       curriculumPack: fractionsPack,
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+14155550100",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
@@ -631,7 +711,7 @@ describe("Realtime teaching controller", () => {
       phoneHashSecret: PHONE_HASH_SECRET,
       curriculumPack: fractionsPack,
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+14155550101",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
@@ -674,7 +754,7 @@ describe("Realtime teaching controller", () => {
       phoneHashSecret: PHONE_HASH_SECRET,
       curriculumPack: fractionsPack,
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+18482160000",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
@@ -799,7 +879,7 @@ describe("Realtime teaching controller", () => {
       phoneHashSecret: PHONE_HASH_SECRET,
       curriculumPack: fractionsPack,
     });
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+14155550109",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
@@ -969,7 +1049,7 @@ describe("Realtime teaching controller", () => {
       curriculumPack: fractionsPack,
     });
     const onLessonCompleted = vi.fn(async () => undefined);
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900002",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
@@ -1053,7 +1133,7 @@ describe("Realtime teaching controller", () => {
       curriculumPack: fractionsPack,
     });
     const onLessonCompleted = vi.fn(async () => undefined);
-    const controller = new RealtimeTeachingController({
+    const controller = makeController({
       callerNumber: "+919999900003",
       lessonService: service,
       modelRoute: "gpt-realtime-2.1-mini",
