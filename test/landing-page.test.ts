@@ -27,7 +27,8 @@ describe("Continuum landing page", () => {
     });
     expect(page).toContain('href="tel:+14155550100"');
     expect(page).toContain("Give a missed call");
-    expect(page).toContain("A teacher.<br>Any phone.");
+    expect(page).toContain("Learning,<br>without bars.");
+    expect(page).toContain("teacher you can call on any phone");
     expect(page).not.toContain("Reviewed guided menu");
   });
 });

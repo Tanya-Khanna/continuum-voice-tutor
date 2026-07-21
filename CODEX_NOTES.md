@@ -759,3 +759,4 @@
 - Re-verified the deployed public page against the v7 product authority on desktop and a 390 px mobile viewport. A cache-busted live read confirmed there is no subject menu, syllabus, or recurring-call promise.
 - Expanded the product proof from three cards to all five locked qualities: teaching instead of answering, basic-phone reach, language adaptation, safe memory and exact resume, and the bounded teacher relationship.
 - Fixed the illustrated feature-phone screen so its paused-lesson message remains readable on a narrow mobile viewport. The public phone number remains hidden behind the carrier gate.
+- Restored the more distinctive hero line, “Learning, without bars.” The plain-language supporting copy still states the concrete product: a patient teacher the learner can call on any phone.
