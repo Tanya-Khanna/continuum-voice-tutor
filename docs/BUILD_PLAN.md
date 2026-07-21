@@ -846,6 +846,7 @@ Migration rules:
 
 ### Phase 6 — Carrier acceptance and release
 
+- ~~Create one current v7 testing guide covering automated, model, browser, carrier, DTMF, SMS, privacy, safety, continuity, judge, and submission checks.~~
 - Run the full carrier and language matrix.
 - Run five consecutive golden judge journeys.
 - ~~Update the landing page to the exact locked definition.~~

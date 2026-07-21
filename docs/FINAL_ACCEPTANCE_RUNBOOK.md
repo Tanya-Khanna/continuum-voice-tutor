@@ -1,5 +1,9 @@
 # Final acceptance runbook
 
+This is the condensed final sign-off. Run the complete feature-by-feature
+procedure in [`TESTING_GUIDE.md`](TESTING_GUIDE.md) first; do not use this shorter
+receipt flow as a substitute for the full test plan.
+
 Run this once, in order, after feature freeze. Use synthetic adults and phone
 numbers whose owners consented to receive calls and SMS. Do not use real child data.
 

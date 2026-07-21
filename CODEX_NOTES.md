@@ -760,3 +760,9 @@
 - Expanded the product proof from three cards to all five locked qualities: teaching instead of answering, basic-phone reach, language adaptation, safe memory and exact resume, and the bounded teacher relationship.
 - Fixed the illustrated feature-phone screen so its paused-lesson message remains readable on a narrow mobile viewport. The public phone number remains hidden behind the carrier gate.
 - Restored the more distinctive hero line, “Learning, without bars.” The plain-language supporting copy still states the concrete product: a patient teacher the learner can call on any phone.
+
+## 2026-07-21 — Complete v7 testing handoff
+
+- Added `docs/TESTING_GUIDE.md` as the start-to-submission operator procedure. It separates zero-credit automation, paid revision-bound GPT evals, browser/proof checks, real-carrier acceptance, and five consecutive judge journeys so one evidence type cannot be mistaken for another.
+- Covered every current product surface: open-topic teaching, all activity and evidence stages, language-first onboarding, portable/shared-phone identity, DTMF, unclear-audio/barge-in recovery, selective memory, exact same/cross-phone resume, missed-call callbacks, every bounded SMS thread, one-time reminders, `STOP`/deletion, safety/factuality/injection, Mission Control, usage/cost receipts, deployment identity, and submission gates.
+- Replaced the stale v6 user-story matrix—which still required retired curricula, subject menus, placement, duration choices, guardian voice menus, and recurring calls—with a v7 pointer to the 38-story coverage ledger.

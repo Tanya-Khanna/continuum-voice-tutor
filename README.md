@@ -177,6 +177,10 @@ npm run verify:fresh
 Historical curriculum-specific eval commands remain under `eval:legacy:*` for
 audit, but their results are not the current v7 release gate.
 
+For the complete operator sequence—from clean installation through every
+automated, model, browser, carrier, DTMF, SMS, privacy, safety, continuity, and
+submission check—follow [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md).
+
 ## Server and Mission Control
 
 ```bash
