@@ -1,5 +1,7 @@
 import { createHmac } from "node:crypto";
-import { validateRequest } from "twilio";
+import twilio from "twilio";
+
+const { validateRequest } = twilio;
 
 export function computeTwilioSignature(options: {
   authToken: string;
