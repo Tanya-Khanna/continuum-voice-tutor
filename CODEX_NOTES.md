@@ -766,3 +766,7 @@
 - Added `docs/TESTING_GUIDE.md` as the start-to-submission operator procedure. It separates zero-credit automation, paid revision-bound GPT evals, browser/proof checks, real-carrier acceptance, and five consecutive judge journeys so one evidence type cannot be mistaken for another.
 - Covered every current product surface: open-topic teaching, all activity and evidence stages, language-first onboarding, portable/shared-phone identity, DTMF, unclear-audio/barge-in recovery, selective memory, exact same/cross-phone resume, missed-call callbacks, every bounded SMS thread, one-time reminders, `STOP`/deletion, safety/factuality/injection, Mission Control, usage/cost receipts, deployment identity, and submission gates.
 - Replaced the stale v6 user-story matrix—which still required retired curricula, subject menus, placement, duration choices, guardian voice menus, and recurring calls—with a v7 pointer to the 38-story coverage ledger.
+
+## 2026-07-21 — Public landing CTA cleanup
+
+- Removed the disabled “Judge phone access is being verified / Use the zero-credit local demo today” block from the public hero. Before the carrier publication gate, no phone CTA is rendered; after the gate, the real call or missed-call CTA appears normally.

@@ -16,7 +16,7 @@ export function renderLandingPage(options: {
   const phone = options.phoneNumber ? escapeHtml(options.phoneNumber) : "";
   const cta = callable
     ? `<a class="cta" href="tel:${phone}">${options.missedCallEnabled ? "Give a missed call" : "Call Continuum"}<span>${phone}</span></a>`
-    : `<div class="cta disabled" aria-disabled="true">Judge phone access is being verified<span>Use the zero-credit local demo today</span></div>`;
+    : "";
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Continuum — The call is the classroom</title>

@@ -9,7 +9,9 @@ describe("Continuum landing page", () => {
     });
     expect(page).toContain("The call is the classroom");
     expect(page).toContain("No smartphone. No app. No camera. No internet");
-    expect(page).toContain("Judge phone access is being verified");
+    expect(page).not.toContain("Judge phone access is being verified");
+    expect(page).not.toContain("Use the zero-credit local demo today");
+    expect(page).not.toContain('<div class="cta');
     expect(page).toContain("What would you like to learn?");
     expect(page).toContain("It speaks your language");
     expect(page).toContain("It remembers and resumes");
