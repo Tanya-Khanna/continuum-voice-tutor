@@ -32,6 +32,42 @@ afterEach(() => {
 });
 
 describe("LessonService", () => {
+  it("persists the current call access mode on lesson and recovery metrics", () => {
+    const repository = new SqliteLearningRepository(":memory:");
+    const service = new LessonService({
+      repository,
+      engine: new OfflineTeachingEngine(fractionsPack),
+      phoneHashSecret: PHONE_HASH_SECRET,
+      curriculumPack: fractionsPack,
+    });
+    const learner = service.identifyLearner({
+      phoneNumber: "+91 99999 00019",
+      learnerName: "Access Learner",
+    });
+    const callback = service.beginOrResumeSubject(
+      learner,
+      undefined,
+      "missed_call",
+    );
+    expect(callback.session.accessMode).toBe("missed_call");
+    service.pause(callback, "drop");
+    const scheduled = service.beginOrResumeSubject(
+      learner,
+      undefined,
+      "scheduled",
+    );
+    expect(scheduled.session.accessMode).toBe("scheduled");
+    expect(
+      repository.listProductMetrics().map((event) => [event.name, event.accessMode]),
+    ).toEqual(
+      expect.arrayContaining([
+        ["drop_paused", "missed_call"],
+        ["drop_recovered", "scheduled"],
+      ]),
+    );
+    repository.close();
+  });
+
   it("persists curriculum-scored placement evidence", async () => {
     const repository = new SqliteLearningRepository(":memory:");
     const service = new LessonService({

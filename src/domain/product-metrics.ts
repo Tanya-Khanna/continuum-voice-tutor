@@ -2,9 +2,13 @@ import { z } from "zod";
 
 export const ProductMetricNameSchema = z.enum([
   "lesson_completed",
+  "shared_phone_lesson_completed",
   "missed_call_queued",
   "callback_placed",
+  "keypad_fallback_requested",
   "keypad_fallback_completed",
+  "unclear_audio_recovery_requested",
+  "unclear_audio_recovered",
   "drop_paused",
   "drop_recovered",
   "cross_phone_resumed",
@@ -23,16 +27,25 @@ export const ProductMetricNameSchema = z.enum([
   "sms_failed",
 ]);
 
+export const AccessModeSchema = z.enum([
+  "missed_call",
+  "sponsored",
+  "direct_dial",
+  "scheduled",
+  "unknown",
+]);
+
 export const ProductMetricEventSchema = z.object({
   id: z.string().min(1),
   name: ProductMetricNameSchema,
   learnerId: z.string().min(1).nullable(),
   sessionId: z.string().min(1).nullable(),
   channel: z.enum(["phone", "dtmf", "sms", "system"]),
-  accessMode: z.enum(["missed_call", "sponsored", "direct_dial", "scheduled", "unknown"]),
+  accessMode: AccessModeSchema,
   numericValue: z.number().finite().nullable(),
   synthetic: z.boolean(),
   createdAt: z.string().datetime(),
 });
 
 export type ProductMetricEvent = z.infer<typeof ProductMetricEventSchema>;
+export type AccessMode = z.infer<typeof AccessModeSchema>;

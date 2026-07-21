@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  AccessModeSchema,
+  type AccessMode,
+} from "../domain/product-metrics.js";
 
 const SipHeaderSchema = z.object({
   name: z.string().min(1),
@@ -402,6 +406,7 @@ function verifiedRelayContext(
   callerNumber: string;
   learnerId?: string;
   durationMinutes?: 3 | 5 | 10;
+  accessMode: AccessMode;
 } | undefined {
   const header = (name: string) =>
     event.data.sip_headers.find(
@@ -410,13 +415,16 @@ function verifiedRelayContext(
   const callerNumber = header("x-continuum-caller");
   const learnerId = header("x-continuum-learner-id");
   const durationValue = header("x-continuum-duration-minutes");
+  const accessModeValue = header("x-continuum-access-mode") ?? "unknown";
   const signature = header("x-continuum-signature");
+  const accessMode = AccessModeSchema.safeParse(accessModeValue);
   if (
     !callerNumber ||
     !signature ||
     !/^\+[1-9]\d{7,14}$/u.test(callerNumber) ||
     (learnerId !== undefined && !/^[A-Za-z0-9_-]{1,120}$/u.test(learnerId)) ||
-    (durationValue !== undefined && !["3", "5", "10"].includes(durationValue))
+    (durationValue !== undefined && !["3", "5", "10"].includes(durationValue)) ||
+    !accessMode.success
   ) {
     return undefined;
   }
@@ -426,7 +434,7 @@ function verifiedRelayContext(
   const expected = Buffer.from(
     createHmac("sha256", relaySecret)
       .update(
-        `continuum-relayed-caller:${callerNumber}:${learnerId ?? "missed-call"}:${durationMinutes ?? "unspecified"}`,
+        `continuum-relayed-caller:${callerNumber}:${learnerId ?? "missed-call"}:${durationMinutes ?? "unspecified"}:${accessMode.data}`,
       )
       .digest("hex"),
     "utf8",
@@ -440,6 +448,7 @@ function verifiedRelayContext(
   }
   return {
     callerNumber,
+    accessMode: accessMode.data,
     ...(learnerId ? { learnerId } : {}),
     ...(durationMinutes ? { durationMinutes } : {}),
   };
@@ -481,6 +490,14 @@ export function durationFromIncomingCall(
 ): 3 | 5 | 10 | undefined {
   const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
   return verifiedRelayContext(event, relaySecret)?.durationMinutes;
+}
+
+export function accessModeFromIncomingCall(
+  unparsedEvent: unknown,
+  relaySecret: string,
+): AccessMode {
+  const event = RealtimeIncomingCallSchema.parse(unparsedEvent);
+  return verifiedRelayContext(event, relaySecret)?.accessMode ?? "unknown";
 }
 
 export function buildRealtimeAcceptPayload(

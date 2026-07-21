@@ -11,7 +11,11 @@ import type { LearningRepository } from "../domain/learner.js";
 import { CallbackJobSchema, type CallbackJob } from "../domain/callback.js";
 import { hashPhoneNumber } from "../domain/identity.js";
 import { buildSipTarget } from "./realtime-sip.js";
-import { ProductMetricEventSchema } from "../domain/product-metrics.js";
+import {
+  AccessModeSchema,
+  ProductMetricEventSchema,
+  type AccessMode,
+} from "../domain/product-metrics.js";
 
 const E164Schema = z.string().regex(/^\+[1-9]\d{7,14}$/u);
 
@@ -74,10 +78,11 @@ function relaySignature(
   secret: string,
   learnerId?: string,
   durationMinutes?: 3 | 5 | 10,
+  accessMode: AccessMode = "unknown",
 ): string {
   return createHmac("sha256", secret)
     .update(
-      `continuum-relayed-caller:${phoneNumber}:${learnerId ?? "missed-call"}:${durationMinutes ?? "unspecified"}`,
+      `continuum-relayed-caller:${phoneNumber}:${learnerId ?? "missed-call"}:${durationMinutes ?? "unspecified"}:${accessMode}`,
     )
     .digest("hex");
 }
@@ -88,7 +93,9 @@ export function buildCallbackSipUri(options: {
   relaySecret: string;
   learnerId?: string;
   durationMinutes?: 3 | 5 | 10;
+  accessMode?: AccessMode;
 }): string {
+  const accessMode = AccessModeSchema.parse(options.accessMode ?? "unknown");
   const target = buildSipTarget(options.projectId);
   const parameters = new URLSearchParams({
     "X-Continuum-Caller": E164Schema.parse(options.callerNumber),
@@ -98,11 +105,13 @@ export function buildCallbackSipUri(options: {
     ...(options.durationMinutes
       ? { "X-Continuum-Duration-Minutes": String(options.durationMinutes) }
       : {}),
+    "X-Continuum-Access-Mode": accessMode,
     "X-Continuum-Signature": relaySignature(
       options.callerNumber,
       options.relaySecret,
       options.learnerId,
       options.durationMinutes,
+      accessMode,
     ),
   });
   return `${target}?${parameters.toString()}`;
@@ -114,6 +123,7 @@ export function verifiedRelayedCaller(options: {
   relaySecret: string;
   learnerId?: string;
   durationMinutes?: 3 | 5 | 10;
+  accessMode?: AccessMode;
 }): string | undefined {
   const parsed = E164Schema.safeParse(options.callerNumber);
   if (!parsed.success) return undefined;
@@ -123,6 +133,7 @@ export function verifiedRelayedCaller(options: {
       options.relaySecret,
       options.learnerId,
       options.durationMinutes,
+      options.accessMode ?? "unknown",
     ),
     "utf8",
   );
@@ -301,6 +312,7 @@ export async function placeTwilioCallback(options: {
   relaySecret: string;
   learnerId?: string;
   durationMinutes?: 3 | 5 | 10;
+  accessMode: AccessMode;
   statusCallbackUrl?: string;
   fetchImplementation?: typeof fetch;
 }): Promise<{ sid: string; status: string }> {
@@ -315,6 +327,7 @@ export async function placeTwilioCallback(options: {
     ...(options.durationMinutes
       ? { durationMinutes: options.durationMinutes }
       : {}),
+    accessMode: options.accessMode,
   });
   const escapedSipUri = sipUri.replaceAll("&", "&amp;");
   const twiml = `<Response><Dial answerOnBridge="true"><Sip>${escapedSipUri}</Sip></Dial></Response>`;

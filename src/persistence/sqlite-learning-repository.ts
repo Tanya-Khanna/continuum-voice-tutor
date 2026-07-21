@@ -90,6 +90,7 @@ interface LessonRow {
   placement_evidence: string;
   anchor_object: string | null;
   duration_minutes: number;
+  access_mode: string;
   created_at: string;
   updated_at: string;
 }
@@ -164,6 +165,7 @@ function lessonFromRow(row: LessonRow): LessonSession {
     placementEvidence: JSON.parse(row.placement_evidence) as unknown,
     anchorObject: row.anchor_object,
     durationMinutes: row.duration_minutes,
+    accessMode: row.access_mode,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });
@@ -220,6 +222,7 @@ export class SqliteLearningRepository implements LearningRepository {
         placement_evidence TEXT NOT NULL DEFAULT '[]',
         anchor_object TEXT,
         duration_minutes INTEGER NOT NULL DEFAULT 5,
+        access_mode TEXT NOT NULL DEFAULT 'unknown',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -450,6 +453,11 @@ export class SqliteLearningRepository implements LearningRepository {
         "ALTER TABLE lesson_sessions ADD COLUMN duration_minutes INTEGER NOT NULL DEFAULT 5",
       );
     }
+    if (!lessonColumns.some((column) => column.name === "access_mode")) {
+      this.#database.exec(
+        "ALTER TABLE lesson_sessions ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'unknown'",
+      );
+    }
     if (!lessonColumns.some((column) => column.name === "curriculum_pack_id")) {
       this.#database.exec(
         "ALTER TABLE lesson_sessions ADD COLUMN curriculum_pack_id TEXT NOT NULL DEFAULT 'legacy'",
@@ -651,12 +659,12 @@ export class SqliteLearningRepository implements LearningRepository {
           id, learner_id, curriculum_pack_id, concept, status, turn_count, last_prompt,
           last_diagnosis, last_strategy, mastery_status, mastery_evidence,
           placement_level, placement_score, placement_total, placement_evidence,
-          anchor_object, duration_minutes, created_at, updated_at
+          anchor_object, duration_minutes, access_mode, created_at, updated_at
         ) VALUES (
           @id, @learnerId, @curriculumPackId, @concept, @status, @turnCount, @lastPrompt,
           @lastDiagnosis, @lastStrategy, @masteryStatus, @masteryEvidence,
           @placementLevel, @placementScore, @placementTotal, @placementEvidenceJson,
-          @anchorObject, @durationMinutes, @createdAt, @updatedAt
+          @anchorObject, @durationMinutes, @accessMode, @createdAt, @updatedAt
         )
         ON CONFLICT(id) DO UPDATE SET
           curriculum_pack_id = excluded.curriculum_pack_id,
@@ -674,6 +682,7 @@ export class SqliteLearningRepository implements LearningRepository {
           placement_evidence = excluded.placement_evidence,
           anchor_object = excluded.anchor_object,
           duration_minutes = excluded.duration_minutes,
+          access_mode = excluded.access_mode,
           updated_at = excluded.updated_at`,
       )
       .run({

@@ -50,7 +50,7 @@ Codex built the telephony bridge, state machine, curriculum compiler, evaluation
 harness, dashboard, tests, privacy gates, and documentation in one continuous task
 with inspectable milestone commits. GPT-5.6 powers live teaching, curriculum
 compilation/verification, and a separate simulated-learner/evaluator suite. The
-current evidence is 179/179 automated tests, 25/25 deterministic teaching cases,
+current evidence is 181/181 automated tests, 25/25 deterministic teaching cases,
 and a historical complete 24/24 paid agent run. The repository's clean-clone gate
 installs from the lockfile, runs every zero-credit check, seeds a synthetic paused
 lesson, and proves exact resume without local secrets or prior state.
@@ -116,7 +116,7 @@ the Eval tab is zero-credit. The local dashboard needs no token.
 
 | Claim | Current evidence | Publication rule |
 |---|---|---|
-| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 179/179 tests; 25/25 deterministic gate | Safe now |
+| Runnable Socratic tutor | Compiled-production smoke; clean-clone offline lesson; 181/181 tests; 25/25 deterministic gate | Safe now |
 | GPT-5.6 at the teaching core | Structured Responses teacher plus 24/24 historical paid agent suite | Safe now; capture the saved scorecard before submission |
 | Universal product architecture | Open language tags; pack/catalog routing; no language-pair or subject branch | Say “universal architecture,” not “every language proven” |
 | Multilingual/code-switching behavior | Selected live Hindi/English, Spanish/English, French/English checks plus deterministic fixtures | Name tested patterns; do not claim every accent/noise condition |

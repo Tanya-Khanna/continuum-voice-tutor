@@ -50,7 +50,8 @@ Do not add WhatsApp, camera homework, a learner-facing web classroom, emotional-
 - Access/reliability/learning metric ledger and protected metrics API.
 - Mobile-first public landing page with no learner web classroom.
 - Three-, five-, and ten-minute lesson state, with duration-specific activity targets.
-- Signed scheduled-duration relay into Realtime plus idempotent Twilio call lifecycle callbacks, no-answer handling, duration/price reconciliation, SMS segment/delivery receipts, and aggregate cost-per-completed-lesson evidence.
+- Signed scheduled-duration and access-mode relay into Realtime plus idempotent Twilio call lifecycle callbacks, no-answer handling, duration/price reconciliation, SMS segment/delivery receipts, sponsor-versus-learner-paid completion evidence, and aggregate cost-per-completed-lesson and retained-concept evidence.
+- Evidence-backed product proof now includes shared-phone completion, keypad-fallback conversion, exact drop/resume recovery, unclear-audio recovery, application response-latency percentiles, diagnostic-to-transfer improvement, hint reduction, teach-back success, strategy-switch success, and learner-reported helpfulness.
 - Offline demo, deterministic evaluator, strict TypeScript, and automated unit/integration tests remain zero-credit runnable.
 
 ### Still gated before a public claim

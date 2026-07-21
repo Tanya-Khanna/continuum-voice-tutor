@@ -22,6 +22,7 @@ import type {
 import type { TeachingFeedback } from "../domain/classroom.js";
 import type { CuriosityTrail } from "../domain/classroom.js";
 import type { LearnerEducationProfile } from "../domain/classroom.js";
+import type { AccessMode } from "../domain/product-metrics.js";
 
 function spokenList(values: readonly string[]): string {
   if (values.length === 1) return values[0]!;
@@ -91,11 +92,15 @@ export class CatalogLessonService {
   beginOrResumeSubject(
     learner: LearnerProfile,
     subject?: string,
+    accessMode: AccessMode = "unknown",
   ): LessonContext {
     const option = subject
       ? this.#catalog.requireBySubject(subject)
       : this.#catalog.defaultOption;
-    return this.#requireService(option.id).beginOrResumeLearner(learner);
+    return this.#requireService(option.id).beginOrResumeLearner(
+      learner,
+      accessMode,
+    );
   }
 
   learningMenu(context: { learner: LearnerProfile }): string {
@@ -154,6 +159,20 @@ export class CatalogLessonService {
     return this.#serviceForContext(context).recordTeachingFeedback(
       context,
       options,
+    );
+  }
+
+  recordKeypadFallbackRequested(context: LessonContext): void {
+    this.#serviceForContext(context).recordKeypadFallbackRequested(context);
+  }
+
+  recordUnclearAudioRecovery(
+    context: LessonContext,
+    outcome: "requested" | "recovered",
+  ): void {
+    this.#serviceForContext(context).recordUnclearAudioRecovery(
+      context,
+      outcome,
     );
   }
 

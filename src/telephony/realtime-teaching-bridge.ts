@@ -18,6 +18,7 @@ import type { PortableIdentityService } from "../domain/portable-identity.js";
 import type { GuardianAuthorization } from "../domain/guardian.js";
 import type { GuardianAccessService } from "../guardian/guardian-access-service.js";
 import type { GuardianControlService } from "../guardian/guardian-control-service.js";
+import type { AccessMode } from "../domain/product-metrics.js";
 import type {
   LessonContext,
   LessonResponse,
@@ -166,6 +167,8 @@ export interface LessonOrchestrator {
   createCuriosityTrail: LessonService["createCuriosityTrail"];
   updateEducationProfile: LessonService["updateEducationProfile"];
   recordTeachingFeedback: LessonService["recordTeachingFeedback"];
+  recordKeypadFallbackRequested: LessonService["recordKeypadFallbackRequested"];
+  recordUnclearAudioRecovery: LessonService["recordUnclearAudioRecovery"];
   setLessonDuration: LessonService["setLessonDuration"];
   requestHint: LessonService["requestHint"];
   educationProfile: LessonService["educationProfile"];
@@ -322,6 +325,7 @@ export class RealtimeTeachingController {
   readonly #handledCallIds = new Set<string>();
   readonly #handledUsageIds = new Set<string>();
   readonly #modelRoute: string;
+  readonly #accessMode: AccessMode;
   readonly #dynamicToolRouting: boolean;
   readonly #onError: (error: Error) => void;
   readonly #onLessonCompleted:
@@ -341,6 +345,7 @@ export class RealtimeTeachingController {
   #placementAnswers: { questionId: string; answer: string }[] = [];
   #toolStage: RealtimeToolStage = "identity";
   #dtmfBuffer = "";
+  #keypadFallbackPending = false;
   #codeAttempts = 0;
   #pendingCodeLearner: LearnerProfile | undefined;
   #lastActivity: LearningActivity | undefined;
@@ -365,6 +370,7 @@ export class RealtimeTeachingController {
     guardianControls?: GuardianControlService;
     initialLearner?: LearnerProfile;
     initialDurationMinutes?: 3 | 5 | 10;
+    initialAccessMode?: AccessMode;
     dynamicToolRouting?: boolean;
     onError?: (error: Error) => void;
     onLessonCompleted?: (
@@ -380,6 +386,7 @@ export class RealtimeTeachingController {
     this.#guardianAccess = options.guardianAccess;
     this.#guardianControls = options.guardianControls;
     this.#modelRoute = options.modelRoute;
+    this.#accessMode = options.initialAccessMode ?? "unknown";
     this.#dynamicToolRouting = options.dynamicToolRouting ?? false;
     this.#onError = options.onError ?? (() => undefined);
     this.#onLessonCompleted = options.onLessonCompleted;
@@ -388,6 +395,8 @@ export class RealtimeTeachingController {
       this.#learner = options.initialLearner;
       this.#context = this.#lessonService.beginOrResumeSubject(
         options.initialLearner,
+        undefined,
+        this.#accessMode,
       );
       if (options.initialDurationMinutes) {
         this.#context = this.#lessonService.setLessonDuration(
@@ -680,6 +689,10 @@ export class RealtimeTeachingController {
     }
 
     if (digit === "*" && this.#toolStage === "guided") {
+      if (this.#context && !this.#keypadFallbackPending) {
+        this.#lessonService.recordKeypadFallbackRequested(this.#context);
+        this.#keypadFallbackPending = true;
+      }
       const choices = this.#lastActivity?.keypadChoices ?? [];
       const spoken = choices.length
         ? `Use the keypad. ${choices.map((choice) => `Press ${choice.key} for ${choice.label}.`).join(" ")}`
@@ -712,12 +725,16 @@ export class RealtimeTeachingController {
         );
         return;
       }
+      if (!this.#keypadFallbackPending) {
+        this.#lessonService.recordKeypadFallbackRequested(this.#context);
+      }
       const result = await this.#lessonService.respond(
         this.#context,
         choice.label,
         { responseMode: "dtmf" },
       );
       this.#context = result.context;
+      this.#keypadFallbackPending = false;
       this.#lastActivity = result.activity;
       const feedback = feedbackPresentation(result);
       if (feedback) {
@@ -1044,6 +1061,7 @@ export class RealtimeTeachingController {
             this.#context = this.#lessonService.beginOrResumeSubject(
               this.#learner,
               args.mode === "guided" ? selectedSubject : undefined,
+              this.#accessMode,
             );
           } else if (
             args.mode === "guided" &&
@@ -1055,6 +1073,7 @@ export class RealtimeTeachingController {
             this.#context = this.#lessonService.beginOrResumeSubject(
               this.#learner,
               selectedSubject,
+              this.#accessMode,
             );
           }
           this.#learningMode = args.mode;
@@ -1346,6 +1365,12 @@ export class RealtimeTeachingController {
         }
       } else if (call.name === "recover_unclear_audio") {
         EmptyArgumentsSchema.parse(JSON.parse(call.arguments));
+        if (this.#context) {
+          this.#lessonService.recordUnclearAudioRecovery(
+            this.#context,
+            "requested",
+          );
+        }
         const retryLead =
           "I did not catch that clearly over the connection. Please say it once more.";
         let recoveryStage:
@@ -1393,6 +1418,12 @@ export class RealtimeTeachingController {
           pending_prompt: pendingPrompt,
           spoken_response: `${retryLead} ${pendingPrompt}`,
         };
+        if (this.#context) {
+          this.#lessonService.recordUnclearAudioRecovery(
+            this.#context,
+            "recovered",
+          );
+        }
         speechPolicy = "localize_recovery";
       } else {
         output = {
@@ -1477,6 +1508,7 @@ export class RealtimeTeachingBridge {
     guardianControls?: GuardianControlService;
     initialLearner?: LearnerProfile;
     initialDurationMinutes?: 3 | 5 | 10;
+    initialAccessMode?: AccessMode;
     modelRoute: string;
     WebSocketImplementation?: typeof WebSocket;
     onError?: (error: Error) => void;
@@ -1509,6 +1541,9 @@ export class RealtimeTeachingBridge {
         : {}),
       ...(options.initialDurationMinutes
         ? { initialDurationMinutes: options.initialDurationMinutes }
+        : {}),
+      ...(options.initialAccessMode
+        ? { initialAccessMode: options.initialAccessMode }
         : {}),
       modelRoute: options.modelRoute,
       dynamicToolRouting: true,

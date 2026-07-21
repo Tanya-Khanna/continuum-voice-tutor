@@ -24,6 +24,7 @@ import { buildPhoneReadinessReport } from "./telephony/readiness.js";
 import {
   RealtimeIncomingCallSchema,
   acceptRealtimeCall,
+  accessModeFromIncomingCall,
   buildRealtimeAcceptPayload,
   callerNumberFromIncomingCall,
   durationFromIncomingCall,
@@ -41,7 +42,10 @@ import { GuardianAccessService } from "./guardian/guardian-access-service.js";
 import { SmsControlService } from "./messaging/sms-control-service.js";
 import { HomeworkService } from "./messaging/homework-service.js";
 import { StudyPlanScheduler } from "./scheduling/study-plan-scheduler.js";
-import { ProductMetricEventSchema } from "./domain/product-metrics.js";
+import {
+  ProductMetricEventSchema,
+  type AccessMode,
+} from "./domain/product-metrics.js";
 import {
   TwilioCallStatusWebhookSchema,
   TwilioMessageStatusWebhookSchema,
@@ -159,7 +163,7 @@ async function sendTrackedSms(options: {
   to: string;
   body: string;
   learnerId?: string;
-  accessMode?: "missed_call" | "scheduled" | "unknown";
+  accessMode?: AccessMode;
 }): Promise<void> {
   if (!twilioSmsConfig) return;
   const statusCallbackUrl = messageStatusCallbackUrl();
@@ -336,6 +340,7 @@ async function processCallbackJob(jobId: string): Promise<void> {
         to: service.destination(claimed),
         projectId: environment.OPENAI_PROJECT_ID!,
         relaySecret: environment.NOMAD_CALLBACK_SECRET,
+        accessMode: "missed_call",
         statusCallbackUrl: carrierCallStatusCallbackUrl(
           environment.NOMAD_PUBLIC_BASE_URL!,
           receiptId,
@@ -422,6 +427,7 @@ async function runStudySchedulerTick(): Promise<void> {
             relaySecret: environment.NOMAD_CALLBACK_SECRET,
             learnerId,
             durationMinutes,
+            accessMode: "scheduled",
             statusCallbackUrl: carrierCallStatusCallbackUrl(
               environment.NOMAD_PUBLIC_BASE_URL!,
               receiptId,
@@ -1088,6 +1094,10 @@ export const server = createServer(async (request, response) => {
             incomingCall,
             environment.NOMAD_CALLBACK_SECRET,
           );
+          const callAccessMode = accessModeFromIncomingCall(
+            incomingCall,
+            environment.NOMAD_CALLBACK_SECRET,
+          );
           const scheduledLearner = scheduledLearnerId
             ? runtime.lessonService.findLearner(scheduledLearnerId)
             : undefined;
@@ -1103,6 +1113,7 @@ export const server = createServer(async (request, response) => {
             ...(scheduledLearner && scheduledDurationMinutes
               ? { initialDurationMinutes: scheduledDurationMinutes }
               : {}),
+            initialAccessMode: callAccessMode,
             modelRoute: environment.OPENAI_REALTIME_MODEL,
             onError: (bridgeError) =>
               console.error(`Realtime call ${callId}:`, bridgeError.message),
@@ -1123,7 +1134,7 @@ export const server = createServer(async (request, response) => {
                       to,
                       body: homework.smsText,
                       learnerId: context.learner.id,
-                      accessMode: "missed_call",
+                      accessMode: context.session.accessMode,
                     });
                   },
                   onLessonPaused: async ({
@@ -1136,7 +1147,7 @@ export const server = createServer(async (request, response) => {
                       to,
                       body: `Lesson paused at Q${pendingQuestionNumber}. Call back anytime and enter your learner code.`,
                       learnerId: context.learner.id,
-                      accessMode: "missed_call",
+                      accessMode: context.session.accessMode,
                     });
                   },
                 }

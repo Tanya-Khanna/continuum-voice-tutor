@@ -24,7 +24,10 @@ import type { CallbackJob } from "./callback.js";
 import type { GuardianAuthorization } from "./guardian.js";
 import type { StudyPlan } from "./study-plan.js";
 import type { SmsReceipt } from "./sms-control.js";
-import type { ProductMetricEvent } from "./product-metrics.js";
+import {
+  AccessModeSchema,
+  type ProductMetricEvent,
+} from "./product-metrics.js";
 import type { HomeworkAssignment } from "./homework.js";
 import type { CarrierCallReceipt } from "./carrier-usage.js";
 
@@ -67,6 +70,7 @@ export const LessonSessionSchema = z.object({
   placementEvidence: z.array(z.string()).default([]),
   anchorObject: AnchorObjectSchema.nullable().default(null),
   durationMinutes: LessonDurationMinutesSchema.default(5),
+  accessMode: AccessModeSchema.default("unknown"),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

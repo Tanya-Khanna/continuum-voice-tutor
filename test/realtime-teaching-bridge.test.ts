@@ -942,6 +942,19 @@ describe("Realtime teaching controller", () => {
       pending_prompt: "What are you curious about?",
     });
     expect(repository.listSandboxTurns(session.id)).toHaveLength(0);
+    const recoveryMetrics = repository
+      .listProductMetrics()
+      .filter((event) => event.sessionId === session.id);
+    expect(
+      recoveryMetrics.filter(
+        (event) => event.name === "unclear_audio_recovery_requested",
+      ),
+    ).toHaveLength(3);
+    expect(
+      recoveryMetrics.filter(
+        (event) => event.name === "unclear_audio_recovered",
+      ),
+    ).toHaveLength(3);
 
     await controller.close();
     repository.close();

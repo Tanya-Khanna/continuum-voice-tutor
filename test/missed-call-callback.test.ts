@@ -7,6 +7,7 @@ import {
   placeTwilioCallback,
 } from "../src/telephony/missed-call-callback.js";
 import {
+  accessModeFromIncomingCall,
   callerNumberFromIncomingCall,
   durationFromIncomingCall,
   learnerIdFromIncomingCall,
@@ -179,6 +180,7 @@ describe("missed-call callback access", () => {
       relaySecret: SECRET,
       learnerId: "learner_1",
       durationMinutes: 10,
+      accessMode: "scheduled",
       statusCallbackUrl:
         "https://continuum.example/webhooks/twilio/call-status?receipt_id=receipt-1",
       fetchImplementation,
@@ -199,6 +201,7 @@ describe("missed-call callback access", () => {
       relaySecret: SECRET,
       learnerId: "learner_1",
       durationMinutes: 10,
+      accessMode: "scheduled",
     });
     const query = new URLSearchParams(uri.split("?")[1]);
     const event = {
@@ -221,6 +224,10 @@ describe("missed-call callback access", () => {
             name: "X-Continuum-Duration-Minutes",
             value: query.get("X-Continuum-Duration-Minutes"),
           },
+          {
+            name: "X-Continuum-Access-Mode",
+            value: query.get("X-Continuum-Access-Mode"),
+          },
         ],
       },
     };
@@ -229,6 +236,16 @@ describe("missed-call callback access", () => {
     );
     expect(learnerIdFromIncomingCall(event, SECRET)).toBe("learner_1");
     expect(durationFromIncomingCall(event, SECRET)).toBe(10);
+    expect(accessModeFromIncomingCall(event, SECRET)).toBe("scheduled");
+    const tamperedEvent = structuredClone(event);
+    const modeHeader = tamperedEvent.data.sip_headers.find(
+      (header) => header.name === "X-Continuum-Access-Mode",
+    );
+    modeHeader!.value = "missed_call";
+    expect(callerNumberFromIncomingCall(tamperedEvent, SECRET)).toBe(
+      "+14155550100",
+    );
+    expect(accessModeFromIncomingCall(tamperedEvent, SECRET)).toBe("unknown");
     expect(callerNumberFromIncomingCall(event, "wrong-secret-value")).toBe(
       "+14155550100",
     );

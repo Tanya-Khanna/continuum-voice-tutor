@@ -54,7 +54,10 @@ import {
   type LearnerEducationProfile,
 } from "../domain/classroom.js";
 import type { z } from "zod";
-import { ProductMetricEventSchema } from "../domain/product-metrics.js";
+import {
+  ProductMetricEventSchema,
+  type AccessMode,
+} from "../domain/product-metrics.js";
 import type { HomeworkDraft } from "../messaging/homework-service.js";
 
 export interface LessonContext {
@@ -202,6 +205,7 @@ export class LessonService {
   beginOrResumeSubject(
     learner: LearnerProfile,
     subject?: string,
+    accessMode: AccessMode = "unknown",
   ): LessonContext {
     if (
       subject &&
@@ -214,10 +218,13 @@ export class LessonService {
         `Unknown guided subject ${subject}. Available subjects: ${this.#curriculumPack.deployment.subject}.`,
       );
     }
-    return this.beginOrResumeLearner(learner);
+    return this.beginOrResumeLearner(learner, accessMode);
   }
 
-  beginOrResumeLearner(learner: LearnerProfile): LessonContext {
+  beginOrResumeLearner(
+    learner: LearnerProfile,
+    accessMode: AccessMode = "unknown",
+  ): LessonContext {
     const persistedLearner = this.#repository.findLearner(learner.id);
     if (!persistedLearner) {
       throw new Error(`Learner ${learner.id} is not present in the repository.`);
@@ -244,6 +251,7 @@ export class LessonService {
       const resumedLesson = LessonSessionSchema.parse({
         ...existingLesson,
         curriculumPackId: this.#curriculumPack.id,
+        accessMode,
         status: "active",
         lastPrompt: prompt,
         updatedAt: now,
@@ -267,7 +275,7 @@ export class LessonService {
               learnerId: persistedLearner.id,
               sessionId: resumedLesson.id,
               channel: "phone",
-              accessMode: "unknown",
+              accessMode: resumedLesson.accessMode,
               numericValue: resumedLesson.turnCount + 1,
               synthetic: false,
               createdAt: now,
@@ -311,6 +319,7 @@ export class LessonService {
       placementScore: latestLesson?.placementScore ?? 0,
       placementTotal: latestLesson?.placementTotal ?? 0,
       placementEvidence: latestLesson?.placementEvidence ?? [],
+      accessMode,
       createdAt: now,
       updatedAt: now,
     });
@@ -631,7 +640,7 @@ export class LessonService {
           learnerId: nextLearner.id,
           sessionId: nextSession.id,
           channel: "dtmf",
-          accessMode: "unknown",
+          accessMode: nextSession.accessMode,
           numericValue: null,
           synthetic: false,
           createdAt: now,
@@ -646,12 +655,29 @@ export class LessonService {
           learnerId: nextLearner.id,
           sessionId: nextSession.id,
           channel: "phone",
-          accessMode: "unknown",
+          accessMode: nextSession.accessMode,
           numericValue: nextSession.turnCount,
           synthetic: false,
           createdAt: now,
         }),
       );
+      if (
+        this.#repository.listLearnersForPhone(nextLearner.phoneHash).length > 1
+      ) {
+        this.#repository.appendProductMetric(
+          ProductMetricEventSchema.parse({
+            id: this.#makeId(),
+            name: "shared_phone_lesson_completed",
+            learnerId: nextLearner.id,
+            sessionId: nextSession.id,
+            channel: "phone",
+            accessMode: nextSession.accessMode,
+            numericValue: null,
+            synthetic: false,
+            createdAt: now,
+          }),
+        );
+      }
     }
     if (generated.usage) {
       this.recordModelUsage(
@@ -703,6 +729,27 @@ export class LessonService {
     return feedback;
   }
 
+  recordKeypadFallbackRequested(context: LessonContext): void {
+    this.#recordProductMetric(
+      context,
+      "keypad_fallback_requested",
+      "dtmf",
+    );
+  }
+
+  recordUnclearAudioRecovery(
+    context: LessonContext,
+    outcome: "requested" | "recovered",
+  ): void {
+    this.#recordProductMetric(
+      context,
+      outcome === "requested"
+        ? "unclear_audio_recovery_requested"
+        : "unclear_audio_recovered",
+      "phone",
+    );
+  }
+
   setLessonDuration(
     context: LessonContext,
     durationMinutes: LessonDurationMinutes,
@@ -741,6 +788,29 @@ export class LessonService {
       context: { ...context, session },
       spokenResponse: `${concept.teachingScaffold.silenceResponseLead} ${concept.teachingScaffold.silenceQuestion}`,
     };
+  }
+
+  #recordProductMetric(
+    context: LessonContext,
+    name:
+      | "keypad_fallback_requested"
+      | "unclear_audio_recovery_requested"
+      | "unclear_audio_recovered",
+    channel: "phone" | "dtmf",
+  ): void {
+    this.#repository.appendProductMetric(
+      ProductMetricEventSchema.parse({
+        id: this.#makeId(),
+        name,
+        learnerId: context.learner.id,
+        sessionId: context.session.id,
+        channel,
+        accessMode: context.session.accessMode,
+        numericValue: null,
+        synthetic: false,
+        createdAt: this.#clock().toISOString(),
+      }),
+    );
   }
 
   updateEducationProfile(
@@ -946,7 +1016,7 @@ export class LessonService {
           learnerId: context.learner.id,
           sessionId: context.session.id,
           channel: "phone",
-          accessMode: "unknown",
+          accessMode: context.session.accessMode,
           numericValue: context.session.turnCount + 1,
           synthetic: false,
           createdAt: this.#clock().toISOString(),

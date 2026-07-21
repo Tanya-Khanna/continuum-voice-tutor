@@ -59,6 +59,7 @@ describe("SQLite learning migrations", () => {
       placementTotal: 0,
       placementEvidence: [],
       anchorObject: null,
+      accessMode: "unknown",
     });
     repository.close();
   });
