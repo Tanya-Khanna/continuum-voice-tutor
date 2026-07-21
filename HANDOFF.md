@@ -11,6 +11,9 @@ Verified on **July 21, 2026**. This is a release handoff, not a product plan. Re
 - Production: <https://continuum-production-8971.up.railway.app/>
 - Health/revision: <https://continuum-production-8971.up.railway.app/health>
 - Protected Mission Control shell: <https://continuum-production-8971.up.railway.app/dashboard>
+- Primary Codex build task / `/feedback` Session ID:
+  `019f6dd7-9486-74b2-9828-be19ee983b70` (recorded, but the `/feedback`
+  share/upload flow is still a manual submission task)
 - Successful release-gate run for the application commit:
   <https://github.com/Tanya-Khanna/nomad-ai/actions/runs/29828967745>
 
