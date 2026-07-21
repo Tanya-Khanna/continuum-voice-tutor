@@ -11,6 +11,10 @@ describe("Continuum landing page", () => {
     expect(page).toContain("No smartphone. No app. No camera. No internet");
     expect(page).toContain("Judge phone access is being verified");
     expect(page).toContain("What would you like to learn?");
+    expect(page).toContain("It speaks your language");
+    expect(page).toContain("It remembers and resumes");
+    expect(page).toContain("It stays a teacher");
+    expect(page).toContain("Lesson paused.<br>Call back anytime.");
     expect(page).toContain("extends teachers and schools");
     expect(page).toContain("prefers-reduced-motion");
   });

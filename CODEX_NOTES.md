@@ -753,3 +753,9 @@
 - The subsequent full run found harmless but release-blocking field drift: one valid spoken question and a paraphrased `nextQuestion`. Since recovery checkpoints belong to trusted code, the controller now derives `nextQuestion` from the single final spoken question. It never repairs a multi-question response; that still fails and triggers model correction.
 - Corrected the live DTMF scenario to match the real controller boundary. Realtime resolves a pressed digit against the currently spoken trusted choices and sends the choice label plus `responseMode: dtmf`; it never asks GPT to interpret the raw digit in isolation. The gate still requires that keypad-only success remain below secure mastery.
 - Revision `7429b255c3d8` passed the complete nine-case live GPT v7 suite after those hardening changes. Its committed archive passed 231/231 tests, 39/39 deterministic anti-wrapper cases, pack-free production smoke, and a process-boundary exact-resume proof; GitHub's independent Release gate passed; Railway served the same revision with the open-topic experience, no curriculum dependency, all bounded callback/SMS features on, recurring scheduler off, and public phone hidden. Secret-free release preflight reached 8/9, leaving only the human carrier/submission receipt.
+
+## 2026-07-21 — Landing-page final alignment
+
+- Re-verified the deployed public page against the v7 product authority on desktop and a 390 px mobile viewport. A cache-busted live read confirmed there is no subject menu, syllabus, or recurring-call promise.
+- Expanded the product proof from three cards to all five locked qualities: teaching instead of answering, basic-phone reach, language adaptation, safe memory and exact resume, and the bounded teacher relationship.
+- Fixed the illustrated feature-phone screen so its paused-lesson message remains readable on a narrow mobile viewport. The public phone number remains hidden behind the carrier gate.
